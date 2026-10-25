@@ -13,7 +13,9 @@ import (
 // clamped.
 const (
 	// MaxCount is the schema's Count maximum, JSON's largest safe integer.
-	MaxCount      = 1<<53 - 1
+	MaxCount = 1<<53 - 1
+	// MaxRetryCount bounds a retry's attempt and max.
+	MaxRetryCount = 999999
 	minHTTPStatus = 100
 	maxHTTPStatus = 599
 )
@@ -28,6 +30,10 @@ func Count(n *int64) *int64 {
 	}
 	return n
 }
+
+// ValidRetryCount reports whether n is a retry attempt or max the contract
+// accepts.
+func ValidRetryCount(n int) bool { return n >= 1 && n <= MaxRetryCount }
 
 // HTTPStatus is status when it is an HTTP status code, nil otherwise.
 func HTTPStatus(status *int) *int {

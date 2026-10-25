@@ -20,6 +20,8 @@ func TestErrorShapes(t *testing.T) {
 			contract.ErrorInfo{Message: "x", Code: "APIError"}},
 		{"no message", `{"name":"MessageOutputLengthError","data":{}}`,
 			contract.ErrorInfo{Message: "MessageOutputLengthError", Code: "MessageOutputLengthError"}},
+		{"empty message", `{"name":"ProviderAuthError","data":{"message":""}}`,
+			contract.ErrorInfo{Message: "ProviderAuthError", Code: "ProviderAuthError"}},
 		{"no data", `{"name":"UnknownError"}`, contract.ErrorInfo{Message: "UnknownError", Code: "UnknownError"}},
 		{"string", `"example failure"`, contract.ErrorInfo{Message: "example failure"}},
 		{"other object", `{"success":false, "errors":[{"message":"bad"}]}`,

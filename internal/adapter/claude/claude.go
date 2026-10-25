@@ -163,9 +163,9 @@ func apiRetry(s systemLine) contract.Event {
 		Message: cut.Text("message", s.Error, contract.MaxTextBytes),
 		Status:  adapter.HTTPStatus(s.ErrorStatus),
 	}
-	if s.Attempt != nil && validRetryCount(*s.Attempt) {
+	if s.Attempt != nil && adapter.ValidRetryCount(*s.Attempt) {
 		info.Retry = &contract.Retry{Attempt: *s.Attempt, DelayMs: adapter.Count(s.RetryDelayMs)}
-		if s.MaxRetries != nil && validRetryCount(*s.MaxRetries) {
+		if s.MaxRetries != nil && adapter.ValidRetryCount(*s.MaxRetries) {
 			info.Retry.Max = s.MaxRetries
 		}
 	}

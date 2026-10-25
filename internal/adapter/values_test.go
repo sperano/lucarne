@@ -38,6 +38,13 @@ func TestCountAndHTTPStatus(t *testing.T) {
 	}
 }
 
+func TestValidRetryCount(t *testing.T) {
+	t.Parallel()
+	if !ValidRetryCount(1) || !ValidRetryCount(MaxRetryCount) || ValidRetryCount(0) || ValidRetryCount(MaxRetryCount+1) {
+		t.Error("ValidRetryCount keeps only counts from 1 to MaxRetryCount")
+	}
+}
+
 func TestCompactJSON(t *testing.T) {
 	t.Parallel()
 	if got, ok := CompactJSON(json.RawMessage(`{ "a": [1, 2] }`)); !ok || got != `{"a":[1,2]}` {

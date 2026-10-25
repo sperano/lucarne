@@ -48,7 +48,7 @@ func errorInfo(raw json.RawMessage) (contract.ErrorInfo, bool) {
 	if isObject(raw) && json.Unmarshal(raw, &named) == nil && named.Name != "" {
 		info := contract.ErrorInfo{Message: named.Name, Code: named.Name}
 		if named.Data != nil {
-			if named.Data.Message != nil {
+			if named.Data.Message != nil && *named.Data.Message != "" {
 				info.Message = *named.Data.Message
 			}
 			info.Status = adapter.HTTPStatus(named.Data.StatusCode)

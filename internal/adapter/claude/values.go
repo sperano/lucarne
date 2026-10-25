@@ -5,10 +5,6 @@ import (
 	"github.com/sperano/lucarne/internal/adapter"
 )
 
-// maxRetryCount bounds a retry's attempt and max; a value outside it is
-// dropped, not clamped.
-const maxRetryCount = 999999
-
 // apiUsage is an API usage object, on assistant messages and results.
 type apiUsage struct {
 	InputTokens   *int64 `json:"input_tokens"`
@@ -33,5 +29,3 @@ func (u *apiUsage) usage(scope contract.UsageScope) (contract.Usage, bool) {
 	return usage, usage.InputTokens != nil || usage.OutputTokens != nil ||
 		usage.CacheReadTokens != nil || usage.CacheWriteTokens != nil
 }
-
-func validRetryCount(n int) bool { return n >= 1 && n <= maxRetryCount }
