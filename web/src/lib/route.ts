@@ -61,6 +61,7 @@ export function runLink(key: RunKey): string {
 }
 
 function isView(view: string): view is View {
+  // includes on the literal tuple only accepts a View; widening it lets any string be tested.
   return (VIEWS as readonly string[]).includes(view);
 }
 
