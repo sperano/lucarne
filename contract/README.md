@@ -238,7 +238,7 @@ Last-Event-ID: {epoch}:{seq}
    | `transcript` | `{epoch}:{seq}` | `Event` |
    | `attempt` | `{epoch}:{seq}` | `AttemptUpdate` (the attempt's full new state) |
    | `run` | `{epoch}:{seq}` | `RunUpdate` (the run's full new state) |
-   | `end` | `{epoch}:{seq}` | `End`: every attempt is ended, expired or unavailable for good, or the run was deleted; the client closes the stream and does not reconnect |
+   | `end` | `{epoch}:{seq}` | `End` (below): nothing more will follow; the client closes the stream and does not reconnect |
    | `reset` | none | `Reset`: drop all state, load a new snapshot, reconnect from it |
 
    A comment line (`: keepalive`) is sent when the stream is otherwise idle,
@@ -248,7 +248,17 @@ Last-Event-ID: {epoch}:{seq}
    `maxReplayUpdates`), `client_too_slow` (more than `maxClientQueue`
    updates were waiting; the server closes the stream after it),
    `bad_cursor` (no cursor, or a malformed one).
-4. The client checks that each `seq` is its last plus one. Any other value
+4. `end` reasons: `run_deleted` (the Task was seen deleted), and
+   `run_finished` (the run's `phase` is `succeeded` or `failed` and every
+   attempt's coverage is `ended` or `expired`). The run's phase is part of
+   the condition: a `pending` run with no attempt yet, or one whose known
+   attempts all ended while Kubernetes starts a retry (a new pod, or a
+   restart of the same container), is not finished, and the stream stays
+   open for the new attempt. An `unavailable` attempt can become readable
+   again, so it keeps the stream open too, until the log is read or the
+   Task is deleted. The `run` update that carries the terminal phase, and
+   the last `attempt` updates, are sent before `end`.
+5. The client checks that each `seq` is its last plus one. Any other value
    means something was lost: it discards its state and reloads the snapshot,
    as on `reset`.
 

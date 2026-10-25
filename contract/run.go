@@ -59,12 +59,24 @@ type Attempt struct {
 
 // ContainerState is the container status Kubernetes reported.
 type ContainerState struct {
-	State      string     `json:"state"`
-	ExitCode   *int       `json:"exitCode,omitempty"`
-	Reason     string     `json:"reason,omitempty"`
-	StartedAt  *Timestamp `json:"startedAt,omitempty"`
-	FinishedAt *Timestamp `json:"finishedAt,omitempty"`
+	State      ContainerStateKind `json:"state"`
+	ExitCode   *int               `json:"exitCode,omitempty"`
+	Reason     string             `json:"reason,omitempty"`
+	StartedAt  *Timestamp         `json:"startedAt,omitempty"`
+	FinishedAt *Timestamp         `json:"finishedAt,omitempty"`
 }
+
+// ContainerStateKind is the Kubernetes container state.
+type ContainerStateKind string
+
+// Container states. Unknown is a container whose status Kubernetes did not
+// report.
+const (
+	ContainerWaiting    ContainerStateKind = "waiting"
+	ContainerRunning    ContainerStateKind = "running"
+	ContainerTerminated ContainerStateKind = "terminated"
+	ContainerUnknown    ContainerStateKind = "unknown"
+)
 
 // CoverageState says whether an attempt's log is, was or can be read.
 type CoverageState string

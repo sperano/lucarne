@@ -117,23 +117,66 @@ func property(defs map[string]map[string]any, def, prop string) map[string]any {
 	return asMap(asMap(defs[def]["properties"])[prop])
 }
 
-func TestGoConstantsMatchSchemaEnums(t *testing.T) {
-	defs := schemaDefs(t)
-	cases := []struct {
-		name   string
-		schema map[string]any
-		goList []string
-	}{
-		{"event kinds", property(defs, "Event", "kind"), toStrings(EventKinds)},
+// enumCase pairs a schema enum with the Go constants that mirror it, in the
+// schema's order.
+type enumCase struct {
+	name   string
+	schema map[string]any
+	goList []string
+}
+
+func runEnumCases(defs map[string]map[string]any) []enumCase {
+	return []enumCase{
 		{"run phases", property(defs, "Run", "phase"), toStrings([]RunPhase{
 			PhasePending, PhaseWaiting, PhaseRunning, PhaseSucceeded, PhaseFailed, PhaseUnknown})},
 		{"runner kinds", defs["RunnerKind"], toStrings([]RunnerKind{
 			RunnerClaudeCode, RunnerCodex, RunnerOpenCode, RunnerUnknown})},
+		{"container states", property(defs, "ContainerState", "state"), toStrings([]ContainerStateKind{
+			ContainerWaiting, ContainerRunning, ContainerTerminated, ContainerUnknown})},
 		{"coverage states", property(defs, "Coverage", "state"), toStrings([]CoverageState{
 			CoveragePending, CoverageFollowing, CoverageEnded, CoverageUnavailable, CoverageExpired})},
+	}
+}
+
+func eventEnumCases(defs map[string]map[string]any) []enumCase {
+	return []enumCase{
+		{"event kinds", property(defs, "Event", "kind"), toStrings(EventKinds)},
+		{"message roles", property(defs, "Message", "role"), toStrings([]MessageRole{
+			RoleUser, RoleAssistant})},
+		{"message types", property(defs, "Message", "type"), toStrings([]MessageType{
+			MessageText, MessageReasoning})},
+		{"tool result statuses", property(defs, "ToolResult", "status"), toStrings([]ToolResultStatus{
+			ResultOK, ResultError, ResultDeclined, ResultUnknown})},
+		{"edit changes", property(defs, "Edit", "change"), toStrings([]EditChange{
+			ChangeAdd, ChangeUpdate, ChangeDelete, ChangeUnknown})},
+		{"usage scopes", property(defs, "Usage", "scope"), toStrings([]UsageScope{
+			ScopeMessage, ScopeStep, ScopeTurn, ScopeSession})},
+		{"lifecycle phases", property(defs, "Lifecycle", "phase"), toStrings([]LifecyclePhase{
+			LifecycleSetupStarted, LifecycleSetupCompleted, LifecycleSetupFailed,
+			LifecycleSessionStarted, LifecycleTurnStarted, LifecycleTurnCompleted,
+			LifecycleTurnFailed, LifecycleCompacted, LifecycleSessionCompleted,
+			LifecycleLimitHit, LifecycleKelosOutputs})},
+		{"raw reasons", property(defs, "Raw", "reason"), toStrings([]RawReason{
+			RawText, RawMalformedJSON, RawUnknownType, RawUnsupported, RawOversized})},
+		{"gap reasons", property(defs, "Gap", "reason"), toStrings([]GapReason{
+			GapSourceTruncated, GapReadInterrupted, GapInputLimit, GapAttemptExpired})},
+	}
+}
+
+func apiEnumCases(defs map[string]map[string]any) []enumCase {
+	return []enumCase{
+		{"reset reasons", property(defs, "Reset", "reason"), toStrings([]ResetReason{
+			ResetEpochChanged, ResetReplayExpired, ResetClientTooSlow, ResetBadCursor})},
+		{"end reasons", property(defs, "End", "reason"), toStrings([]EndReason{
+			EndRunFinished, EndRunDeleted})},
 		{"error codes", asMap(asMap(property(defs, "ErrorResponse", "error")["properties"])["code"]),
 			[]string{ErrorInvalidRunKey, ErrorRunNotFound, ErrorNotImplemented, ErrorInternal, ErrorNotFound, ErrorMethodNotAllowed}},
 	}
+}
+
+func TestGoConstantsMatchSchemaEnums(t *testing.T) {
+	defs := schemaDefs(t)
+	cases := slices.Concat(runEnumCases(defs), eventEnumCases(defs), apiEnumCases(defs))
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			if got := enumOf(t, c.schema); !slices.Equal(got, c.goList) {

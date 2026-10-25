@@ -502,7 +502,7 @@
       "required": ["seq", "reason"],
       "properties": {
         "seq": { "$ref": "#/$defs/Seq" },
-        "reason": { "enum": ["attempts_ended", "run_deleted"] }
+        "reason": { "enum": ["run_finished", "run_deleted"] }
       },
       "additionalProperties": false
     },

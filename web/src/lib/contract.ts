@@ -32,6 +32,9 @@ export type RunPhase = (typeof RUN_PHASES)[number];
 export const RUNNER_KINDS = ['claude-code', 'codex', 'opencode', 'unknown'] as const;
 export type RunnerKind = (typeof RUNNER_KINDS)[number];
 
+export const CONTAINER_STATES = ['waiting', 'running', 'terminated', 'unknown'] as const;
+export type ContainerStateKind = (typeof CONTAINER_STATES)[number];
+
 export const COVERAGE_STATES = ['pending', 'following', 'ended', 'unavailable', 'expired'] as const;
 export type CoverageState = (typeof COVERAGE_STATES)[number];
 
@@ -44,6 +47,65 @@ export const ERROR_CODES = [
   'method_not_allowed',
 ] as const;
 export type ErrorCode = (typeof ERROR_CODES)[number];
+
+export const MESSAGE_ROLES = ['user', 'assistant'] as const;
+export type MessageRole = (typeof MESSAGE_ROLES)[number];
+
+export const MESSAGE_TYPES = ['text', 'reasoning'] as const;
+export type MessageType = (typeof MESSAGE_TYPES)[number];
+
+export const TOOL_RESULT_STATUSES = ['ok', 'error', 'declined', 'unknown'] as const;
+export type ToolResultStatus = (typeof TOOL_RESULT_STATUSES)[number];
+
+export const EDIT_CHANGES = ['add', 'update', 'delete', 'unknown'] as const;
+export type EditChange = (typeof EDIT_CHANGES)[number];
+
+export const USAGE_SCOPES = ['message', 'step', 'turn', 'session'] as const;
+export type UsageScope = (typeof USAGE_SCOPES)[number];
+
+export const LIFECYCLE_PHASES = [
+  'setup_started',
+  'setup_completed',
+  'setup_failed',
+  'session_started',
+  'turn_started',
+  'turn_completed',
+  'turn_failed',
+  'compacted',
+  'session_completed',
+  'limit_hit',
+  'kelos_outputs',
+] as const;
+export type LifecyclePhase = (typeof LIFECYCLE_PHASES)[number];
+
+export const RAW_REASONS = [
+  'text',
+  'malformed_json',
+  'unknown_type',
+  'unsupported',
+  'oversized',
+] as const;
+export type RawReason = (typeof RAW_REASONS)[number];
+
+export const GAP_REASONS = [
+  'source_truncated',
+  'read_interrupted',
+  'input_limit',
+  'attempt_expired',
+] as const;
+export type GapReason = (typeof GAP_REASONS)[number];
+
+export const RESET_REASONS = [
+  'epoch_changed',
+  'replay_expired',
+  'client_too_slow',
+  'bad_cursor',
+] as const;
+export type ResetReason = (typeof RESET_REASONS)[number];
+
+/** run_finished: a terminal run phase and every attempt ended or expired. */
+export const END_REASONS = ['run_finished', 'run_deleted'] as const;
+export type EndReason = (typeof END_REASONS)[number];
 
 /** SSE event names on a run's stream. */
 export const SSE_EVENTS = {
@@ -86,7 +148,7 @@ export interface Runner {
 }
 
 export interface ContainerState {
-  state: 'waiting' | 'running' | 'terminated' | 'unknown';
+  state: ContainerStateKind;
   exitCode?: number;
   reason?: string;
   startedAt?: Time;
@@ -142,8 +204,8 @@ export interface Source {
 }
 
 export interface Message {
-  role: 'user' | 'assistant';
-  type: 'text' | 'reasoning';
+  role: MessageRole;
+  type: MessageType;
   text: string;
   messageId?: string;
 }
@@ -159,7 +221,7 @@ export interface ToolCall {
 
 export interface ToolResult {
   callId: string;
-  status: 'ok' | 'error' | 'declined' | 'unknown';
+  status: ToolResultStatus;
   output?: string;
   exitCode?: number;
 }
@@ -167,14 +229,14 @@ export interface ToolResult {
 export interface Edit {
   callId?: string;
   path: string;
-  change: 'add' | 'update' | 'delete' | 'unknown';
+  change: EditChange;
   diff?: string;
   before?: string;
   after?: string;
 }
 
 export interface Usage {
-  scope: 'message' | 'step' | 'turn' | 'session';
+  scope: UsageScope;
   inputTokens?: number;
   outputTokens?: number;
   cacheReadTokens?: number;
@@ -207,18 +269,7 @@ export interface Output {
 }
 
 export interface Lifecycle {
-  phase:
-    | 'setup_started'
-    | 'setup_completed'
-    | 'setup_failed'
-    | 'session_started'
-    | 'turn_started'
-    | 'turn_completed'
-    | 'turn_failed'
-    | 'compacted'
-    | 'session_completed'
-    | 'limit_hit'
-    | 'kelos_outputs';
+  phase: LifecyclePhase;
   sessionId?: string;
   model?: string;
   runnerVersion?: string;
@@ -231,13 +282,13 @@ export interface Lifecycle {
 }
 
 export interface Raw {
-  reason: 'text' | 'malformed_json' | 'unknown_type' | 'unsupported' | 'oversized';
+  reason: RawReason;
   text: string;
   bytes: number;
 }
 
 export interface Gap {
-  reason: 'source_truncated' | 'read_interrupted' | 'input_limit' | 'attempt_expired';
+  reason: GapReason;
   lines?: number;
   detail?: string;
 }
@@ -289,12 +340,12 @@ export interface RunUpdate {
 
 export interface Reset {
   epoch: string;
-  reason: 'epoch_changed' | 'replay_expired' | 'client_too_slow' | 'bad_cursor';
+  reason: ResetReason;
 }
 
 export interface End {
   seq: number;
-  reason: 'attempts_ended' | 'run_deleted';
+  reason: EndReason;
 }
 
 export interface ErrorResponse {

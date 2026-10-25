@@ -39,15 +39,37 @@ type RunUpdate struct {
 // Reset is the data of a "reset" SSE event: the client must drop its state
 // and load a new snapshot.
 type Reset struct {
-	Epoch  string `json:"epoch"`
-	Reason string `json:"reason"`
+	Epoch  string      `json:"epoch"`
+	Reason ResetReason `json:"reason"`
 }
+
+// ResetReason says why the stream was reset.
+type ResetReason string
+
+// Reset reasons; see contract/README.md.
+const (
+	ResetEpochChanged  ResetReason = "epoch_changed"
+	ResetReplayExpired ResetReason = "replay_expired"
+	ResetClientTooSlow ResetReason = "client_too_slow"
+	ResetBadCursor     ResetReason = "bad_cursor"
+)
 
 // End is the data of an "end" SSE event: nothing more will follow.
 type End struct {
-	Seq    int64  `json:"seq"`
-	Reason string `json:"reason"`
+	Seq    int64     `json:"seq"`
+	Reason EndReason `json:"reason"`
 }
+
+// EndReason says why the stream ended.
+type EndReason string
+
+// End reasons. RunFinished needs a terminal run phase (succeeded or failed)
+// and every attempt ended or expired: a run whose attempts all ended while
+// a retry starts is not finished.
+const (
+	EndRunFinished EndReason = "run_finished"
+	EndRunDeleted  EndReason = "run_deleted"
+)
 
 // Error codes of ErrorResponse.
 const (

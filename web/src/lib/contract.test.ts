@@ -3,12 +3,23 @@ import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import schema from '../../../contract/v1/transcript.schema.json';
 import {
+  CONTAINER_STATES,
   COVERAGE_STATES,
+  EDIT_CHANGES,
+  END_REASONS,
   ERROR_CODES,
   EVENT_KINDS,
+  GAP_REASONS,
+  LIFECYCLE_PHASES,
+  MESSAGE_ROLES,
+  MESSAGE_TYPES,
+  RAW_REASONS,
+  RESET_REASONS,
   RUN_PHASES,
   RUNNER_KINDS,
   SCHEMA_VERSION,
+  TOOL_RESULT_STATUSES,
+  USAGE_SCOPES,
   type Attempt,
   type AttemptKey,
   type AttemptUpdate,
@@ -270,13 +281,29 @@ describe('TypeScript types match the schema', () => {
     expect(branches).toEqual(expected);
   });
 
-  it('enums', () => {
-    const $defs = schema.$defs;
-    expect($defs.Event.properties.kind.enum).toEqual([...EVENT_KINDS]);
-    expect($defs.Run.properties.phase.enum).toEqual([...RUN_PHASES]);
-    expect($defs.RunnerKind.enum).toEqual([...RUNNER_KINDS]);
-    expect($defs.Coverage.properties.state.enum).toEqual([...COVERAGE_STATES]);
-    expect($defs.ErrorResponse.properties.error.properties.code.enum).toEqual([...ERROR_CODES]);
+  const $defs = schema.$defs;
+  it.each([
+    ['event kinds', $defs.Event.properties.kind.enum, EVENT_KINDS],
+    ['run phases', $defs.Run.properties.phase.enum, RUN_PHASES],
+    ['runner kinds', $defs.RunnerKind.enum, RUNNER_KINDS],
+    ['container states', $defs.ContainerState.properties.state.enum, CONTAINER_STATES],
+    ['coverage states', $defs.Coverage.properties.state.enum, COVERAGE_STATES],
+    ['message roles', $defs.Message.properties.role.enum, MESSAGE_ROLES],
+    ['message types', $defs.Message.properties.type.enum, MESSAGE_TYPES],
+    ['tool result statuses', $defs.ToolResult.properties.status.enum, TOOL_RESULT_STATUSES],
+    ['edit changes', $defs.Edit.properties.change.enum, EDIT_CHANGES],
+    ['usage scopes', $defs.Usage.properties.scope.enum, USAGE_SCOPES],
+    ['lifecycle phases', $defs.Lifecycle.properties.phase.enum, LIFECYCLE_PHASES],
+    ['raw reasons', $defs.Raw.properties.reason.enum, RAW_REASONS],
+    ['gap reasons', $defs.Gap.properties.reason.enum, GAP_REASONS],
+    ['reset reasons', $defs.Reset.properties.reason.enum, RESET_REASONS],
+    ['end reasons', $defs.End.properties.reason.enum, END_REASONS],
+    ['error codes', $defs.ErrorResponse.properties.error.properties.code.enum, ERROR_CODES],
+  ] as const)('enum: %s', (_name, schemaEnum, values) => {
+    expect(schemaEnum).toEqual([...values]);
+  });
+
+  it('schema version', () => {
     expect($defs.SchemaVersion.const).toBe(SCHEMA_VERSION);
   });
 });
