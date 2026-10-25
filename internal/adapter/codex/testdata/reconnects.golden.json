@@ -1,0 +1,131 @@
+[
+  {
+    "seq": 1,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.codex.0:2a444a2e06314801:1:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.codex.0",
+    "kind": "lifecycle",
+    "source": {
+      "line": 1,
+      "part": 0,
+      "type": "thread.started"
+    },
+    "lifecycle": {
+      "phase": "session_started",
+      "sessionId": "0199a1b2-c3d4-7e5f-8a6b-7c8d9e0f1a2b"
+    }
+  },
+  {
+    "seq": 2,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.codex.0:2a444a2e06314801:2:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.codex.0",
+    "kind": "lifecycle",
+    "source": {
+      "line": 2,
+      "part": 0,
+      "type": "turn.started"
+    },
+    "lifecycle": {
+      "phase": "turn_started"
+    }
+  },
+  {
+    "seq": 3,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.codex.0:2a444a2e06314801:3:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.codex.0",
+    "kind": "error",
+    "source": {
+      "line": 3,
+      "part": 0,
+      "type": "error"
+    },
+    "error": {
+      "message": "Reconnecting... 1/5 (stream disconnected before completion: example transport error)",
+      "retry": {
+        "attempt": 1,
+        "max": 5
+      }
+    }
+  },
+  {
+    "seq": 4,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.codex.0:2a444a2e06314801:4:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.codex.0",
+    "kind": "error",
+    "source": {
+      "line": 4,
+      "part": 0,
+      "type": "error"
+    },
+    "error": {
+      "message": "Reconnecting... 2/5 (stream disconnected before completion: example transport error)",
+      "retry": {
+        "attempt": 2,
+        "max": 5
+      }
+    }
+  },
+  {
+    "seq": 5,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.codex.0:2a444a2e06314801:5:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.codex.0",
+    "kind": "error",
+    "source": {
+      "line": 5,
+      "part": 0,
+      "type": "item.completed"
+    },
+    "error": {
+      "message": "model rerouted: example-model-a -\u003e example-model-b (HighRiskCyberActivity)"
+    }
+  },
+  {
+    "seq": 6,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.codex.0:2a444a2e06314801:6:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.codex.0",
+    "kind": "message",
+    "source": {
+      "line": 6,
+      "part": 0,
+      "type": "item.completed"
+    },
+    "message": {
+      "role": "assistant",
+      "type": "text",
+      "text": "Done after two reconnects.",
+      "messageId": "item_1"
+    }
+  },
+  {
+    "seq": 7,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.codex.0:2a444a2e06314801:7:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.codex.0",
+    "kind": "lifecycle",
+    "source": {
+      "line": 7,
+      "part": 0,
+      "type": "turn.completed"
+    },
+    "lifecycle": {
+      "phase": "turn_completed"
+    }
+  },
+  {
+    "seq": 8,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.codex.0:2a444a2e06314801:7:1",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.codex.0",
+    "kind": "usage",
+    "source": {
+      "line": 7,
+      "part": 1,
+      "type": "turn.completed"
+    },
+    "usage": {
+      "scope": "session",
+      "inputTokens": 9120,
+      "outputTokens": 54,
+      "cacheReadTokens": 8192,
+      "cacheWriteTokens": 0,
+      "reasoningTokens": 0
+    }
+  }
+]

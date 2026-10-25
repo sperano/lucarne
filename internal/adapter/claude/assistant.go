@@ -2,7 +2,6 @@ package claude
 
 import (
 	"encoding/json"
-	"unicode/utf8"
 
 	"github.com/sperano/lucarne/contract"
 	"github.com/sperano/lucarne/internal/adapter"
@@ -171,11 +170,7 @@ func toolCall(b block, parent string) contract.Event {
 		ParentCallID: cut.Text("parentCallId", parent, contract.MaxLabelBytes),
 	}
 	if input, ok := compactJSON(b.Input); ok {
-		if len(input) <= contract.MaxToolInputBytes && utf8.ValidString(input) {
-			call.Input = json.RawMessage(input)
-		} else {
-			call.InputText = cut.Text("inputText", input, contract.MaxToolInputBytes)
-		}
+		cut.ToolInput(call, input)
 	}
 	return contract.Event{Kind: contract.KindToolCall, ToolCall: call, Truncated: cut.Fields()}
 }

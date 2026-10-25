@@ -1,0 +1,16 @@
+{"type":"thread.started","thread_id":"0199a1b2-c3d4-7e5f-8a6b-7c8d9e0f1a2b"}
+{"type":"turn.started"}
+{"type":"item.completed","item":{"id":"item_0","type":"reasoning","text":"**Checking tests and the tracker together**"}}
+{"type":"item.started","item":{"id":"item_1","type":"todo_list","items":[{"text":"Run the tests","completed":false},{"text":"Look up the tracker item","completed":false}]}}
+{"type":"item.started","item":{"id":"item_2","type":"command_execution","command":"/bin/bash -lc 'go test ./...'","aggregated_output":"","exit_code":null,"status":"in_progress"}}
+{"type":"item.started","item":{"id":"item_3","type":"mcp_tool_call","server":"tracker","tool":"get_item","arguments":{"id":7},"result":null,"error":null,"status":"in_progress"}}
+{"type":"item.started","item":{"id":"item_4","type":"command_execution","command":"/bin/bash -lc 'go vet ./...'","aggregated_output":"","exit_code":null,"status":"in_progress"}}
+{"type":"item.completed","item":{"id":"item_4","type":"command_execution","command":"/bin/bash -lc 'go vet ./...'","aggregated_output":"","exit_code":0,"status":"completed"}}
+{"type":"item.completed","item":{"id":"item_3","type":"mcp_tool_call","server":"tracker","tool":"get_item","arguments":{"id":7},"result":{"content":[{"type":"text","text":"Item 7: the greeting names the world."}],"structured_content":null},"error":null,"status":"completed"}}
+{"type":"item.updated","item":{"id":"item_1","type":"todo_list","items":[{"text":"Run the tests","completed":false},{"text":"Look up the tracker item","completed":true}]}}
+{"type":"item.updated","item":{"id":"item_1","type":"todo_list","items":[{"text":"Run the tests","completed":false},{"text":"Look up the tracker item","completed":true}]}}
+{"type":"item.completed","item":{"id":"item_2","type":"command_execution","command":"/bin/bash -lc 'go test ./...'","aggregated_output":"ok  \texample.com/widget\t0.004s\n","exit_code":0,"status":"completed"}}
+{"type":"item.updated","item":{"id":"item_1","type":"todo_list","items":[{"text":"Run the tests","completed":true},{"text":"Look up the tracker item","completed":true}]}}
+{"type":"item.completed","item":{"id":"item_5","type":"agent_message","text":"The tests and vet pass, and the tracker item agrees."}}
+{"type":"item.completed","item":{"id":"item_1","type":"todo_list","items":[{"text":"Run the tests","completed":true},{"text":"Look up the tracker item","completed":true}]}}
+{"type":"turn.completed","usage":{"input_tokens":30720,"cached_input_tokens":24576,"cache_write_input_tokens":0,"output_tokens":512,"reasoning_output_tokens":192}}
