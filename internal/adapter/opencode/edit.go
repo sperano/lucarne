@@ -85,6 +85,8 @@ func edits(tool, callID string, state *toolState) []contract.Event {
 	return nil
 }
 
+// single turns the (event, ok) of a one-file tool into the slice edits
+// returns for every tool, apply_patch's several files included.
 func single(ev contract.Event, ok bool) []contract.Event {
 	if !ok {
 		return nil
