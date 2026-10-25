@@ -121,241 +121,241 @@ export const SSE_EVENTS = {
 export type Time = string;
 
 export interface RunKey {
-  cluster: string;
-  namespace: string;
-  taskUID: string;
+  readonly cluster: string;
+  readonly namespace: string;
+  readonly taskUID: string;
 }
 
 export interface AttemptKey {
-  podUID: string;
-  container: string;
-  restart: number;
+  readonly podUID: string;
+  readonly container: string;
+  readonly restart: number;
 }
 
 export interface Run {
-  key: RunKey;
-  taskName: string;
-  runner?: RunnerKind;
-  phase: RunPhase;
-  deleted?: boolean;
-  created?: Time;
-  started?: Time;
-  completed?: Time;
+  readonly key: RunKey;
+  readonly taskName: string;
+  readonly runner?: RunnerKind;
+  readonly phase: RunPhase;
+  readonly deleted?: boolean;
+  readonly created?: Time;
+  readonly started?: Time;
+  readonly completed?: Time;
 }
 
 export interface Runner {
-  kind: RunnerKind;
-  version?: string;
+  readonly kind: RunnerKind;
+  readonly version?: string;
 }
 
 export interface ContainerState {
-  state: ContainerStateKind;
-  exitCode?: number;
-  reason?: string;
-  startedAt?: Time;
-  finishedAt?: Time;
+  readonly state: ContainerStateKind;
+  readonly exitCode?: number;
+  readonly reason?: string;
+  readonly startedAt?: Time;
+  readonly finishedAt?: Time;
 }
 
 export interface Coverage {
-  state: CoverageState;
-  lines: number;
-  gaps: number;
-  truncatedLines: number;
-  reason?: string;
+  readonly state: CoverageState;
+  readonly lines: number;
+  readonly gaps: number;
+  readonly truncatedLines: number;
+  readonly reason?: string;
 }
 
 export interface Attempt {
-  id: string;
-  key: AttemptKey;
-  podName: string;
-  runner: Runner;
-  container: ContainerState;
-  coverage: Coverage;
+  readonly id: string;
+  readonly key: AttemptKey;
+  readonly podName: string;
+  readonly runner: Runner;
+  readonly container: ContainerState;
+  readonly coverage: Coverage;
 }
 
 export interface Stream {
-  epoch: string;
-  lastSeq: number;
-  droppedEvents: number;
+  readonly epoch: string;
+  readonly lastSeq: number;
+  readonly droppedEvents: number;
 }
 
 export interface Limits {
-  maxLineBytes: number;
-  maxAttemptLogBytes: number;
-  maxTextBytes: number;
-  maxToolInputBytes: number;
-  maxToolOutputBytes: number;
-  maxDiffBytes: number;
-  maxRawBytes: number;
-  maxPathBytes: number;
-  maxLabelBytes: number;
-  maxEventsPerRun: number;
-  maxRunBytes: number;
-  maxAttemptsPerRun: number;
-  maxReplayUpdates: number;
-  maxClientQueue: number;
+  readonly maxLineBytes: number;
+  readonly maxAttemptLogBytes: number;
+  readonly maxTextBytes: number;
+  readonly maxToolInputBytes: number;
+  readonly maxToolOutputBytes: number;
+  readonly maxDiffBytes: number;
+  readonly maxRawBytes: number;
+  readonly maxPathBytes: number;
+  readonly maxLabelBytes: number;
+  readonly maxEventsPerRun: number;
+  readonly maxRunBytes: number;
+  readonly maxAttemptsPerRun: number;
+  readonly maxReplayUpdates: number;
+  readonly maxClientQueue: number;
 }
 
 export interface Source {
-  line: number;
-  part: number;
-  type?: string;
-  logTime?: Time;
-  runnerTime?: Time;
+  readonly line: number;
+  readonly part: number;
+  readonly type?: string;
+  readonly logTime?: Time;
+  readonly runnerTime?: Time;
 }
 
 export interface Message {
-  role: MessageRole;
-  type: MessageType;
-  text: string;
-  messageId?: string;
+  readonly role: MessageRole;
+  readonly type: MessageType;
+  readonly text: string;
+  readonly messageId?: string;
 }
 
 export interface ToolCall {
-  callId: string;
-  name: string;
-  input?: unknown;
-  inputText?: string;
-  title?: string;
-  parentCallId?: string;
+  readonly callId: string;
+  readonly name: string;
+  readonly input?: unknown;
+  readonly inputText?: string;
+  readonly title?: string;
+  readonly parentCallId?: string;
 }
 
 export interface ToolResult {
-  callId: string;
-  status: ToolResultStatus;
-  output?: string;
-  exitCode?: number;
+  readonly callId: string;
+  readonly status: ToolResultStatus;
+  readonly output?: string;
+  readonly exitCode?: number;
 }
 
 export interface Edit {
-  callId?: string;
-  path: string;
-  change: EditChange;
-  diff?: string;
-  before?: string;
-  after?: string;
+  readonly callId?: string;
+  readonly path: string;
+  readonly change: EditChange;
+  readonly diff?: string;
+  readonly before?: string;
+  readonly after?: string;
 }
 
 export interface Usage {
-  scope: UsageScope;
-  inputTokens?: number;
-  outputTokens?: number;
-  cacheReadTokens?: number;
-  cacheWriteTokens?: number;
-  reasoningTokens?: number;
-  totalTokens?: number;
+  readonly scope: UsageScope;
+  readonly inputTokens?: number;
+  readonly outputTokens?: number;
+  readonly cacheReadTokens?: number;
+  readonly cacheWriteTokens?: number;
+  readonly reasoningTokens?: number;
+  readonly totalTokens?: number;
   /** The source's cost as a decimal string, never a float. */
-  costUSD?: string;
-  durationMs?: number;
-  apiDurationMs?: number;
-  turns?: number;
+  readonly costUSD?: string;
+  readonly durationMs?: number;
+  readonly apiDurationMs?: number;
+  readonly turns?: number;
 }
 
 export interface Retry {
-  attempt: number;
-  max?: number;
-  delayMs?: number;
+  readonly attempt: number;
+  readonly max?: number;
+  readonly delayMs?: number;
 }
 
 export interface ErrorInfo {
-  message: string;
-  code?: string;
-  status?: number;
-  retry?: Retry;
+  readonly message: string;
+  readonly code?: string;
+  readonly status?: number;
+  readonly retry?: Retry;
 }
 
 export interface Output {
-  key: string;
-  value: string;
+  readonly key: string;
+  readonly value: string;
 }
 
 export interface Lifecycle {
-  phase: LifecyclePhase;
-  sessionId?: string;
-  model?: string;
-  runnerVersion?: string;
-  subtype?: string;
-  isError?: boolean;
-  stopReason?: string;
-  exitCode?: number;
-  detail?: string;
-  outputs?: Output[];
+  readonly phase: LifecyclePhase;
+  readonly sessionId?: string;
+  readonly model?: string;
+  readonly runnerVersion?: string;
+  readonly subtype?: string;
+  readonly isError?: boolean;
+  readonly stopReason?: string;
+  readonly exitCode?: number;
+  readonly detail?: string;
+  readonly outputs?: readonly Output[];
 }
 
 export interface Raw {
-  reason: RawReason;
-  text: string;
-  bytes: number;
+  readonly reason: RawReason;
+  readonly text: string;
+  readonly bytes: number;
 }
 
 export interface Gap {
-  reason: GapReason;
-  lines?: number;
-  detail?: string;
+  readonly reason: GapReason;
+  readonly lines?: number;
+  readonly detail?: string;
 }
 
 export interface EventBase {
-  seq: number;
-  id: string;
-  attempt: string;
-  kind: EventKind;
-  source: Source;
-  truncated?: string[];
+  readonly seq: number;
+  readonly id: string;
+  readonly attempt: string;
+  readonly kind: EventKind;
+  readonly source: Source;
+  readonly truncated?: readonly string[];
 }
 
 /** The payload field of each event kind. */
 export interface EventPayloads {
-  message: { message: Message };
-  tool_call: { toolCall: ToolCall };
-  tool_result: { toolResult: ToolResult };
-  edit: { edit: Edit };
-  usage: { usage: Usage };
-  error: { error: ErrorInfo };
-  lifecycle: { lifecycle: Lifecycle };
-  raw: { raw: Raw };
-  gap: { gap: Gap };
+  message: { readonly message: Message };
+  tool_call: { readonly toolCall: ToolCall };
+  tool_result: { readonly toolResult: ToolResult };
+  edit: { readonly edit: Edit };
+  usage: { readonly usage: Usage };
+  error: { readonly error: ErrorInfo };
+  lifecycle: { readonly lifecycle: Lifecycle };
+  raw: { readonly raw: Raw };
+  gap: { readonly gap: Gap };
 }
 
 export type TranscriptEvent = {
-  [K in EventKind]: EventBase & { kind: K } & EventPayloads[K];
+  [K in EventKind]: EventBase & { readonly kind: K } & EventPayloads[K];
 }[EventKind];
 
 export interface Snapshot {
-  schema: typeof SCHEMA_VERSION;
-  run: Run;
-  attempts: Attempt[];
-  events: TranscriptEvent[];
-  stream: Stream;
-  limits: Limits;
+  readonly schema: typeof SCHEMA_VERSION;
+  readonly run: Run;
+  readonly attempts: readonly Attempt[];
+  readonly events: readonly TranscriptEvent[];
+  readonly stream: Stream;
+  readonly limits: Limits;
 }
 
 export interface AttemptUpdate {
-  seq: number;
-  attempt: Attempt;
+  readonly seq: number;
+  readonly attempt: Attempt;
 }
 
 export interface RunUpdate {
-  seq: number;
-  run: Run;
+  readonly seq: number;
+  readonly run: Run;
 }
 
 export interface Reset {
-  epoch: string;
-  reason: ResetReason;
+  readonly epoch: string;
+  readonly reason: ResetReason;
 }
 
 export interface End {
-  seq: number;
-  reason: EndReason;
+  readonly seq: number;
+  readonly reason: EndReason;
 }
 
 export interface ErrorResponse {
-  error: { code: ErrorCode; message: string };
+  readonly error: { readonly code: ErrorCode; readonly message: string };
 }
 
 export interface ContractInfo {
-  schema: typeof SCHEMA_VERSION;
-  limits: Limits;
+  readonly schema: typeof SCHEMA_VERSION;
+  readonly limits: Limits;
 }
 
 /** The document types the schema validates, by definition name. */

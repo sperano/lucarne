@@ -27,6 +27,7 @@
       <dd><code>{route.key.taskUID}</code></dd>
     </dl>
     <p>The transcript view is not built yet.</p>
+    <!-- eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- the last page is tested so that unreachable(route) fails to compile when a page is added. -->
   {:else if route.page === 'invalid'}
     <p role="alert">This is not a valid run link ({route.reason}).</p>
   {:else}

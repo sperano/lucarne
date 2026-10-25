@@ -10,12 +10,27 @@ const NODE_FILES = ['*.config.{js,ts}', 'src/**/*.test.ts'];
 // The schema validator, which runs Ajv and so needs eval; see its header.
 const VALIDATOR = 'src/lib/validate.ts';
 
+// The TypeScript projects the type-aware rules read: the app, then the Node
+// files (tests and the TypeScript configs).
+const TS_PROJECTS = ['./tsconfig.json', './tsconfig.node.json'];
+
 export default ts.config(
   { ignores: ['dist/', 'node_modules/'] },
   js.configs.recommended,
-  ...ts.configs.strict,
+  ...ts.configs.strictTypeChecked,
   ...svelte.configs.recommended,
-  { languageOptions: { globals: globals.browser } },
+  {
+    languageOptions: {
+      globals: globals.browser,
+      parserOptions: {
+        project: TS_PROJECTS,
+        tsconfigRootDir: import.meta.dirname,
+        extraFileExtensions: ['.svelte'],
+      },
+    },
+  },
+  // Plain JavaScript configs: not in a TypeScript program, so no type information.
+  { files: ['**/*.js'], ...ts.configs.disableTypeChecked },
   { files: NODE_FILES, languageOptions: { globals: globals.node } },
   {
     files: ['src/**/*.{ts,svelte}'],
