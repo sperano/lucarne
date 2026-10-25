@@ -1,5 +1,7 @@
 package contract
 
+import "encoding/json"
+
 // Run is a Kelos Task as Lucarne last read it. Its times are the Task's
 // Kubernetes lifecycle times, absent when the Task status had none.
 type Run struct {
@@ -104,4 +106,17 @@ type Snapshot struct {
 	Events   []Event   `json:"events"`
 	Stream   Stream    `json:"stream"`
 	Limits   Limits    `json:"limits"`
+}
+
+// MarshalJSON writes nil Attempts and Events as empty arrays, which the
+// schema requires, so a snapshot built without them still validates.
+func (s Snapshot) MarshalJSON() ([]byte, error) {
+	type plain Snapshot
+	if s.Attempts == nil {
+		s.Attempts = []Attempt{}
+	}
+	if s.Events == nil {
+		s.Events = []Event{}
+	}
+	return json.Marshal(plain(s))
 }
