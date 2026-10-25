@@ -33,6 +33,7 @@ export const RUNNER_KINDS = ['claude-code', 'codex', 'opencode', 'unknown'] as c
 export type RunnerKind = (typeof RUNNER_KINDS)[number];
 
 export const CONTAINER_STATES = ['waiting', 'running', 'terminated', 'unknown'] as const;
+// The type of ContainerState.state: ContainerStateState would repeat the word, hence Kind; Coverage.state is CoverageState.
 export type ContainerStateKind = (typeof CONTAINER_STATES)[number];
 
 export const COVERAGE_STATES = ['pending', 'following', 'ended', 'unavailable', 'expired'] as const;

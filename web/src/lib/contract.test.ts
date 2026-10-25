@@ -274,6 +274,7 @@ describe('TypeScript types match the schema', () => {
       raw: 'raw',
       gap: 'gap',
     } satisfies { [K in keyof EventPayloads]: keyof EventPayloads[K] };
+    // Each Event.oneOf branch is a JSON Schema object whose properties are kind and its payload field; only their names are read.
     const branches = (schema.$defs.Event.oneOf as { properties: Record<string, unknown> }[]).map(
       (b) => Object.keys(b.properties).sort(),
     );
