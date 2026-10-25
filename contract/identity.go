@@ -106,7 +106,7 @@ func ParseAttemptID(id string) (AttemptKey, error) {
 	}
 	restart, err := parseCanonicalNonNegative(parts[2])
 	if err != nil {
-		return AttemptKey{}, fmt.Errorf("%w: attempt %q restart: %v", ErrInvalidKey, id, err)
+		return AttemptKey{}, fmt.Errorf("%w: attempt %q restart: %w", ErrInvalidKey, id, err)
 	}
 	key := AttemptKey{PodUID: parts[0], Container: parts[1], Restart: restart}
 	if err := key.Validate(); err != nil {
@@ -146,7 +146,10 @@ func eventPrefix(attemptID, origin string, line int64) string {
 // an identifier has exactly one spelling.
 func parseCanonicalNonNegative(s string) (int64, error) {
 	n, err := strconv.ParseInt(s, 10, 64)
-	if err != nil || n < 0 || strconv.FormatInt(n, 10) != s {
+	if err != nil {
+		return 0, err
+	}
+	if n < 0 || strconv.FormatInt(n, 10) != s {
 		return 0, fmt.Errorf("%q is not a canonical non-negative integer", s)
 	}
 	return n, nil

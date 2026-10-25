@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"regexp"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -77,6 +78,15 @@ func TestParseAttemptIDRejectsNonCanonical(t *testing.T) {
 		if _, err := ParseAttemptID(id); !errors.Is(err, ErrInvalidKey) {
 			t.Errorf("ParseAttemptID(%q) err = %v, want ErrInvalidKey", id, err)
 		}
+	}
+}
+
+func TestParseAttemptIDWrapsTheParseError(t *testing.T) {
+	t.Parallel()
+	id := "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.99999999999999999999"
+	_, err := ParseAttemptID(id)
+	if !errors.Is(err, ErrInvalidKey) || !errors.Is(err, strconv.ErrRange) {
+		t.Errorf("ParseAttemptID(%q) err = %v, want ErrInvalidKey wrapping strconv.ErrRange", id, err)
 	}
 }
 

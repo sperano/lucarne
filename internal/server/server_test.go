@@ -174,6 +174,10 @@ func TestAssets(t *testing.T) {
 			t.Errorf("GET %s Cache-Control %q", path, got)
 		}
 	}
+	// "/assets/../secret.txt" never reaches the asset handler: ServeMux cleans
+	// the path and redirects to "/secret.txt", and its {file...} wildcard
+	// cannot match a ".." segment. The case pins that net/http behavior; the
+	// handler has no traversal guard of its own.
 	for _, path := range []string{"/assets/missing.js", "/assets/nested", "/.gitkeep", "/index.html", "/assets/../secret.txt", "/elsewhere"} {
 		res := get(t, h, path)
 		if res.StatusCode == http.StatusOK {
