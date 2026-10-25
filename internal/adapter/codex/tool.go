@@ -91,18 +91,22 @@ func (p *Parser) renderTool(completed bool, it item, tool toolItem, out *adapter
 }
 
 // callInput is the call's input: the item's fields that are neither its
-// envelope nor its outcome, as a JSON object.
+// envelope nor its outcome, as a JSON object. HTML characters are kept as
+// Codex printed them: json.Marshal would escape the &, < and > of shell
+// commands, which costs input budget and shows in a cut inputText.
 func callInput(it item, outcome []string) string {
 	input := maps.Clone(it.fields)
 	for _, name := range append([]string{fieldID, fieldType, fieldStatus}, outcome...) {
 		delete(input, name)
 	}
-	data, err := json.Marshal(input)
-	if err != nil {
+	var buf strings.Builder
+	enc := json.NewEncoder(&buf)
+	enc.SetEscapeHTML(false)
+	if enc.Encode(input) != nil {
 		// Unreachable: every value was decoded from valid JSON.
 		return "{}"
 	}
-	return string(data)
+	return strings.TrimSuffix(buf.String(), "\n")
 }
 
 func toolCall(it item, input string) contract.Event {

@@ -204,6 +204,42 @@ func TestToolInputAndOutputAreBounded(t *testing.T) {
 	}
 }
 
+// commandInputOverhead is the length of `{"command":""}`, the input of a
+// command item around its command.
+const commandInputOverhead = len(`{"command":""}`)
+
+// shellCommand is a command of exactly n bytes, with the &, < and > that
+// json.Marshal would escape.
+func shellCommand(n int) string {
+	const prefix = "a && b > c 2>&1 < d"
+	return prefix + strings.Repeat("x", n-len(prefix))
+}
+
+func commandCompleted(command string) string {
+	return fmt.Sprintf(`{"type":"item.completed","item":{"id":"item_1","type":"command_execution","command":%q,"aggregated_output":"","exit_code":0,"status":"completed"}}`, command)
+}
+
+func TestToolInputKeepsHTMLCharacters(t *testing.T) {
+	t.Parallel()
+	command := shellCommand(contract.MaxToolInputBytes - commandInputOverhead)
+	call := only(t, normalize(t, commandCompleted(command)), contract.KindToolCall)
+	if want := `{"command":"` + command + `"}`; string(call.ToolCall.Input) != want || call.Truncated != nil {
+		t.Errorf("call input %.40q (%d bytes), truncated %v, want %.40q (%d bytes)",
+			call.ToolCall.Input, len(call.ToolCall.Input), call.Truncated, want, len(want))
+	}
+}
+
+func TestCutToolInputKeepsHTMLCharacters(t *testing.T) {
+	t.Parallel()
+	command := shellCommand(contract.MaxToolInputBytes)
+	call := only(t, normalize(t, commandCompleted(command)), contract.KindToolCall)
+	want := (`{"command":"` + command)[:contract.MaxToolInputBytes]
+	if call.ToolCall.Input != nil || call.ToolCall.InputText != want {
+		t.Errorf("inputText %.40q (%d bytes), want %.40q (%d bytes)",
+			call.ToolCall.InputText, len(call.ToolCall.InputText), want, len(want))
+	}
+}
+
 func ptrTo(s string) *string { return &s }
 
 func equalString(a, b *string) bool {
