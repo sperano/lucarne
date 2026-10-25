@@ -73,13 +73,18 @@ const (
 
 // Error codes of ErrorResponse.
 const (
-	ErrorInvalidRunKey  = "invalid_run_key"
-	ErrorRunNotFound    = "run_not_found"
+	// ErrorInvalidRunKey is a path under /api/v1/runs/ that is not one of the
+	// two run paths, or whose run key has a percent-encoded character.
+	ErrorInvalidRunKey = "invalid_run_key"
+	// ErrorRunNotFound is a valid run key with no such run, or one that expired.
+	ErrorRunNotFound = "run_not_found"
+	// ErrorNotImplemented is an endpoint that exists but is not served yet.
 	ErrorNotImplemented = "not_implemented"
-	ErrorInternal       = "internal"
+	// ErrorInternal is a server-side failure.
+	ErrorInternal = "internal"
 	// ErrorNotFound is an API path that names no endpoint.
 	ErrorNotFound = "not_found"
-	// ErrorMethodNotAllowed is a request with another method than GET.
+	// ErrorMethodNotAllowed is a request with another method than GET or HEAD.
 	ErrorMethodNotAllowed = "method_not_allowed"
 )
 
