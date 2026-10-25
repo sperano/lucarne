@@ -1,0 +1,137 @@
+[
+  {
+    "seq": 1,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0:9fd01d635621f3b0:1:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0",
+    "kind": "raw",
+    "source": {
+      "line": 1,
+      "part": 0
+    },
+    "raw": {
+      "reason": "text",
+      "text": "Warning: Unrecognized provider prefix 'example' in KELOS_MODEL, defaulting to Anthropic",
+      "bytes": 87
+    }
+  },
+  {
+    "seq": 2,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0:9fd01d635621f3b0:2:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0",
+    "kind": "lifecycle",
+    "source": {
+      "line": 2,
+      "part": 0,
+      "type": "step_start",
+      "runnerTime": "2026-10-25T08:00:00.1Z"
+    },
+    "lifecycle": {
+      "phase": "step_started",
+      "sessionId": "ses_01ExampleSession"
+    }
+  },
+  {
+    "seq": 3,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0:9fd01d635621f3b0:3:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0",
+    "kind": "raw",
+    "source": {
+      "line": 3,
+      "part": 0
+    },
+    "raw": {
+      "reason": "malformed_json",
+      "text": "{\"type\":\"text\",\"timestamp\":1792915200900,\"sessionID\":\"ses_01ExampleSession\",\"part\":{\"id\":\"prt_32\",\"sessionID\":\"ses_01ExampleSession\",\"messageID\":\"msg_0",
+      "bytes": 151
+    }
+  },
+  {
+    "seq": 4,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0:9fd01d635621f3b0:4:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0",
+    "kind": "raw",
+    "source": {
+      "line": 4,
+      "part": 0
+    },
+    "raw": {
+      "reason": "malformed_json",
+      "text": "{\"type\":\"text\",\"timestamp\":1792915201000,}",
+      "bytes": 42
+    }
+  },
+  {
+    "seq": 5,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0:9fd01d635621f3b0:5:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0",
+    "kind": "raw",
+    "source": {
+      "line": 5,
+      "part": 0,
+      "type": "example_future_event",
+      "runnerTime": "2026-10-25T08:00:01Z"
+    },
+    "raw": {
+      "reason": "unknown_type",
+      "text": "{\"type\":\"example_future_event\",\"timestamp\":1792915201000,\"sessionID\":\"ses_01ExampleSession\",\"part\":{\"id\":\"prt_33\",\"sessionID\":\"ses_01ExampleSession\",\"messageID\":\"msg_01ExampleF\",\"type\":\"example-future-part\"}}",
+      "bytes": 208
+    }
+  },
+  {
+    "seq": 6,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0:9fd01d635621f3b0:6:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0",
+    "kind": "message",
+    "source": {
+      "line": 6,
+      "part": 0,
+      "type": "text",
+      "runnerTime": "2026-10-25T08:00:01.6Z"
+    },
+    "message": {
+      "role": "assistant",
+      "type": "text",
+      "text": "Recovered after the bad lines.",
+      "messageId": "msg_01ExampleF"
+    }
+  },
+  {
+    "seq": 7,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0:9fd01d635621f3b0:7:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0",
+    "kind": "lifecycle",
+    "source": {
+      "line": 7,
+      "part": 0,
+      "type": "step_finish",
+      "runnerTime": "2026-10-25T08:00:01.7Z"
+    },
+    "lifecycle": {
+      "phase": "step_completed",
+      "sessionId": "ses_01ExampleSession",
+      "stopReason": "stop"
+    }
+  },
+  {
+    "seq": 8,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0:9fd01d635621f3b0:7:1",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0",
+    "kind": "usage",
+    "source": {
+      "line": 7,
+      "part": 1,
+      "type": "step_finish",
+      "runnerTime": "2026-10-25T08:00:01.7Z"
+    },
+    "usage": {
+      "scope": "step",
+      "inputTokens": 128,
+      "outputTokens": 7,
+      "cacheReadTokens": 0,
+      "cacheWriteTokens": 0,
+      "reasoningTokens": 0,
+      "totalTokens": 135,
+      "costUSD": "0.002"
+    }
+  }
+]

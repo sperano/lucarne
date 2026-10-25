@@ -161,10 +161,10 @@ func apiRetry(s systemLine) contract.Event {
 	var cut adapter.Truncation
 	info := &contract.ErrorInfo{
 		Message: cut.Text("message", s.Error, contract.MaxTextBytes),
-		Status:  httpStatus(s.ErrorStatus),
+		Status:  adapter.HTTPStatus(s.ErrorStatus),
 	}
 	if s.Attempt != nil && validRetryCount(*s.Attempt) {
-		info.Retry = &contract.Retry{Attempt: *s.Attempt, DelayMs: count(s.RetryDelayMs)}
+		info.Retry = &contract.Retry{Attempt: *s.Attempt, DelayMs: adapter.Count(s.RetryDelayMs)}
 		if s.MaxRetries != nil && validRetryCount(*s.MaxRetries) {
 			info.Retry.Max = s.MaxRetries
 		}
@@ -176,7 +176,7 @@ func apiRetry(s systemLine) contract.Event {
 // before) is the detail, as written.
 func compacted(metadata json.RawMessage) contract.Event {
 	ev := lifecycle(contract.LifecycleCompacted)
-	if detail, ok := compactJSON(metadata); ok {
+	if detail, ok := adapter.CompactJSON(metadata); ok {
 		var cut adapter.Truncation
 		ev.Lifecycle.Detail = cut.Optional("detail", &detail, contract.MaxTextBytes)
 		ev.Truncated = cut.Fields()

@@ -1,0 +1,344 @@
+[
+  {
+    "seq": 1,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0:854bd1743e57b01e:1:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0",
+    "kind": "lifecycle",
+    "source": {
+      "line": 1,
+      "part": 0,
+      "type": "step_start",
+      "runnerTime": "2026-10-25T08:00:00.1Z"
+    },
+    "lifecycle": {
+      "phase": "step_started",
+      "sessionId": "ses_01ExampleSession"
+    }
+  },
+  {
+    "seq": 2,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0:854bd1743e57b01e:2:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0",
+    "kind": "message",
+    "source": {
+      "line": 2,
+      "part": 0,
+      "type": "text",
+      "runnerTime": "2026-10-25T08:00:00.9Z"
+    },
+    "message": {
+      "role": "assistant",
+      "type": "text",
+      "text": "I'll run the tests, read the config and ask a subagent at the same time.",
+      "messageId": "msg_01ExampleG"
+    }
+  },
+  {
+    "seq": 3,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0:854bd1743e57b01e:3:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0",
+    "kind": "tool_call",
+    "source": {
+      "line": 3,
+      "part": 0,
+      "type": "tool_use",
+      "runnerTime": "2026-10-25T08:00:01.4Z"
+    },
+    "toolCall": {
+      "callId": "call_01ExampleRead",
+      "name": "read",
+      "input": {
+        "filePath": "/workspace/repo/config.yaml"
+      },
+      "title": "config.yaml"
+    }
+  },
+  {
+    "seq": 4,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0:854bd1743e57b01e:3:1",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0",
+    "kind": "tool_result",
+    "source": {
+      "line": 3,
+      "part": 1,
+      "type": "tool_use",
+      "runnerTime": "2026-10-25T08:00:01.4Z"
+    },
+    "toolResult": {
+      "callId": "call_01ExampleRead",
+      "status": "ok",
+      "output": "\u003cfile\u003e\n00001| name: widget\n\u003c/file\u003e"
+    }
+  },
+  {
+    "seq": 5,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0:854bd1743e57b01e:4:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0",
+    "kind": "raw",
+    "source": {
+      "line": 4,
+      "part": 0
+    },
+    "raw": {
+      "reason": "text",
+      "text": "Warning: example stderr line written while the run was in progress",
+      "bytes": 66
+    }
+  },
+  {
+    "seq": 6,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0:854bd1743e57b01e:5:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0",
+    "kind": "tool_call",
+    "source": {
+      "line": 5,
+      "part": 0,
+      "type": "tool_use",
+      "runnerTime": "2026-10-25T08:00:04.2Z"
+    },
+    "toolCall": {
+      "callId": "call_01ExampleTests",
+      "name": "bash",
+      "input": {
+        "command": "go test ./...",
+        "description": "Run the tests"
+      },
+      "title": "go test ./..."
+    }
+  },
+  {
+    "seq": 7,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0:854bd1743e57b01e:5:1",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0",
+    "kind": "tool_result",
+    "source": {
+      "line": 5,
+      "part": 1,
+      "type": "tool_use",
+      "runnerTime": "2026-10-25T08:00:04.2Z"
+    },
+    "toolResult": {
+      "callId": "call_01ExampleTests",
+      "status": "ok",
+      "output": "ok  \texample.com/widget\t0.004s\n",
+      "exitCode": 0
+    }
+  },
+  {
+    "seq": 8,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0:854bd1743e57b01e:6:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0",
+    "kind": "tool_call",
+    "source": {
+      "line": 6,
+      "part": 0,
+      "type": "tool_use",
+      "runnerTime": "2026-10-25T08:00:06.1Z"
+    },
+    "toolCall": {
+      "callId": "call_01ExampleTask",
+      "name": "task",
+      "input": {
+        "description": "Find the callers",
+        "prompt": "List the callers of Greeting.",
+        "subagent_type": "general"
+      },
+      "title": "Find the callers"
+    }
+  },
+  {
+    "seq": 9,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0:854bd1743e57b01e:6:1",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0",
+    "kind": "tool_result",
+    "source": {
+      "line": 6,
+      "part": 1,
+      "type": "tool_use",
+      "runnerTime": "2026-10-25T08:00:06.1Z"
+    },
+    "toolResult": {
+      "callId": "call_01ExampleTask",
+      "status": "ok",
+      "output": "task_id: ses_02ExampleChild\n\n\u003ctask_result\u003e\nGreeting is called from main.go only.\n\u003c/task_result\u003e"
+    }
+  },
+  {
+    "seq": 10,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0:854bd1743e57b01e:7:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0",
+    "kind": "lifecycle",
+    "source": {
+      "line": 7,
+      "part": 0,
+      "type": "step_finish",
+      "runnerTime": "2026-10-25T08:00:06.2Z"
+    },
+    "lifecycle": {
+      "phase": "step_completed",
+      "sessionId": "ses_01ExampleSession",
+      "stopReason": "tool-calls"
+    }
+  },
+  {
+    "seq": 11,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0:854bd1743e57b01e:7:1",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0",
+    "kind": "usage",
+    "source": {
+      "line": 7,
+      "part": 1,
+      "type": "step_finish",
+      "runnerTime": "2026-10-25T08:00:06.2Z"
+    },
+    "usage": {
+      "scope": "step",
+      "inputTokens": 4096,
+      "outputTokens": 384,
+      "cacheReadTokens": 16000,
+      "cacheWriteTokens": 0,
+      "reasoningTokens": 0,
+      "totalTokens": 20480,
+      "costUSD": "0.0302"
+    }
+  },
+  {
+    "seq": 12,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0:854bd1743e57b01e:8:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0",
+    "kind": "tool_call",
+    "source": {
+      "line": 8,
+      "part": 0,
+      "type": "tool_use",
+      "runnerTime": "2026-10-25T08:00:09Z"
+    },
+    "toolCall": {
+      "callId": "call_01ExampleRead",
+      "name": "read",
+      "input": {
+        "filePath": "/workspace/repo/config.yaml"
+      },
+      "title": "config.yaml"
+    }
+  },
+  {
+    "seq": 13,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0:854bd1743e57b01e:8:1",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0",
+    "kind": "tool_result",
+    "source": {
+      "line": 8,
+      "part": 1,
+      "type": "tool_use",
+      "runnerTime": "2026-10-25T08:00:09Z"
+    },
+    "toolResult": {
+      "callId": "call_01ExampleRead",
+      "status": "ok",
+      "output": "\u003cfile\u003e\n00001| name: widget\n\u003c/file\u003e"
+    }
+  },
+  {
+    "seq": 14,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0:854bd1743e57b01e:9:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0",
+    "kind": "message",
+    "source": {
+      "line": 9,
+      "part": 0,
+      "type": "text",
+      "runnerTime": "2026-10-25T08:00:09.1Z"
+    },
+    "message": {
+      "role": "user",
+      "type": "text",
+      "text": "Continue if you have next steps, or stop and ask for clarification if you are unsure how to proceed.",
+      "messageId": "msg_01ExampleI"
+    }
+  },
+  {
+    "seq": 15,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0:854bd1743e57b01e:10:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0",
+    "kind": "lifecycle",
+    "source": {
+      "line": 10,
+      "part": 0,
+      "type": "step_start",
+      "runnerTime": "2026-10-25T08:00:09.2Z"
+    },
+    "lifecycle": {
+      "phase": "step_started",
+      "sessionId": "ses_01ExampleSession"
+    }
+  },
+  {
+    "seq": 16,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0:854bd1743e57b01e:11:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0",
+    "kind": "tool_call",
+    "source": {
+      "line": 11,
+      "part": 0,
+      "type": "tool_use",
+      "runnerTime": "2026-10-25T08:00:12Z"
+    },
+    "toolCall": {
+      "callId": "call_01ExampleSlow",
+      "name": "bash",
+      "input": {
+        "command": "go test -run TestSlow ./...",
+        "description": "Run the slow test"
+      }
+    }
+  },
+  {
+    "seq": 17,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0:854bd1743e57b01e:11:1",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0",
+    "kind": "tool_result",
+    "source": {
+      "line": 11,
+      "part": 1,
+      "type": "tool_use",
+      "runnerTime": "2026-10-25T08:00:12Z"
+    },
+    "toolResult": {
+      "callId": "call_01ExampleSlow",
+      "status": "error",
+      "output": "Tool execution aborted"
+    }
+  },
+  {
+    "seq": 18,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0:854bd1743e57b01e:12:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0",
+    "kind": "error",
+    "source": {
+      "line": 12,
+      "part": 0,
+      "type": "error",
+      "runnerTime": "2026-10-25T08:00:12.1Z"
+    },
+    "error": {
+      "message": "The operation was aborted.",
+      "code": "MessageAbortedError"
+    }
+  },
+  {
+    "seq": 19,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0:854bd1743e57b01e:13:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0",
+    "kind": "raw",
+    "source": {
+      "line": 13,
+      "part": 0
+    },
+    "raw": {
+      "reason": "malformed_json",
+      "text": "{\"type\":\"text\",\"timestamp\":1792915212200,\"sessionID\":\"ses_01ExampleSession\",\"part\":{\"id\":\"prt_50\",\"sessionID\":\"ses_01ExampleSession",
+      "bytes": 131
+    }
+  }
+]

@@ -156,7 +156,8 @@ func eventEnumCases(defs map[string]map[string]any) []enumCase {
 			ScopeMessage, ScopeStep, ScopeTurn, ScopeSession})},
 		{"lifecycle phases", property(defs, "Lifecycle", "phase"), toStrings([]LifecyclePhase{
 			LifecycleSetupStarted, LifecycleSetupCompleted, LifecycleSetupFailed,
-			LifecycleSessionStarted, LifecycleTurnStarted, LifecycleTurnCompleted,
+			LifecycleSessionStarted, LifecycleStepStarted, LifecycleStepCompleted,
+			LifecycleTurnStarted, LifecycleTurnCompleted,
 			LifecycleTurnFailed, LifecycleCompacted, LifecycleSessionCompleted,
 			LifecycleLimitHit, LifecycleKelosOutputs})},
 		{"raw reasons", property(defs, "Raw", "reason"), toStrings([]RawReason{

@@ -1,25 +1,13 @@
 package claude
 
 import (
-	"bytes"
-	"encoding/json"
-	"regexp"
-	"strconv"
-
 	"github.com/sperano/lucarne/contract"
+	"github.com/sperano/lucarne/internal/adapter"
 )
 
-// Ranges the contract accepts; a value outside them is dropped, not
-// clamped.
-const (
-	minHTTPStatus = 100
-	maxHTTPStatus = 599
-	// maxRetryCount bounds a retry's attempt and max.
-	maxRetryCount = 999999
-)
-
-// decimalUSD is the schema's DecimalUSD pattern.
-var decimalUSD = regexp.MustCompile(`^(0|[1-9][0-9]{0,15})(\.[0-9]{1,18})?$`)
+// maxRetryCount bounds a retry's attempt and max; a value outside it is
+// dropped, not clamped.
+const maxRetryCount = 999999
 
 // apiUsage is an API usage object, on assistant messages and results.
 type apiUsage struct {
@@ -37,59 +25,13 @@ func (u *apiUsage) usage(scope contract.UsageScope) (contract.Usage, bool) {
 	}
 	usage := contract.Usage{
 		Scope:            scope,
-		InputTokens:      count(u.InputTokens),
-		OutputTokens:     count(u.OutputTokens),
-		CacheReadTokens:  count(u.CacheRead),
-		CacheWriteTokens: count(u.CacheCreation),
+		InputTokens:      adapter.Count(u.InputTokens),
+		OutputTokens:     adapter.Count(u.OutputTokens),
+		CacheReadTokens:  adapter.Count(u.CacheRead),
+		CacheWriteTokens: adapter.Count(u.CacheCreation),
 	}
 	return usage, usage.InputTokens != nil || usage.OutputTokens != nil ||
 		usage.CacheReadTokens != nil || usage.CacheWriteTokens != nil
 }
 
-// count is n when it is a valid counter, nil otherwise.
-func count(n *int64) *int64 {
-	if n == nil || *n < 0 {
-		return nil
-	}
-	return n
-}
-
-func httpStatus(status *int) *int {
-	if status == nil || *status < minHTTPStatus || *status > maxHTTPStatus {
-		return nil
-	}
-	return status
-}
-
 func validRetryCount(n int) bool { return n >= 1 && n <= maxRetryCount }
-
-// costUSD writes a JSON number as a plain decimal string: as written when
-// it already is one, else in the shortest plain form. It is empty when the
-// number is negative or has no such form within the schema's precision.
-func costUSD(n json.Number) string {
-	s := n.String()
-	if s == "" || decimalUSD.MatchString(s) {
-		return s
-	}
-	f, err := n.Float64()
-	if err != nil {
-		return ""
-	}
-	if plain := strconv.FormatFloat(f, 'f', -1, 64); decimalUSD.MatchString(plain) {
-		return plain
-	}
-	return ""
-}
-
-// compactJSON is raw without insignificant space; ok is false when raw is
-// absent or null.
-func compactJSON(raw json.RawMessage) (string, bool) {
-	if len(raw) == 0 || string(raw) == "null" {
-		return "", false
-	}
-	var buf bytes.Buffer
-	if json.Compact(&buf, raw) != nil {
-		return "", false
-	}
-	return buf.String(), true
-}
