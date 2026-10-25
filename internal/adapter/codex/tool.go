@@ -3,6 +3,7 @@ package codex
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"maps"
 	"strings"
 
@@ -102,9 +103,10 @@ func callInput(it item, outcome []string) string {
 	var buf strings.Builder
 	enc := json.NewEncoder(&buf)
 	enc.SetEscapeHTML(false)
-	if enc.Encode(input) != nil {
-		// Unreachable: every value was decoded from valid JSON.
-		return "{}"
+	if err := enc.Encode(input); err != nil {
+		// Unreachable: every value is raw JSON the item's decoding
+		// validated. Fail loudly rather than render a made-up input.
+		panic(fmt.Sprintf("codex: encoding tool input: %v", err))
 	}
 	return strings.TrimSuffix(buf.String(), "\n")
 }

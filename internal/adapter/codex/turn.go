@@ -98,6 +98,8 @@ func announcedRetry(message string) *contract.Retry {
 	if m == nil {
 		return nil
 	}
+	// Atoi cannot fail: reconnecting caps each number at maxRetryCount's
+	// width, far below int's range. Widening the regex breaks this.
 	attempt, _ := strconv.Atoi(m[1])
 	limit, _ := strconv.Atoi(m[2])
 	if !validRetryCount(attempt) {
