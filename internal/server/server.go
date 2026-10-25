@@ -54,7 +54,7 @@ func New(assets fs.FS, logger *slog.Logger) http.Handler {
 	mux.HandleFunc("GET "+contract.APIPrefix+"/runs/", s.notARunPath)
 	mux.HandleFunc(contract.APIPrefix, s.apiNotFound)
 	mux.HandleFunc(contract.APIPrefix+"/", s.apiNotFound)
-	mux.HandleFunc("GET /"+assetsDir+"/{file}", s.asset)
+	mux.HandleFunc("GET /"+assetsDir+"/{file...}", s.asset)
 	mux.HandleFunc("GET /{$}", s.home)
 	mux.HandleFunc("GET /runs/{cluster}/{namespace}/{taskUID}", s.runPage)
 	mux.HandleFunc("GET /runs/", s.notARunLink)
@@ -69,7 +69,7 @@ type server struct {
 
 func (s *server) health(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	_, _ = w.Write([]byte("ok\n"))
+	s.write(w, []byte("ok\n"))
 }
 
 func (s *server) contractInfo(w http.ResponseWriter, _ *http.Request) {
@@ -143,13 +143,13 @@ func (s *server) writeIndex(w http.ResponseWriter, status int) {
 	if s.index == nil {
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		w.WriteHeader(http.StatusServiceUnavailable)
-		_, _ = w.Write([]byte(notBuiltMessage))
+		s.write(w, []byte(notBuiltMessage))
 		return
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Cache-Control", cacheIndex)
 	w.WriteHeader(status)
-	_, _ = w.Write(s.index)
+	s.write(w, s.index)
 }
 
 // validRunKey checks the run key in the path. A canonical key has no
@@ -180,7 +180,13 @@ func (s *server) writeJSON(w http.ResponseWriter, status int, v any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Cache-Control", "no-store")
 	w.WriteHeader(status)
-	if _, err := w.Write(append(body, '\n')); err != nil {
+	s.write(w, append(body, '\n'))
+}
+
+// write sends a response body. A failure means the client went away, so it
+// is logged at debug level only.
+func (s *server) write(w http.ResponseWriter, data []byte) {
+	if _, err := w.Write(data); err != nil {
 		s.logger.Debug("write response", "error", err)
 	}
 }

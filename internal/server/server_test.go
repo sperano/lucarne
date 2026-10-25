@@ -157,12 +157,14 @@ func TestDeepLinksServeTheUI(t *testing.T) {
 
 func TestAssets(t *testing.T) {
 	h := newTestServer(builtAssets())
-	res := get(t, h, "/assets/index-abc.js")
-	if res.StatusCode != http.StatusOK || body(t, res) != testAsset {
-		t.Fatalf("asset status %d", res.StatusCode)
-	}
-	if got := res.Header.Get("Cache-Control"); got != cacheAssets {
-		t.Errorf("Cache-Control %q", got)
+	for _, path := range []string{"/assets/index-abc.js", "/assets/nested/a.js"} {
+		res := get(t, h, path)
+		if res.StatusCode != http.StatusOK || body(t, res) != testAsset {
+			t.Fatalf("GET %s = %d", path, res.StatusCode)
+		}
+		if got := res.Header.Get("Cache-Control"); got != cacheAssets {
+			t.Errorf("GET %s Cache-Control %q", path, got)
+		}
 	}
 	for _, path := range []string{"/assets/missing.js", "/assets/nested", "/.gitkeep", "/index.html", "/assets/../secret.txt", "/elsewhere"} {
 		res := get(t, h, path)
