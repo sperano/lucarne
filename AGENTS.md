@@ -13,9 +13,10 @@ Lucarne observes; it never takes part. It does not start, steer or stop
 agents, and nothing in the agent pipeline waits on it.
 
 Status: bootstrapped. The contract, the fixtures, the server skeleton, the
-UI shell and the Claude Code and Codex adapters exist; the OpenCode
-adapter, the Kubernetes log source, the snapshot/SSE endpoints and the
-conversation view do not yet (the run endpoints answer 501).
+UI shell, the Claude Code and Codex adapters and the Kubernetes log source
+exist; the OpenCode adapter, the snapshot/SSE endpoints (which will wire
+the source into the server) and the conversation view do not yet (the run
+endpoints answer 501).
 
 ## What lives here, and what does not
 
@@ -36,6 +37,7 @@ expect. One executable, no database.
 | `fixtures/` | Sanitized, provenance-labelled runner output per runner and version, with `manifest.json`; see its `README.md`. |
 | `cmd/lucarne/` | The executable. |
 | `internal/adapter/` | Runner-neutral normalization of one attempt's log lines: event IDs and parts, the contract's bounds, raw fallback, the Kelos marker lines. `claude/` is the Claude Code stream-json runner and `codex/` the Codex `exec --json` runner, each with golden tests over its fixtures (`go test ./internal/adapter/<runner>/ -update` rewrites them) and its mapping and capability gaps in `doc.go`. |
+| `internal/kube/` | The Kubernetes source: resolves a run key to a Kelos Task by UID within the configured cluster and namespace allowlist, lists the attempts of its `kelos-agent` container through the Task → Job → pod controller chain (by UID), and reads their logs bounded, re-checking that chain before each stream, following and resuming across breaks. Read-only (get, list, pods/log); its RBAC and limits are in `doc.go`. Tests run against client-go fakes. |
 | `internal/server/` | HTTP: `/healthz`, `/api/v1/...`, the embedded UI and its deep links, security headers. |
 | `internal/privacy/` | The scan that keeps private data out of fixtures and examples. |
 | `web/` | The UI (Vite, Svelte 5, TypeScript). `web/src/lib/contract.ts` mirrors the contract; `web/embed.go` embeds `web/dist`. |
