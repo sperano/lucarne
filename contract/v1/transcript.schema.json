@@ -34,9 +34,9 @@
       "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\\.[a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?\\.(0|[1-9][0-9]{0,9})$"
     },
     "EventID": {
-      "description": "<attemptID>:<origin>:<line>:<part>, or <attemptID>:<origin>:<line>:gap for a gap event. <origin> names the first line of the log read the line ordinals count from.",
+      "description": "<attemptID>:<origin>:<line>:<part>, or <attemptID>:<origin>:<line>:gap.<part> for a gap event. <origin> names the first line of the log read the line ordinals count from.",
       "type": "string",
-      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\\.[a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?\\.(0|[1-9][0-9]{0,9}):[0-9a-f]{16}:[1-9][0-9]{0,15}:((0|[1-9][0-9]{0,5})|gap)$"
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\\.[a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?\\.(0|[1-9][0-9]{0,9}):[0-9a-f]{16}:[1-9][0-9]{0,15}:(gap\\.)?(0|[1-9][0-9]{0,5})$"
     },
     "Epoch": { "type": "string", "pattern": "^[0-9a-z]{1,32}$" },
     "DecimalUSD": {
@@ -442,7 +442,7 @@
         }
       ],
       "if": { "properties": { "kind": { "const": "gap" } } },
-      "then": { "properties": { "id": { "type": "string", "pattern": ":gap$" } } },
+      "then": { "properties": { "id": { "type": "string", "pattern": ":gap\\.[0-9]+$" } } },
       "else": { "properties": { "id": { "type": "string", "pattern": ":[0-9]+$" } } },
       "unevaluatedProperties": false
     },

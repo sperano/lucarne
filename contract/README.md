@@ -47,7 +47,7 @@ property is an error, not something to ignore.
 | Task UID | lowercase UID, `metadata.uid` of the Task | `3f8e2a4c-1b2d-4e5f-8a9b-0c1d2e3f4a5b` |
 | attempt ID | `<podUID>.<container>.<restart>` | `7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0` |
 | log origin | 16 lowercase hex digits: the first 8 bytes of the SHA-256 of the first line of a log read | `635a06eb36cc2997` |
-| event ID | `<attemptID>:<origin>:<line>:<part>`, or `<attemptID>:<origin>:<line>:gap` | `7c9d…1e2f.claude-code.0:635a…2997:42:1` |
+| event ID | `<attemptID>:<origin>:<line>:<part>`, or `<attemptID>:<origin>:<line>:gap.<part>` for a gap | `7c9d…1e2f.claude-code.0:635a…2997:42:1` |
 
 An **attempt** is one container instance: a pod (by UID; a retried Job makes
 a second pod, and Kelos's `status.podName` names only the latest), one of
@@ -70,6 +70,13 @@ fragment. Every number is in canonical decimal (no sign, no leading zero).
   event (same `line`). If the start of a log is no longer available
   (rotation), ordinals count from the first line read and a
   `source_truncated` gap says so.
+- A gap's `line` is the ordinal the next line read gets: `lines` read + 1
+  when the gap is found, whether or not a line follows (none does after
+  `input_limit` or `attempt_expired`). Its `part` numbers the gaps before
+  that line, from 0, apart from the events the line produced: two
+  reconnects before line 120 are `…:120:gap.0` and `…:120:gap.1`, and
+  neither is the line's own `…:120:0`. An attempt with no line read has no
+  origin and so no events; its `coverage` says why.
 - The `origin` names where the ordinals start: the first line read, as the
   log API returned it (timestamp prefix included, line ending excluded),
   hashed by `LogOrigin` in [`identity.go`](identity.go). It changes exactly
@@ -104,7 +111,7 @@ their limit.
 | `error` | `message`, `code?`, `status?` (HTTP), `retry?` (`attempt`, `max?`, `delayMs?`) | an error the runner reported; `retry` only when it announced one |
 | `lifecycle` | `phase`, and the fields that phase's source line had | session, turn and Kelos markers (below) |
 | `raw` | `reason`, `text` (cut to `maxRawBytes`), `bytes` (the line's length) | a line no adapter rendered |
-| `gap` | `reason`, `lines?`, `detail?` | lines missing before `source.line` |
+| `gap` | `reason`, `lines?`, `detail?` | lines missing before `source.line`; `source.part` numbers the gaps before that line |
 
 Lifecycle phases: `setup_started`, `setup_completed`, `setup_failed`
 (`exitCode`) for the Kelos setup markers on stderr; `session_started`,

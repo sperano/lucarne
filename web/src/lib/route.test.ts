@@ -32,8 +32,14 @@ describe('parseRoute', () => {
   });
 
   it('accepts a gap event in the fragment', () => {
+    expect(parseRoute(RUN_PATH, '', `#event=${ATTEMPT}:${ORIGIN}:120:gap.1`)).toMatchObject({
+      event: `${ATTEMPT}:${ORIGIN}:120:gap.1`,
+    });
+  });
+
+  it('rejects a gap event ID without its ordinal', () => {
     expect(parseRoute(RUN_PATH, '', `#event=${ATTEMPT}:${ORIGIN}:120:gap`)).toMatchObject({
-      event: `${ATTEMPT}:${ORIGIN}:120:gap`,
+      page: 'invalid',
     });
   });
 

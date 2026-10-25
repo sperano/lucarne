@@ -23,8 +23,10 @@ var (
 const (
 	attemptSeparator = "."
 	eventSeparator   = ":"
-	gapPart          = "gap"
-	maxRestart       = 9999999999
+	// gapPartPrefix marks a gap event's part, so that a gap and an event
+	// the same line produced never share an ID.
+	gapPartPrefix = "gap."
+	maxRestart    = 9999999999
 	// originBytes is how much of the first line's SHA-256 a log origin keeps:
 	// 64 bits, written as 16 hex digits.
 	originBytes = 8
@@ -128,10 +130,11 @@ func EventID(attemptID, origin string, line int64, part int) string {
 	return eventPrefix(attemptID, origin, line) + strconv.Itoa(part)
 }
 
-// GapEventID is the identifier of a gap found before line in an attempt's log
-// read from origin.
-func GapEventID(attemptID, origin string, line int64) string {
-	return eventPrefix(attemptID, origin, line) + gapPart
+// GapEventID is the identifier of the part-th gap found before line in an
+// attempt's log read from origin. A gap after the last line read is before
+// the next line, lines read + 1.
+func GapEventID(attemptID, origin string, line int64, part int) string {
+	return eventPrefix(attemptID, origin, line) + gapPartPrefix + strconv.Itoa(part)
 }
 
 // eventPrefix is the part of an event ID before the part number.

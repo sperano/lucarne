@@ -101,8 +101,14 @@ func TestIdentifiersMatchSchemaPatterns(t *testing.T) {
 			t.Errorf("%q does not match $defs/%s", value, def)
 		}
 	}
-	if gap := GapEventID(attemptID, origin, 120); !pattern("EventID").MatchString(gap) || !strings.HasSuffix(gap, ":gap") {
-		t.Errorf("gap id %q is not an EventID ending in :gap", gap)
+	first, second := GapEventID(attemptID, origin, 120, 0), GapEventID(attemptID, origin, 120, 1)
+	for _, gap := range []string{first, second} {
+		if !pattern("EventID").MatchString(gap) || !strings.Contains(gap, ":gap.") {
+			t.Errorf("gap id %q is not an EventID with a :gap. part", gap)
+		}
+	}
+	if first == second || first == EventID(attemptID, origin, 120, 0) {
+		t.Errorf("gap ids %q and %q collide with each other or with the line's event", first, second)
 	}
 }
 
