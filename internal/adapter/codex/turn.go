@@ -1,6 +1,7 @@
 package codex
 
 import (
+	"fmt"
 	"regexp"
 	"strconv"
 
@@ -19,8 +20,11 @@ const (
 
 // reconnecting is how Codex words a stream retry it is about to make
 // (codex-rs/core/src/responses_retry.rs): "Reconnecting... n/max", then
-// the cause in parentheses.
-var reconnecting = regexp.MustCompile(`^Reconnecting\.\.\. ([0-9]{1,6})/([0-9]{1,6})(?: |$)`)
+// the cause in parentheses. Each number is at most as wide as
+// maxRetryCount, so a longer one is not a retry the contract accepts.
+var reconnecting = regexp.MustCompile(fmt.Sprintf(
+	`^Reconnecting\.\.\. ([0-9]{1,%[1]d})/([0-9]{1,%[1]d})(?: |$)`,
+	len(strconv.Itoa(maxRetryCount))))
 
 // tokenUsage is turn.completed's usage: the thread's running total
 // (last_total_token_usage), all zeros when Codex received no token count.
@@ -52,8 +56,10 @@ func renderTurn(line threadLine, out *adapter.Emitter) contract.RawReason {
 		if usage, ok := line.Usage.usage(); ok {
 			out.Emit(contract.Event{Kind: contract.KindUsage, Usage: &usage})
 		}
-	default:
+	case typeTurnFailed:
 		out.Emit(turnFailed(line.Error))
+	default:
+		return contract.RawUnsupported
 	}
 	return ""
 }

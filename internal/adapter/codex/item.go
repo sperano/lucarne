@@ -31,7 +31,9 @@ type item struct {
 }
 
 // decodeItem decodes an item line's item. The ID is the first "id" of the
-// object: a web_search item serializes its search's own id after it.
+// object: a web_search item serializes its search's own id after it, and
+// a map keeps the last one, so firstID reads the object a second time on
+// purpose.
 func decodeItem(raw json.RawMessage) (item, bool) {
 	var it item
 	if json.Unmarshal(raw, &it.fields) != nil || it.fields == nil {

@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/sperano/lucarne/contract"
+	"github.com/sperano/lucarne/internal/adapter"
 )
 
 func TestThreadAndTurnLines(t *testing.T) {
@@ -34,6 +35,14 @@ func TestThreadAndTurnLines(t *testing.T) {
 	}
 	if l := events[5].Lifecycle; l.Phase != contract.LifecycleTurnFailed || l.Detail != nil {
 		t.Errorf("turn.failed without error = %+v, want no detail", l)
+	}
+}
+
+func TestRenderTurnUnknownType(t *testing.T) {
+	t.Parallel()
+	var out adapter.Emitter
+	if reason := renderTurn(threadLine{Type: "turn.paused"}, &out); reason != contract.RawUnsupported || out.Len() != 0 {
+		t.Errorf("unknown type gave %q and %d events, want unsupported and none", reason, out.Len())
 	}
 }
 
@@ -73,6 +82,8 @@ func TestErrorRetries(t *testing.T) {
 		{"Reconnecting... 0/5 (example)", 0, nil},
 		{"Reconnecting... waiting for network (example)", 0, nil},
 		{"Reconnecting... 2/5x", 0, nil},
+		{"Reconnecting... 999999/999999 (example)", maxRetryCount, ptr(maxRetryCount)},
+		{"Reconnecting... 1000000/5 (example)", 0, nil},
 		{"unexpected status 401 Unauthorized", 0, nil},
 	}
 	for _, c := range cases {
