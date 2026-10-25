@@ -173,7 +173,7 @@ func apiEnumCases(defs map[string]map[string]any) []enumCase {
 		{"end reasons", property(defs, "End", "reason"), toStrings([]EndReason{
 			EndRunFinished, EndRunDeleted})},
 		{"error codes", asMap(asMap(property(defs, "ErrorResponse", "error")["properties"])["code"]),
-			[]string{ErrorInvalidRunKey, ErrorRunNotFound, ErrorNotImplemented, ErrorInternal, ErrorNotFound, ErrorMethodNotAllowed}},
+			toStrings([]ErrorCode{ErrorInvalidRunKey, ErrorRunNotFound, ErrorNotImplemented, ErrorInternal, ErrorNotFound, ErrorMethodNotAllowed})},
 	}
 }
 

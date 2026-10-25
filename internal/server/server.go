@@ -8,6 +8,7 @@ import (
 	"io/fs"
 	"log/slog"
 	"net/http"
+	"unicode/utf8"
 
 	"github.com/sperano/lucarne/contract"
 )
@@ -175,7 +176,7 @@ func validRunKey(r *http.Request) error {
 	}.Validate()
 }
 
-func (s *server) writeError(w http.ResponseWriter, status int, code, message string) {
+func (s *server) writeError(w http.ResponseWriter, status int, code contract.ErrorCode, message string) {
 	s.writeJSON(w, status, contract.ErrorResponse{Error: contract.ErrorBody{Code: code, Message: truncate(message, contract.MaxLabelBytes)}})
 }
 
@@ -207,13 +208,11 @@ func truncate(s string, limit int) string {
 		return s
 	}
 	cut := limit
-	for cut > 0 && !isRuneStart(s[cut]) {
+	for cut > 0 && !utf8.RuneStart(s[cut]) {
 		cut--
 	}
 	return s[:cut]
 }
-
-func isRuneStart(b byte) bool { return b&0xC0 != 0x80 }
 
 func securityHeaders(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

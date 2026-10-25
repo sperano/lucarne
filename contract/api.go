@@ -71,21 +71,24 @@ const (
 	EndRunDeleted  EndReason = "run_deleted"
 )
 
+// ErrorCode is the machine-readable code of an API error.
+type ErrorCode string
+
 // Error codes of ErrorResponse.
 const (
 	// ErrorInvalidRunKey is a path under /api/v1/runs/ that is not one of the
 	// two run paths, or whose run key has a percent-encoded character.
-	ErrorInvalidRunKey = "invalid_run_key"
+	ErrorInvalidRunKey ErrorCode = "invalid_run_key"
 	// ErrorRunNotFound is a valid run key with no such run, or one that expired.
-	ErrorRunNotFound = "run_not_found"
+	ErrorRunNotFound ErrorCode = "run_not_found"
 	// ErrorNotImplemented is an endpoint that exists but is not served yet.
-	ErrorNotImplemented = "not_implemented"
+	ErrorNotImplemented ErrorCode = "not_implemented"
 	// ErrorInternal is a server-side failure.
-	ErrorInternal = "internal"
+	ErrorInternal ErrorCode = "internal"
 	// ErrorNotFound is an API path that names no endpoint.
-	ErrorNotFound = "not_found"
+	ErrorNotFound ErrorCode = "not_found"
 	// ErrorMethodNotAllowed is a request with another method than GET or HEAD.
-	ErrorMethodNotAllowed = "method_not_allowed"
+	ErrorMethodNotAllowed ErrorCode = "method_not_allowed"
 )
 
 // ErrorResponse is the body of every API error.
@@ -95,8 +98,8 @@ type ErrorResponse struct {
 
 // ErrorBody is an API error's code and human-readable message.
 type ErrorBody struct {
-	Code    string `json:"code"`
-	Message string `json:"message"`
+	Code    ErrorCode `json:"code"`
+	Message string    `json:"message"`
 }
 
 // ContractInfo is GET /api/v1/contract.

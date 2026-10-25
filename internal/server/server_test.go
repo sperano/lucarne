@@ -79,7 +79,7 @@ type apiErrorCase struct {
 	method string
 	path   string
 	status int
-	code   string
+	code   contract.ErrorCode
 }
 
 func TestRunEndpointsValidateTheKey(t *testing.T) {
