@@ -1,5 +1,6 @@
 <script lang="ts">
   import { parseRoute } from './lib/route';
+  import { unreachable } from './lib/unreachable';
 
   const route = parseRoute(window.location.pathname, window.location.search, window.location.hash);
 </script>
@@ -26,8 +27,10 @@
       <dd><code>{route.key.taskUID}</code></dd>
     </dl>
     <p>The transcript view is not built yet.</p>
-  {:else}
+  {:else if route.page === 'invalid'}
     <p role="alert">This is not a valid run link ({route.reason}).</p>
+  {:else}
+    {unreachable(route)}
   {/if}
 </main>
 

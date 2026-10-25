@@ -5,7 +5,7 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "lib": ["ES2023", "DOM", "DOM.Iterable"],
-    "types": ["svelte", "vite/client", "node"],
+    "types": ["svelte", "vite/client"],
     "strict": true,
     "noEmit": true,
     "resolveJsonModule": true,
@@ -14,11 +14,6 @@
     "noUnusedParameters": true,
     "exactOptionalPropertyTypes": true
   },
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.svelte",
-    "vite.config.ts",
-    "eslint.config.js",
-    "svelte.config.js"
-  ]
+  "include": ["src/**/*.ts", "src/**/*.svelte"],
+  "exclude": ["src/**/*.test.ts"]
 }
