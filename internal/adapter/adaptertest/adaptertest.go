@@ -123,18 +123,37 @@ func FixtureLines(t testing.TB, file string) []string {
 	return strings.Split(strings.TrimSuffix(string(data), "\n"), "\n")
 }
 
-// MatchGolden normalizes every fixture of runner with a fresh adapter from
-// newRunner and compares the events with testdata/<scenario>.golden.json,
-// rewriting it first when update is set. Every line that is not blank must
+// A Repeat reports whether a line repeats what an earlier line showed, so
+// that it may produce no event. It is called on every line, in order.
+type Repeat func(line string) bool
+
+// Golden describes the golden tests over a runner's fixtures.
+type Golden struct {
+	Attempt string
+	Runner  string
+	// New returns a fresh adapter for each fixture.
+	New func() adapter.Runner
+	// NewRepeat, when set, returns a fresh Repeat for each fixture.
+	NewRepeat func() Repeat
+	// Update rewrites the golden files first.
+	Update bool
+}
+
+// Match normalizes every fixture of g's runner and compares the events
+// with testdata/<scenario>.golden.json. Every line that is not blank must
 // produce an event, and the output must hold no private data.
-func MatchGolden(t *testing.T, attempt, runner string, newRunner func() adapter.Runner, update bool) {
+func (g Golden) Match(t *testing.T) {
 	t.Helper()
-	for _, f := range RunnerFixtures(t, runner) {
+	for _, f := range RunnerFixtures(t, g.Runner) {
 		t.Run(f.File, func(t *testing.T) {
 			t.Parallel()
 			lines := FixtureLines(t, f.File)
-			events := Normalize(t, attempt, newRunner(), lines...)
-			CheckEveryLineShown(t, lines, events)
+			events := Normalize(t, g.Attempt, g.New(), lines...)
+			var repeat Repeat
+			if g.NewRepeat != nil {
+				repeat = g.NewRepeat()
+			}
+			CheckEveryLineShown(t, lines, events, repeat)
 			got, err := json.MarshalIndent(events, "", "  ")
 			if err != nil {
 				t.Fatal(err)
@@ -143,9 +162,15 @@ func MatchGolden(t *testing.T, attempt, runner string, newRunner func() adapter.
 			for _, finding := range privacy.Scan(string(got)) {
 				t.Errorf("golden output: %v", finding)
 			}
-			compareGolden(t, strings.TrimSuffix(path.Base(f.File), ".log"), got, update)
+			compareGolden(t, strings.TrimSuffix(path.Base(f.File), ".log"), got, g.Update)
 		})
 	}
+}
+
+// MatchGolden runs the golden tests of a runner that never repeats a line.
+func MatchGolden(t *testing.T, attempt, runner string, newRunner func() adapter.Runner, update bool) {
+	t.Helper()
+	Golden{Attempt: attempt, Runner: runner, New: newRunner, Update: update}.Match(t)
 }
 
 func compareGolden(t *testing.T, scenario string, got []byte, update bool) {
@@ -170,8 +195,8 @@ var outputsLine = regexp.MustCompile(`^([a-z][a-z0-9-]*:( .*)?|---KELOS_OUTPUTS_
 
 // CheckEveryLineShown fails when a line that is not blank produced no
 // event, unless it belongs to an outputs block shown as its start line's
-// event.
-func CheckEveryLineShown(t testing.TB, lines []string, events []contract.Event) {
+// event, or repeat, when not nil, reports it as a repeat.
+func CheckEveryLineShown(t testing.TB, lines []string, events []contract.Event, repeat Repeat) {
 	t.Helper()
 	shown := map[int64]contract.Event{}
 	for _, ev := range events {
@@ -180,12 +205,14 @@ func CheckEveryLineShown(t testing.TB, lines []string, events []contract.Event) 
 	inBlock := false
 	for i, line := range lines {
 		number := int64(i + 1)
+		repeated := repeat != nil && repeat(line)
 		ev, ok := shown[number]
 		switch {
 		case ok:
 			inBlock = ev.Kind == contract.KindLifecycle && ev.Lifecycle.Phase == contract.LifecycleKelosOutputs
 		case line == "":
 		case inBlock && outputsLine.MatchString(line):
+		case repeated:
 		default:
 			t.Errorf("line %d produced no event: %q", number, line)
 		}
