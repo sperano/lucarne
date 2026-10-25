@@ -25,6 +25,7 @@ func builtAssets() fstest.MapFS {
 	return fstest.MapFS{
 		"index.html":           {Data: []byte(testIndex)},
 		"assets/index-abc.js":  {Data: []byte(testAsset)},
+		"assets/nested/a.js":   {Data: []byte(testAsset)},
 		".gitkeep":             {Data: nil},
 		"assets/../secret.txt": {Data: []byte("never served")},
 	}
@@ -124,9 +125,13 @@ func TestAssets(t *testing.T) {
 	if got := res.Header.Get("Cache-Control"); got != cacheAssets {
 		t.Errorf("Cache-Control %q", got)
 	}
-	for _, path := range []string{"/assets/missing.js", "/.gitkeep", "/index.html", "/assets/../secret.txt", "/elsewhere"} {
-		if res := get(t, h, path); res.StatusCode == http.StatusOK {
+	for _, path := range []string{"/assets/missing.js", "/assets/nested", "/.gitkeep", "/index.html", "/assets/../secret.txt", "/elsewhere"} {
+		res := get(t, h, path)
+		if res.StatusCode == http.StatusOK {
 			t.Errorf("GET %s = 200, want an error", path)
+		}
+		if got := res.Header.Get("Cache-Control"); got == cacheAssets {
+			t.Errorf("GET %s cached as an asset", path)
 		}
 	}
 }

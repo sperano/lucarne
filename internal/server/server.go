@@ -79,7 +79,9 @@ func (s *server) runNotImplemented(w http.ResponseWriter, r *http.Request) {
 
 func (s *server) asset(w http.ResponseWriter, r *http.Request) {
 	name := assetsDir + "/" + r.PathValue("file")
-	if _, err := fs.Stat(s.assets, name); err != nil {
+	// Checked before setting the immutable Cache-Control header, so that a
+	// missing asset's 404 is not cached for a year.
+	if info, err := fs.Stat(s.assets, name); err != nil || info.IsDir() {
 		http.NotFound(w, r)
 		return
 	}

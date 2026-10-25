@@ -3,11 +3,14 @@ package contract
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
 	"reflect"
 	"slices"
 	"testing"
+
+	"github.com/santhosh-tekuri/jsonschema/v6"
 
 	"github.com/sperano/lucarne/internal/privacy"
 )
@@ -61,8 +64,10 @@ func TestValidExamplesValidate(t *testing.T) {
 func TestInvalidExamplesAreRejected(t *testing.T) {
 	for _, ex := range loadExamples(t, invalidDir) {
 		t.Run(ex.path, func(t *testing.T) {
-			if err := Validate(ex.def, ex.data); err == nil {
-				t.Error("validated, want a schema error")
+			err := Validate(ex.def, ex.data)
+			var verr *jsonschema.ValidationError
+			if !errors.As(err, &verr) {
+				t.Errorf("got %v, want a wrapped *jsonschema.ValidationError", err)
 			}
 		})
 	}

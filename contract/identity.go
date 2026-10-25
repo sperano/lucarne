@@ -95,7 +95,7 @@ func ParseAttemptID(id string) (AttemptKey, error) {
 	if len(parts) != 3 {
 		return AttemptKey{}, fmt.Errorf("%w: attempt %q has %d parts, want 3", ErrInvalidKey, id, len(parts))
 	}
-	restart, err := parseCanonicalUint(parts[2])
+	restart, err := parseCanonicalNonNegative(parts[2])
 	if err != nil {
 		return AttemptKey{}, fmt.Errorf("%w: attempt %q restart: %v", ErrInvalidKey, id, err)
 	}
@@ -116,9 +116,9 @@ func GapEventID(attemptID string, line int64) string {
 	return attemptID + eventSeparator + strconv.FormatInt(line, 10) + eventSeparator + gapPart
 }
 
-// parseCanonicalUint accepts only the decimal form FormatInt produces, so
+// parseCanonicalNonNegative accepts only the decimal form FormatInt produces, so
 // an identifier has exactly one spelling.
-func parseCanonicalUint(s string) (int64, error) {
+func parseCanonicalNonNegative(s string) (int64, error) {
 	n, err := strconv.ParseInt(s, 10, 64)
 	if err != nil || n < 0 || strconv.FormatInt(n, 10) != s {
 		return 0, fmt.Errorf("%q is not a canonical non-negative integer", s)

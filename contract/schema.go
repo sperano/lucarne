@@ -61,8 +61,7 @@ func Validate(def string, document []byte) error {
 		return fmt.Errorf("decode %s: %w", def, err)
 	}
 	if err := schema.Validate(value); err != nil {
-		// %#v prints the library's detail: each failing keyword and path.
-		return fmt.Errorf("%#v", err)
+		return fmt.Errorf("validate %s: %w", def, err)
 	}
 	return nil
 }
