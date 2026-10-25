@@ -1,0 +1,78 @@
+# AGENTS.md
+
+Instructions for anyone, human or agent, changing this repository.
+
+## What Lucarne is
+
+Lucarne is a read-only viewer for the transcripts of Kelos coding agents: it
+reads a run's pod logs (Claude stream-json, Codex `exec --json`, OpenCode
+`run --format json`), normalizes them into one event stream and renders
+them live in the browser, first as a conversation, later as an inspector.
+
+Lucarne observes; it never takes part. It does not start, steer or stop
+agents, and nothing in the agent pipeline waits on it.
+
+Status: nothing is implemented yet. The repository holds only this file, the
+README and the LICENSE.
+
+## What lives here, and what does not
+
+| Repository | Holds |
+| --- | --- |
+| `sperano/lucarne` (here) | The transcript/API contract, the runner adapters, the log source, the server, the frontend, tests, fixtures, CI and the container build. |
+| `sperano/hollingsworth` | Everything that deploys or wires Lucarne into the cluster: Helm chart and values, ApplicationSet entry, RBAC, Gateway and Authentik, the image pin, Gordon's announcement links, and the Kelos onboarding of this repository itself (`helm/kelos/values-hollingsworth.yaml`, including `vikunjaSpawners.prReadiness.ciChecks`). |
+
+The planned layout, Go at the repository root with the Svelte/TypeScript
+frontend in `web/`, matches the agent stacks this repository is onboarded
+with (`go-service`, then `web`). Whoever bootstraps the code replaces this
+paragraph with the real layout table and gates.
+
+## Tasks that target another repository
+
+A Kelos agent working on a task from the Lucarne project gets a clone of this
+repository and nothing else: the spawner routes by project, never by what the
+task says. So:
+
+- Commit only Lucarne's own code and documentation here. Never copy Helm,
+  OpenTofu, RBAC or Kelos configuration into this repository to "stage" it.
+- A task whose work is in `sperano/hollingsworth` belongs in the
+  Hollingsworth project, where its agent gets that checkout. If one reaches
+  you here, change nothing, reply on the task that it has to move, and stop.
+- When a Lucarne change needs a Hollingsworth change too (a new CI check
+  name for `prReadiness.ciChecks`, a new image, a new configuration value),
+  finish the Lucarne part and name the Hollingsworth change in the PR body
+  under what was left out; the owner turns it into a Hollingsworth task.
+
+## Pull requests and reviews
+
+- Agent branches are `kelos/vikunja-<task id>`. Open the PR as soon as the
+  gates pass; do not review your own diff.
+- Every PR is reviewed by `pr-challenger`; a PR that changes Go files
+  (`*.go`, `go.mod`, `go.sum`) also gets `idiomatic-go`, and one that changes
+  TypeScript, JavaScript, Svelte, `package.json`, `package-lock.json` or
+  `tsconfig*.json` gets `idiomatic-typescript`. Each posts one PR review and
+  a `review/<reviewer>` check.
+- `main` requires `review/pr-challenger`. A blocking verdict, and a
+  suggestions verdict on a PR labelled `kelos:fix-suggestions`, starts a
+  follow-up on the PR branch, for a capped number of rounds.
+- The owner merges. Merging closes the Vikunja task.
+
+## Rules
+
+- **The repository is public.** Fixtures, examples, tests, comments and docs
+  use fabricated or sanitized data only: no private transcripts, prompts,
+  tokens, real task titles, Vikunja ids or internal hostnames
+  (`*.example.com` instead).
+- **Sources are read-only.** No code writes to Kubernetes, Vikunja or
+  GitHub, and credentials are requested with read scopes only. Cluster
+  credentials never reach the browser.
+- **A run is identified by cluster + namespace + Task UID**, an attempt by
+  pod UID, container and restart: never by Task name, which a retry or a
+  later Task reuses.
+- **Render only what the source emitted.** No invented prompts, reasoning,
+  timing, costs or outcomes; missing, truncated and expired data is shown as
+  such.
+- Named constants, not magic numbers.
+- Files ≤ ~500 lines, functions ≤ ~50; compose small functions.
+- Tests live in sibling files: `foo.go` → `foo_test.go`, `foo.ts` →
+  `foo.test.ts`, a component `Foo.svelte` → `Foo.svelte.test.ts`.
