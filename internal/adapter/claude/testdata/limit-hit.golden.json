@@ -1,0 +1,175 @@
+[
+  {
+    "seq": 1,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0:36d596781bc86f41:1:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0",
+    "kind": "lifecycle",
+    "source": {
+      "line": 1,
+      "part": 0,
+      "type": "system"
+    },
+    "lifecycle": {
+      "phase": "session_started",
+      "sessionId": "0b1c2d3e-4f50-4617-8293-a4b5c6d7e8f9",
+      "model": "claude-opus-5-5",
+      "runnerVersion": "2.1.296"
+    }
+  },
+  {
+    "seq": 2,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0:36d596781bc86f41:2:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0",
+    "kind": "raw",
+    "source": {
+      "line": 2,
+      "part": 0,
+      "type": "rate_limit_event"
+    },
+    "raw": {
+      "reason": "unsupported",
+      "text": "{\"type\":\"rate_limit_event\",\"rate_limit_info\":{\"status\":\"rejected\",\"unifiedRateLimitFallbackAvailable\":false,\"resetsAt\":1792936800,\"rateLimitType\":\"five_hour\"},\"uuid\":\"00000000-0000-4000-8000-00000000001c\",\"session_id\":\"0b1c2d3e-4f50-4617-8293-a4b5c6d7e8f9\"}",
+      "bytes": 257
+    }
+  },
+  {
+    "seq": 3,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0:36d596781bc86f41:3:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0",
+    "kind": "error",
+    "source": {
+      "line": 3,
+      "part": 0,
+      "type": "assistant"
+    },
+    "error": {
+      "message": "Usage limit reached.",
+      "code": "rate_limit"
+    }
+  },
+  {
+    "seq": 4,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0:36d596781bc86f41:3:1",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0",
+    "kind": "usage",
+    "source": {
+      "line": 3,
+      "part": 1,
+      "type": "assistant"
+    },
+    "usage": {
+      "scope": "message",
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "cacheReadTokens": 0,
+      "cacheWriteTokens": 0
+    }
+  },
+  {
+    "seq": 5,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0:36d596781bc86f41:4:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0",
+    "kind": "lifecycle",
+    "source": {
+      "line": 4,
+      "part": 0,
+      "type": "result"
+    },
+    "lifecycle": {
+      "phase": "session_completed",
+      "subtype": "success",
+      "isError": true,
+      "stopReason": "stop_sequence"
+    }
+  },
+  {
+    "seq": 6,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0:36d596781bc86f41:4:1",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0",
+    "kind": "usage",
+    "source": {
+      "line": 4,
+      "part": 1,
+      "type": "result"
+    },
+    "usage": {
+      "scope": "session",
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "cacheReadTokens": 0,
+      "cacheWriteTokens": 0,
+      "costUSD": "0",
+      "durationMs": 48210,
+      "apiDurationMs": 39876,
+      "turns": 1
+    }
+  },
+  {
+    "seq": 7,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0:36d596781bc86f41:4:2",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0",
+    "kind": "error",
+    "source": {
+      "line": 4,
+      "part": 2,
+      "type": "result"
+    },
+    "error": {
+      "message": "Usage limit reached.",
+      "status": 429
+    }
+  },
+  {
+    "seq": 8,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0:36d596781bc86f41:5:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0",
+    "kind": "lifecycle",
+    "source": {
+      "line": 5,
+      "part": 0
+    },
+    "lifecycle": {
+      "phase": "kelos_outputs",
+      "outputs": [
+        {
+          "key": "branch",
+          "value": "agent/example-42"
+        },
+        {
+          "key": "pr",
+          "value": "https://github.com/example/widget/pull/7"
+        },
+        {
+          "key": "commit",
+          "value": "9f2c4e1a7b3d5f60812e4c9a0b1d2e3f4a5b6c7d"
+        },
+        {
+          "key": "base-branch",
+          "value": "main"
+        },
+        {
+          "key": "limit-resets-at",
+          "value": "1792936800"
+        },
+        {
+          "key": "limit-type",
+          "value": "five_hour"
+        }
+      ]
+    }
+  },
+  {
+    "seq": 9,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0:36d596781bc86f41:14:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0",
+    "kind": "lifecycle",
+    "source": {
+      "line": 14,
+      "part": 0
+    },
+    "lifecycle": {
+      "phase": "limit_hit",
+      "detail": "{\"status\": \"rejected\", \"unifiedRateLimitFallbackAvailable\": false, \"resetsAt\": 1792936800, \"rateLimitType\": \"five_hour\"}"
+    }
+  }
+]

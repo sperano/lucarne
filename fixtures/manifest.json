@@ -100,6 +100,15 @@
       "notes": "A stderr warning, an assistant line cut in half, invalid JSON, an unknown type, an unknown system subtype, an unknown content block and a compact_boundary."
     },
     {
+      "file": "claude-code/2.1.296/interleaved.log",
+      "runner": "claude-code",
+      "version": "2.1.296",
+      "provenance": "synthetic",
+      "scenarios": ["session_start", "assistant_text", "parallel_tools", "subagent", "tool_success", "tool_failure", "partial_message", "duplicate_line", "usage", "cost"],
+      "lines": { "blank": 0, "json": 15, "text": 0 },
+      "notes": "Two tool calls of one message whose results come back interleaved with a Task subagent's lines (parent_tool_use_id), a stream_event partial message, a Bash call interrupted (its error text is illustrative), and the same assistant line printed twice. Whether Claude Code interleaves subagent and main-agent lines this way is unverified."
+    },
+    {
       "file": "codex/0.162.1/session-basic.log",
       "runner": "codex",
       "version": "0.162.1",

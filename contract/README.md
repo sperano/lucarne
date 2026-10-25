@@ -110,7 +110,7 @@ their limit.
 | `usage` | `scope` (`message`, `step`, `turn`, `session`) and only the counters reported: tokens, `costUSD` (decimal string), `durationMs`, `apiDurationMs`, `turns` | a runner's usage report; `scope` says what it covers as the runner defines it |
 | `error` | `message`, `code?`, `status?` (HTTP), `retry?` (`attempt`, `max?`, `delayMs?`) | an error the runner reported; `retry` only when it announced one |
 | `lifecycle` | `phase`, and the fields that phase's source line had | session, turn and Kelos markers (below) |
-| `raw` | `reason`, `text` (cut to `maxRawBytes`), `bytes` (the line's length) | a line no adapter rendered |
+| `raw` | `reason`, `text` (cut to `maxRawBytes`), `bytes` (the length of what `text` holds before the cut) | a line, or a part of one such as a content block, no adapter rendered |
 | `gap` | `reason`, `lines?`, `detail?` | lines missing before `source.line`; `source.part` numbers the gaps before that line |
 
 Lifecycle phases: `setup_started`, `setup_completed`, `setup_failed`
