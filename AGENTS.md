@@ -12,8 +12,8 @@ them live in the browser, first as a conversation, later as an inspector.
 Lucarne observes; it never takes part. It does not start, steer or stop
 agents, and nothing in the agent pipeline waits on it.
 
-Status: nothing is implemented yet. The repository holds only this file and
-the README.
+Status: nothing is implemented yet. The repository holds only this file, the
+README and the LICENSE.
 
 ## What lives here, and what does not
 
