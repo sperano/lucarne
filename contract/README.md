@@ -46,7 +46,8 @@ property is an error, not something to ignore.
 | namespace | DNS label | `agents` |
 | Task UID | lowercase UID, `metadata.uid` of the Task | `3f8e2a4c-1b2d-4e5f-8a9b-0c1d2e3f4a5b` |
 | attempt ID | `<podUID>.<container>.<restart>` | `7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0` |
-| event ID | `<attemptID>:<line>:<part>`, or `<attemptID>:<line>:gap` | `7c9d…1e2f.claude-code.0:42:1` |
+| log origin | 16 lowercase hex digits: the first 8 bytes of the SHA-256 of the first line of a log read | `635a06eb36cc2997` |
+| event ID | `<attemptID>:<origin>:<line>:<part>`, or `<attemptID>:<origin>:<line>:gap` | `7c9d…1e2f.claude-code.0:635a…2997:42:1` |
 
 An **attempt** is one container instance: a pod (by UID; a retried Job makes
 a second pod, and Kelos's `status.podName` names only the latest), one of
@@ -69,6 +70,12 @@ fragment. Every number is in canonical decimal (no sign, no leading zero).
   event (same `line`). If the start of a log is no longer available
   (rotation), ordinals count from the first line read and a
   `source_truncated` gap says so.
+- The `origin` names where the ordinals start: the first line read, as the
+  log API returned it (timestamp prefix included, line ending excluded),
+  hashed by `LogOrigin` in [`identity.go`](identity.go). It changes exactly
+  when the numbering does: a re-read after rotation numbers another first
+  line 1 and gets another origin, so an ID from before it cannot name a
+  different line.
 - `seq` orders everything a run's stream delivers: events, attempt updates
   and run updates share one counter, which starts at 1 and increases by
   exactly 1 within an **epoch**. Snapshot events therefore have increasing
@@ -180,8 +187,9 @@ entries and `truncated` at most 8 names.
 - `view` is `conversation` (the default) or `inspector`; another value is
   invalid. Other query parameters are ignored.
 - `#event=` scrolls to an event. An event ID is tied to how a log was read,
-  so a stale one (rotation, another epoch) may no longer exist: the UI says
-  so rather than guessing a neighbour.
+  so a stale one may no longer exist: its origin is no longer the attempt's
+  (the log was re-read after rotation), or the run dropped the event
+  (`maxEventsPerRun`). The UI says so rather than guessing a neighbour.
 - Links carry no credentials and nothing secret; access control is the
   deployment's (an authenticating proxy), not the link's.
 

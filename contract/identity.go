@@ -1,6 +1,8 @@
 package contract
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"regexp"
@@ -21,6 +23,9 @@ const (
 	eventSeparator   = ":"
 	gapPart          = "gap"
 	maxRestart       = 9999999999
+	// originBytes is how much of the first line's SHA-256 a log origin keeps:
+	// 64 bits, written as 16 hex digits.
+	originBytes = 8
 )
 
 // ErrInvalidKey is wrapped by every identity parse or validation error.
@@ -106,14 +111,30 @@ func ParseAttemptID(id string) (AttemptKey, error) {
 	return key, nil
 }
 
-// EventID is the identifier of the event at part of line in an attempt.
-func EventID(attemptID string, line int64, part int) string {
-	return attemptID + eventSeparator + strconv.FormatInt(line, 10) + eventSeparator + strconv.Itoa(part)
+// LogOrigin names the start of one read of an attempt's log: the first line
+// read, as the log API returned it (timestamp prefix included, line ending
+// excluded). Line ordinals count from that line, so the origin changes
+// whenever they do, as when rotation removed the log's start before a re-read.
+func LogOrigin(firstLine []byte) string {
+	sum := sha256.Sum256(firstLine)
+	return hex.EncodeToString(sum[:originBytes])
 }
 
-// GapEventID is the identifier of a gap found before line in an attempt.
-func GapEventID(attemptID string, line int64) string {
-	return attemptID + eventSeparator + strconv.FormatInt(line, 10) + eventSeparator + gapPart
+// EventID is the identifier of the event at part of line in an attempt's log
+// read from origin.
+func EventID(attemptID, origin string, line int64, part int) string {
+	return eventPrefix(attemptID, origin, line) + strconv.Itoa(part)
+}
+
+// GapEventID is the identifier of a gap found before line in an attempt's log
+// read from origin.
+func GapEventID(attemptID, origin string, line int64) string {
+	return eventPrefix(attemptID, origin, line) + gapPart
+}
+
+// eventPrefix is the part of an event ID before the part number.
+func eventPrefix(attemptID, origin string, line int64) string {
+	return attemptID + eventSeparator + origin + eventSeparator + strconv.FormatInt(line, 10) + eventSeparator
 }
 
 // parseCanonicalNonNegative accepts only the decimal form FormatInt produces, so

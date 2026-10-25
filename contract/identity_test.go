@@ -13,6 +13,13 @@ var exampleRun = RunKey{Cluster: "example", Namespace: "agents", TaskUID: "3f8e2
 
 var exampleAttempt = AttemptKey{PodUID: "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f", Container: "claude-code", Restart: 2}
 
+// exampleFirstLine is a first log line as the log API returns it, and
+// exampleOrigin its LogOrigin.
+const (
+	exampleFirstLine = "2026-10-25T09:00:00.000000000Z ---KELOS_SETUP_START---"
+	exampleOrigin    = "635a06eb36cc2997"
+)
+
 func TestRunKeyValidate(t *testing.T) {
 	if err := exampleRun.Validate(); err != nil {
 		t.Fatalf("valid key rejected: %v", err)
@@ -77,9 +84,10 @@ func TestIdentifiersMatchSchemaPatterns(t *testing.T) {
 		return regexp.MustCompile(defs[def]["pattern"].(string))
 	}
 	attemptID := exampleAttempt.ID()
+	origin := exampleOrigin
 	checks := map[string]string{
 		"AttemptID": attemptID,
-		"EventID":   EventID(attemptID, 42, 1),
+		"EventID":   EventID(attemptID, origin, 42, 1),
 		"UID":       exampleRun.TaskUID,
 		"DNSLabel":  exampleRun.Namespace,
 	}
@@ -88,8 +96,24 @@ func TestIdentifiersMatchSchemaPatterns(t *testing.T) {
 			t.Errorf("%q does not match $defs/%s", value, def)
 		}
 	}
-	if gap := GapEventID(attemptID, 120); !pattern("EventID").MatchString(gap) || !strings.HasSuffix(gap, ":gap") {
+	if gap := GapEventID(attemptID, origin, 120); !pattern("EventID").MatchString(gap) || !strings.HasSuffix(gap, ":gap") {
 		t.Errorf("gap id %q is not an EventID ending in :gap", gap)
+	}
+}
+
+func TestLogOriginNamesTheFirstLine(t *testing.T) {
+	if got := LogOrigin([]byte(exampleFirstLine)); got != exampleOrigin {
+		t.Errorf("LogOrigin = %q, want %q", got, exampleOrigin)
+	}
+	// After rotation the first line read is another line, often only a
+	// timestamp apart, and its events must get other IDs.
+	rotated := strings.Replace(exampleFirstLine, "000000000Z", "000000001Z", 1)
+	if LogOrigin([]byte(rotated)) == exampleOrigin {
+		t.Errorf("LogOrigin(%q) = the origin of %q", rotated, exampleFirstLine)
+	}
+	attemptID := exampleAttempt.ID()
+	if a, b := EventID(attemptID, exampleOrigin, 1, 0), EventID(attemptID, LogOrigin([]byte(rotated)), 1, 0); a == b {
+		t.Errorf("line 1 of two origins has one event ID %q", a)
 	}
 }
 

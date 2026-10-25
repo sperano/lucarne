@@ -4,6 +4,7 @@ import { parseRoute, runLink } from './route';
 const UID = '3f8e2a4c-1b2d-4e5f-8a9b-0c1d2e3f4a5b';
 const RUN_PATH = `/runs/example/agents/${UID}`;
 const ATTEMPT = '7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0';
+const ORIGIN = '635a06eb36cc2997';
 const KEY = { cluster: 'example', namespace: 'agents', taskUID: UID };
 
 describe('parseRoute', () => {
@@ -19,20 +20,20 @@ describe('parseRoute', () => {
     const route = parseRoute(
       RUN_PATH,
       `?attempt=${ATTEMPT}&view=inspector&utm=ignored`,
-      `#event=${ATTEMPT}:42:1`,
+      `#event=${ATTEMPT}:${ORIGIN}:42:1`,
     );
     expect(route).toEqual({
       page: 'run',
       key: KEY,
       view: 'inspector',
       attempt: ATTEMPT,
-      event: `${ATTEMPT}:42:1`,
+      event: `${ATTEMPT}:${ORIGIN}:42:1`,
     });
   });
 
   it('accepts a gap event in the fragment', () => {
-    expect(parseRoute(RUN_PATH, '', `#event=${ATTEMPT}:120:gap`)).toMatchObject({
-      event: `${ATTEMPT}:120:gap`,
+    expect(parseRoute(RUN_PATH, '', `#event=${ATTEMPT}:${ORIGIN}:120:gap`)).toMatchObject({
+      event: `${ATTEMPT}:${ORIGIN}:120:gap`,
     });
   });
 
@@ -51,6 +52,10 @@ describe('parseRoute', () => {
 
   it('rejects a malformed event fragment', () => {
     expect(parseRoute(RUN_PATH, '', '#event=42')).toMatchObject({ page: 'invalid' });
+  });
+
+  it('rejects an event ID without a log origin', () => {
+    expect(parseRoute(RUN_PATH, '', `#event=${ATTEMPT}:42:1`)).toMatchObject({ page: 'invalid' });
   });
 
   it('ignores fragments that are not event links', () => {
