@@ -4,6 +4,7 @@ package server
 
 import (
 	"encoding/json"
+	"errors"
 	"io/fs"
 	"log/slog"
 	"net/http"
@@ -27,7 +28,14 @@ const (
 		"form-action 'none'; frame-ancestors 'none'"
 
 	notBuiltMessage = "frontend not built: run `npm run build` in web/\n"
+
+	notARunPathMessage = "not a run path: want runs/{cluster}/{namespace}/{taskUID}, optionally followed by /events"
+
+	// allowedMethods is the Allow header of a 405: every endpoint is GET.
+	allowedMethods = "GET, HEAD"
 )
+
+var errEncodedPath = errors.New("run key is percent-encoded: its parts must be in canonical form")
 
 // New returns the handler serving the API and the frontend in assets, the
 // contents of web/dist.
@@ -43,6 +51,9 @@ func New(assets fs.FS, logger *slog.Logger) http.Handler {
 	mux.HandleFunc("GET "+contract.ContractPath, s.contractInfo)
 	mux.HandleFunc("GET "+contract.APIPrefix+"/runs/{cluster}/{namespace}/{taskUID}", s.runNotImplemented)
 	mux.HandleFunc("GET "+contract.APIPrefix+"/runs/{cluster}/{namespace}/{taskUID}/events", s.runNotImplemented)
+	mux.HandleFunc("GET "+contract.APIPrefix+"/runs/", s.notARunPath)
+	mux.HandleFunc(contract.APIPrefix, s.apiNotFound)
+	mux.HandleFunc(contract.APIPrefix+"/", s.apiNotFound)
 	mux.HandleFunc("GET /"+assetsDir+"/{file}", s.asset)
 	mux.HandleFunc("GET /{$}", s.home)
 	mux.HandleFunc("GET /runs/{cluster}/{namespace}/{taskUID}", s.runPage)
@@ -71,11 +82,28 @@ func (s *server) contractInfo(w http.ResponseWriter, _ *http.Request) {
 // runNotImplemented validates the run key as the real endpoints will, then
 // says the endpoint does not exist yet.
 func (s *server) runNotImplemented(w http.ResponseWriter, r *http.Request) {
-	if err := runKey(r).Validate(); err != nil {
+	if err := validRunKey(r); err != nil {
 		s.writeError(w, http.StatusBadRequest, contract.ErrorInvalidRunKey, err.Error())
 		return
 	}
 	s.writeError(w, http.StatusNotImplemented, contract.ErrorNotImplemented, "run snapshots and streams are not implemented yet")
+}
+
+// notARunPath answers a path under the runs endpoint of another shape: a
+// trailing slash, too few or too many parts.
+func (s *server) notARunPath(w http.ResponseWriter, _ *http.Request) {
+	s.writeError(w, http.StatusBadRequest, contract.ErrorInvalidRunKey, notARunPathMessage)
+}
+
+// apiNotFound answers every other API request, so that each API error is an
+// ErrorResponse. Every endpoint is GET, so another method is never allowed.
+func (s *server) apiNotFound(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet && r.Method != http.MethodHead {
+		w.Header().Set("Allow", allowedMethods)
+		s.writeError(w, http.StatusMethodNotAllowed, contract.ErrorMethodNotAllowed, "API endpoints answer only GET")
+		return
+	}
+	s.writeError(w, http.StatusNotFound, contract.ErrorNotFound, "no API endpoint at this path")
 }
 
 func (s *server) asset(w http.ResponseWriter, r *http.Request) {
@@ -98,7 +126,7 @@ func (s *server) home(w http.ResponseWriter, _ *http.Request) {
 // which explains the problem, with status 404.
 func (s *server) runPage(w http.ResponseWriter, r *http.Request) {
 	status := http.StatusOK
-	if err := runKey(r).Validate(); err != nil {
+	if err := validRunKey(r); err != nil {
 		status = http.StatusNotFound
 	}
 	s.writeIndex(w, status)
@@ -124,12 +152,18 @@ func (s *server) writeIndex(w http.ResponseWriter, status int) {
 	_, _ = w.Write(s.index)
 }
 
-func runKey(r *http.Request) contract.RunKey {
+// validRunKey checks the run key in the path. A canonical key has no
+// character that needs escaping, so a percent-encoded path is rejected: the
+// mux decodes it, the UI does not, and both must read a URL as one key.
+func validRunKey(r *http.Request) error {
+	if r.URL.EscapedPath() != r.URL.Path {
+		return errEncodedPath
+	}
 	return contract.RunKey{
 		Cluster:   r.PathValue("cluster"),
 		Namespace: r.PathValue("namespace"),
 		TaskUID:   r.PathValue("taskUID"),
-	}
+	}.Validate()
 }
 
 func (s *server) writeError(w http.ResponseWriter, status int, code, message string) {

@@ -68,24 +68,58 @@ func TestContractInfoIsValid(t *testing.T) {
 	}
 }
 
+// encodedTaskUID is runKey1's Task UID with its "2" percent-encoded: it
+// decodes to a valid key, but is not in canonical form.
+var encodedTaskUID = strings.Replace(runKey1.TaskUID, "2", "%32", 1)
+
+type apiErrorCase struct {
+	method string
+	path   string
+	status int
+	code   string
+}
+
 func TestRunEndpointsValidateTheKey(t *testing.T) {
+	checkAPIErrors(t, []apiErrorCase{
+		{http.MethodGet, runKey1.SnapshotPath(), http.StatusNotImplemented, contract.ErrorNotImplemented},
+		{http.MethodGet, runKey1.EventsPath(), http.StatusNotImplemented, contract.ErrorNotImplemented},
+		{http.MethodGet, "/api/v1/runs/example/agents/example-claude-42", http.StatusBadRequest, contract.ErrorInvalidRunKey},
+		{http.MethodGet, "/api/v1/runs/Example/agents/" + runKey1.TaskUID + "/events", http.StatusBadRequest, contract.ErrorInvalidRunKey},
+		{http.MethodGet, "/api/v1/runs/example/agents/" + encodedTaskUID, http.StatusBadRequest, contract.ErrorInvalidRunKey},
+		{http.MethodGet, "/api/v1/runs/example/agents/" + encodedTaskUID + "/events", http.StatusBadRequest, contract.ErrorInvalidRunKey},
+		{http.MethodGet, "/api/v1/runs/example/agents", http.StatusBadRequest, contract.ErrorInvalidRunKey},
+		{http.MethodGet, runKey1.SnapshotPath() + "/", http.StatusBadRequest, contract.ErrorInvalidRunKey},
+		{http.MethodGet, runKey1.EventsPath() + "/extra", http.StatusBadRequest, contract.ErrorInvalidRunKey},
+		{http.MethodGet, "/api/v1/runs/", http.StatusBadRequest, contract.ErrorInvalidRunKey},
+	})
+}
+
+func TestUnknownAPIRequestsAnswerJSON(t *testing.T) {
+	checkAPIErrors(t, []apiErrorCase{
+		{http.MethodGet, "/api/v1", http.StatusNotFound, contract.ErrorNotFound},
+		{http.MethodGet, "/api/v1/", http.StatusNotFound, contract.ErrorNotFound},
+		{http.MethodGet, "/api/v1/missing", http.StatusNotFound, contract.ErrorNotFound},
+		{http.MethodGet, contract.ContractPath + "/", http.StatusNotFound, contract.ErrorNotFound},
+		{http.MethodPost, contract.ContractPath, http.StatusMethodNotAllowed, contract.ErrorMethodNotAllowed},
+		{http.MethodDelete, runKey1.SnapshotPath(), http.StatusMethodNotAllowed, contract.ErrorMethodNotAllowed},
+		{http.MethodPost, "/api/v1/runs/example", http.StatusMethodNotAllowed, contract.ErrorMethodNotAllowed},
+	})
+}
+
+func checkAPIErrors(t *testing.T, cases []apiErrorCase) {
+	t.Helper()
 	h := newTestServer(builtAssets())
-	cases := []struct {
-		path   string
-		status int
-		code   string
-	}{
-		{runKey1.SnapshotPath(), http.StatusNotImplemented, contract.ErrorNotImplemented},
-		{runKey1.EventsPath(), http.StatusNotImplemented, contract.ErrorNotImplemented},
-		{"/api/v1/runs/example/agents/example-claude-42", http.StatusBadRequest, contract.ErrorInvalidRunKey},
-		{"/api/v1/runs/Example/agents/" + runKey1.TaskUID + "/events", http.StatusBadRequest, contract.ErrorInvalidRunKey},
-	}
 	for _, c := range cases {
-		t.Run(c.path, func(t *testing.T) {
-			res := get(t, h, c.path)
+		t.Run(c.method+" "+c.path, func(t *testing.T) {
+			rec := httptest.NewRecorder()
+			h.ServeHTTP(rec, httptest.NewRequest(c.method, c.path, nil))
+			res := rec.Result()
 			data := body(t, res)
 			if res.StatusCode != c.status {
 				t.Errorf("status %d, want %d", res.StatusCode, c.status)
+			}
+			if c.status == http.StatusMethodNotAllowed && res.Header.Get("Allow") != allowedMethods {
+				t.Errorf("Allow %q, want %q", res.Header.Get("Allow"), allowedMethods)
 			}
 			if err := contract.Validate(contract.DefErrorResponse, []byte(data)); err != nil {
 				t.Fatal(err)
@@ -107,6 +141,7 @@ func TestDeepLinksServeTheUI(t *testing.T) {
 		runKey1.LinkPath() + "/":                 http.StatusNotFound,
 		runKey1.LinkPath() + "/extra":            http.StatusNotFound,
 		"/runs/example/" + runKey1.TaskUID:       http.StatusNotFound,
+		"/runs/example/agents/" + encodedTaskUID: http.StatusNotFound,
 		"/runs/":                                 http.StatusNotFound,
 	}
 	for path, status := range cases {

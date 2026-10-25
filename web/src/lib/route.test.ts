@@ -41,6 +41,7 @@ describe('parseRoute', () => {
     ['an uppercase UID', `/runs/example/agents/${UID.toUpperCase()}`, ''],
     ['a trailing slash', `${RUN_PATH}/`, ''],
     ['a missing namespace', `/runs/example/${UID}`, ''],
+    ['a percent-encoded part', `/runs/example/agents/${UID.replace('2', '%32')}`, ''],
     ['another page', '/settings', ''],
     ['a pod name as attempt', RUN_PATH, '?attempt=example-claude-42-x7k2p'],
     ['an unknown view', RUN_PATH, '?view=timeline'],

@@ -199,9 +199,13 @@ except the stream.
 
 Errors are an `ErrorResponse` `{"error": {"code", "message"}}`: 400
 `invalid_run_key`, 404 `run_not_found` (no such run, or it expired; Lucarne
-cannot tell the two apart once the Task is gone), 501 `not_implemented`, 500
-`internal`. In this bootstrap the run endpoints validate the key and answer
-501.
+cannot tell the two apart once the Task is gone), 404 `not_found` (no
+endpoint at this path), 405 `method_not_allowed` (any method but `GET` or
+`HEAD`), 501 `not_implemented`, 500 `internal`. Every path under
+`/api/v1/runs/` that is not one of the two run paths above, a trailing slash
+included, is an `invalid_run_key`, and so is a run key with a percent-encoded
+character, as for deep links. In this bootstrap the run endpoints validate
+the key and answer 501.
 
 A **snapshot** is the run, its attempts, its retained events in `seq`
 order, and `stream`: the `epoch`, the `lastSeq` it reflects and

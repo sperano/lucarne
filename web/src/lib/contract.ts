@@ -40,6 +40,8 @@ export const ERROR_CODES = [
   'run_not_found',
   'not_implemented',
   'internal',
+  'not_found',
+  'method_not_allowed',
 ] as const;
 export type ErrorCode = (typeof ERROR_CODES)[number];
 

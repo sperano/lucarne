@@ -515,7 +515,14 @@
           "required": ["code", "message"],
           "properties": {
             "code": {
-              "enum": ["invalid_run_key", "run_not_found", "not_implemented", "internal"]
+              "enum": [
+                "invalid_run_key",
+                "run_not_found",
+                "not_implemented",
+                "internal",
+                "not_found",
+                "method_not_allowed"
+              ]
             },
             "message": { "$ref": "#/$defs/Label" }
           },

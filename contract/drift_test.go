@@ -132,7 +132,7 @@ func TestGoConstantsMatchSchemaEnums(t *testing.T) {
 		{"coverage states", property(defs, "Coverage", "state"), toStrings([]CoverageState{
 			CoveragePending, CoverageFollowing, CoverageEnded, CoverageUnavailable, CoverageExpired})},
 		{"error codes", asMap(asMap(property(defs, "ErrorResponse", "error")["properties"])["code"]),
-			[]string{ErrorInvalidRunKey, ErrorRunNotFound, ErrorNotImplemented, ErrorInternal}},
+			[]string{ErrorInvalidRunKey, ErrorRunNotFound, ErrorNotImplemented, ErrorInternal, ErrorNotFound, ErrorMethodNotAllowed}},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {

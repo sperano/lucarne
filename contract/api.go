@@ -55,6 +55,10 @@ const (
 	ErrorRunNotFound    = "run_not_found"
 	ErrorNotImplemented = "not_implemented"
 	ErrorInternal       = "internal"
+	// ErrorNotFound is an API path that names no endpoint.
+	ErrorNotFound = "not_found"
+	// ErrorMethodNotAllowed is a request with another method than GET.
+	ErrorMethodNotAllowed = "method_not_allowed"
 )
 
 // ErrorResponse is the body of every API error.
