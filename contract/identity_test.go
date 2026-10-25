@@ -21,6 +21,7 @@ const (
 )
 
 func TestRunKeyValidate(t *testing.T) {
+	t.Parallel()
 	if err := exampleRun.Validate(); err != nil {
 		t.Fatalf("valid key rejected: %v", err)
 	}
@@ -39,6 +40,7 @@ func TestRunKeyValidate(t *testing.T) {
 }
 
 func TestRunKeyPaths(t *testing.T) {
+	t.Parallel()
 	const tail = "example/agents/3f8e2a4c-1b2d-4e5f-8a9b-0c1d2e3f4a5b"
 	if got, want := exampleRun.LinkPath(), "/runs/"+tail; got != want {
 		t.Errorf("LinkPath = %q, want %q", got, want)
@@ -52,6 +54,7 @@ func TestRunKeyPaths(t *testing.T) {
 }
 
 func TestAttemptIDRoundTrip(t *testing.T) {
+	t.Parallel()
 	id := exampleAttempt.ID()
 	if want := "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.2"; id != want {
 		t.Fatalf("ID = %q, want %q", id, want)
@@ -63,6 +66,7 @@ func TestAttemptIDRoundTrip(t *testing.T) {
 }
 
 func TestParseAttemptIDRejectsNonCanonical(t *testing.T) {
+	t.Parallel()
 	for _, id := range []string{
 		"7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.02",
 		"7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.-1",
@@ -79,6 +83,7 @@ func TestParseAttemptIDRejectsNonCanonical(t *testing.T) {
 // TestIdentifiersMatchSchemaPatterns keeps the Go formatters and the
 // schema's patterns in step.
 func TestIdentifiersMatchSchemaPatterns(t *testing.T) {
+	t.Parallel()
 	defs := schemaDefs(t)
 	pattern := func(def string) *regexp.Regexp {
 		return regexp.MustCompile(defs[def]["pattern"].(string))
@@ -102,6 +107,7 @@ func TestIdentifiersMatchSchemaPatterns(t *testing.T) {
 }
 
 func TestLogOriginNamesTheFirstLine(t *testing.T) {
+	t.Parallel()
 	if got := LogOrigin([]byte(exampleFirstLine)); got != exampleOrigin {
 		t.Errorf("LogOrigin = %q, want %q", got, exampleOrigin)
 	}
@@ -118,6 +124,7 @@ func TestLogOriginNamesTheFirstLine(t *testing.T) {
 }
 
 func TestTimestampIsWrittenInUTC(t *testing.T) {
+	t.Parallel()
 	zone := time.FixedZone("UTC-7", -7*60*60)
 	ts := Timestamp{time.Date(2026, 10, 25, 2, 0, 6, 120000000, zone)}
 	got, err := json.Marshal(ts)
@@ -130,6 +137,7 @@ func TestTimestampIsWrittenInUTC(t *testing.T) {
 }
 
 func TestTimestampRejectsOffsets(t *testing.T) {
+	t.Parallel()
 	var ts Timestamp
 	if err := json.Unmarshal([]byte(`"2026-10-25T05:00:06-04:00"`), &ts); err == nil {
 		t.Error("a time with an offset was accepted")

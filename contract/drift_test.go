@@ -61,6 +61,7 @@ func goFields(typ reflect.Type) (names []string, optional map[string]bool) {
 // schema object's properties, and that a property is optional in Go
 // (omitempty) exactly when the schema does not require it.
 func TestGoTypesMatchSchemaObjects(t *testing.T) {
+	t.Parallel()
 	defs := schemaDefs(t)
 	types := map[string]any{
 		"RunKey": RunKey{}, "AttemptKey": AttemptKey{}, "Run": Run{}, "Runner": Runner{},
@@ -74,6 +75,7 @@ func TestGoTypesMatchSchemaObjects(t *testing.T) {
 	}
 	for name, value := range types {
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			def, ok := defs[name]
 			if !ok {
 				t.Fatalf("no $defs/%s", name)
@@ -82,6 +84,7 @@ func TestGoTypesMatchSchemaObjects(t *testing.T) {
 		})
 	}
 	t.Run("ErrorBody", func(t *testing.T) {
+		t.Parallel()
 		body := asMap(asMap(defs["ErrorResponse"]["properties"])["error"])
 		checkObject(t, body, reflect.TypeFor[ErrorBody]())
 	})
@@ -175,10 +178,12 @@ func apiEnumCases(defs map[string]map[string]any) []enumCase {
 }
 
 func TestGoConstantsMatchSchemaEnums(t *testing.T) {
+	t.Parallel()
 	defs := schemaDefs(t)
 	cases := slices.Concat(runEnumCases(defs), eventEnumCases(defs), apiEnumCases(defs))
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
 			if got := enumOf(t, c.schema); !slices.Equal(got, c.goList) {
 				t.Errorf("schema enum %v, Go constants %v", got, c.goList)
 			}
@@ -198,6 +203,7 @@ func toStrings[S ~string](values []S) []string {
 }
 
 func TestSchemaBoundsMatchLimits(t *testing.T) {
+	t.Parallel()
 	defs := schemaDefs(t)
 	maxLength := map[string]int{
 		"Label": MaxLabelBytes, "Text": MaxTextBytes, "ToolInputText": MaxToolInputBytes,

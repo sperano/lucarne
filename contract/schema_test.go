@@ -52,8 +52,10 @@ func loadExamples(t *testing.T, root string) []example {
 }
 
 func TestValidExamplesValidate(t *testing.T) {
+	t.Parallel()
 	for _, ex := range loadExamples(t, validDir) {
 		t.Run(ex.path, func(t *testing.T) {
+			t.Parallel()
 			if err := Validate(ex.def, ex.data); err != nil {
 				t.Errorf("%v", err)
 			}
@@ -62,8 +64,10 @@ func TestValidExamplesValidate(t *testing.T) {
 }
 
 func TestInvalidExamplesAreRejected(t *testing.T) {
+	t.Parallel()
 	for _, ex := range loadExamples(t, invalidDir) {
 		t.Run(ex.path, func(t *testing.T) {
+			t.Parallel()
 			err := Validate(ex.def, ex.data)
 			var verr *jsonschema.ValidationError
 			if !errors.As(err, &verr) {
@@ -74,6 +78,7 @@ func TestInvalidExamplesAreRejected(t *testing.T) {
 }
 
 func TestEveryDocumentHasAValidExample(t *testing.T) {
+	t.Parallel()
 	seen := map[string]bool{}
 	for _, ex := range loadExamples(t, validDir) {
 		seen[ex.def] = true
@@ -86,6 +91,7 @@ func TestEveryDocumentHasAValidExample(t *testing.T) {
 }
 
 func TestEveryEventKindHasAnExample(t *testing.T) {
+	t.Parallel()
 	seen := map[EventKind]bool{}
 	for _, ex := range loadExamples(t, validDir) {
 		for _, e := range eventsOf(t, ex) {
@@ -118,8 +124,10 @@ func eventsOf(t *testing.T, ex example) []Event {
 // of every example: decoding rejects unknown fields and encoding gives back
 // the same document.
 func TestExamplesRoundTripThroughGoTypes(t *testing.T) {
+	t.Parallel()
 	for _, ex := range loadExamples(t, validDir) {
 		t.Run(ex.path, func(t *testing.T) {
+			t.Parallel()
 			target := newDocument(t, ex.def)
 			mustDecode(t, ex.data, target)
 			encoded, err := json.Marshal(target)
@@ -168,6 +176,7 @@ func mustDecode(t *testing.T, data []byte, v any) {
 }
 
 func TestExampleLimitsAreTheDefaults(t *testing.T) {
+	t.Parallel()
 	for _, ex := range loadExamples(t, validDir) {
 		var limited struct {
 			Limits *Limits `json:"limits"`
@@ -182,6 +191,7 @@ func TestExampleLimitsAreTheDefaults(t *testing.T) {
 }
 
 func TestExamplesHoldNoPrivateData(t *testing.T) {
+	t.Parallel()
 	for _, root := range []string{validDir, invalidDir} {
 		for _, ex := range loadExamples(t, root) {
 			for _, finding := range privacy.Scan(string(ex.data)) {
@@ -192,6 +202,7 @@ func TestExamplesHoldNoPrivateData(t *testing.T) {
 }
 
 func TestValidateRejectsUnknownDefinition(t *testing.T) {
+	t.Parallel()
 	if err := Validate("Nope", []byte(`{}`)); err == nil {
 		t.Error("an unknown definition validated")
 	}

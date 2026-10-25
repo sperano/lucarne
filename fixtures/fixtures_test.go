@@ -39,6 +39,7 @@ func loadManifest(t *testing.T) Manifest {
 }
 
 func TestManifestListsEveryFixtureOnce(t *testing.T) {
+	t.Parallel()
 	m := loadManifest(t)
 	onDisk, err := fs.Glob(Files, "*/*/*.log")
 	if err != nil {
@@ -58,9 +59,11 @@ func TestManifestListsEveryFixtureOnce(t *testing.T) {
 }
 
 func TestFixturesAreProvenanceLabelled(t *testing.T) {
+	t.Parallel()
 	m := loadManifest(t)
 	for _, f := range m.Fixtures {
 		t.Run(f.File, func(t *testing.T) {
+			t.Parallel()
 			if want := path.Join(f.Runner, f.Version, path.Base(f.File)); f.File != want {
 				t.Errorf("file %q is not under its runner and version, want %q", f.File, want)
 			}
@@ -92,8 +95,10 @@ func TestFixturesAreProvenanceLabelled(t *testing.T) {
 }
 
 func TestLineCountsMatchContent(t *testing.T) {
+	t.Parallel()
 	for _, f := range loadManifest(t).Fixtures {
 		t.Run(f.File, func(t *testing.T) {
+			t.Parallel()
 			if got := countLines(t, f.File); got != f.Lines {
 				t.Errorf("lines = %+v, manifest says %+v", got, f.Lines)
 			}
@@ -127,9 +132,11 @@ func countLines(t *testing.T, file string) LineCounts {
 }
 
 func TestDeployedVersionsAreCovered(t *testing.T) {
+	t.Parallel()
 	m := loadManifest(t)
 	for runner, version := range m.Deployed.Runners {
 		t.Run(runner, func(t *testing.T) {
+			t.Parallel()
 			covered := map[string]bool{}
 			for _, f := range m.Fixtures {
 				if f.Runner == runner && f.Version == version {
@@ -152,6 +159,7 @@ func TestDeployedVersionsAreCovered(t *testing.T) {
 }
 
 func TestFixturesHoldNoPrivateData(t *testing.T) {
+	t.Parallel()
 	for _, f := range loadManifest(t).Fixtures {
 		data, err := Read(f.File)
 		if err != nil {

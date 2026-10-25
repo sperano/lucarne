@@ -8,6 +8,7 @@ import (
 // TestSnapshotWithoutAttemptsValidates covers a snapshot built in Go for a
 // pending run: its nil slices must encode as the arrays the schema requires.
 func TestSnapshotWithoutAttemptsValidates(t *testing.T) {
+	t.Parallel()
 	snapshot := Snapshot{
 		Schema: SchemaVersion,
 		Run:    Run{Key: exampleRun, TaskName: "example-opencode-44", Phase: PhasePending},

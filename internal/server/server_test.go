@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
 	"log/slog"
 	"net/http"
@@ -52,6 +53,7 @@ func newTestServer(assets fstest.MapFS) http.Handler {
 }
 
 func TestHealth(t *testing.T) {
+	t.Parallel()
 	res := get(t, newTestServer(builtAssets()), "/healthz")
 	if res.StatusCode != http.StatusOK || body(t, res) != "ok\n" {
 		t.Errorf("GET /healthz = %d", res.StatusCode)
@@ -59,6 +61,7 @@ func TestHealth(t *testing.T) {
 }
 
 func TestContractInfoIsValid(t *testing.T) {
+	t.Parallel()
 	res := get(t, newTestServer(builtAssets()), contract.ContractPath)
 	if res.StatusCode != http.StatusOK {
 		t.Fatalf("status %d", res.StatusCode)
@@ -80,6 +83,7 @@ type apiErrorCase struct {
 }
 
 func TestRunEndpointsValidateTheKey(t *testing.T) {
+	t.Parallel()
 	checkAPIErrors(t, []apiErrorCase{
 		{http.MethodGet, runKey1.SnapshotPath(), http.StatusNotImplemented, contract.ErrorNotImplemented},
 		{http.MethodGet, runKey1.EventsPath(), http.StatusNotImplemented, contract.ErrorNotImplemented},
@@ -95,6 +99,7 @@ func TestRunEndpointsValidateTheKey(t *testing.T) {
 }
 
 func TestUnknownAPIRequestsAnswerJSON(t *testing.T) {
+	t.Parallel()
 	checkAPIErrors(t, []apiErrorCase{
 		{http.MethodGet, "/api/v1", http.StatusNotFound, contract.ErrorNotFound},
 		{http.MethodGet, "/api/v1/", http.StatusNotFound, contract.ErrorNotFound},
@@ -111,6 +116,7 @@ func checkAPIErrors(t *testing.T, cases []apiErrorCase) {
 	h := newTestServer(builtAssets())
 	for _, c := range cases {
 		t.Run(c.method+" "+c.path, func(t *testing.T) {
+			t.Parallel()
 			rec := httptest.NewRecorder()
 			h.ServeHTTP(rec, httptest.NewRequest(c.method, c.path, nil))
 			res := rec.Result()
@@ -133,6 +139,7 @@ func checkAPIErrors(t *testing.T, cases []apiErrorCase) {
 }
 
 func TestDeepLinksServeTheUI(t *testing.T) {
+	t.Parallel()
 	h := newTestServer(builtAssets())
 	cases := map[string]int{
 		"/":                                      http.StatusOK,
@@ -156,6 +163,7 @@ func TestDeepLinksServeTheUI(t *testing.T) {
 }
 
 func TestAssets(t *testing.T) {
+	t.Parallel()
 	h := newTestServer(builtAssets())
 	for _, path := range []string{"/assets/index-abc.js", "/assets/nested/a.js"} {
 		res := get(t, h, path)
@@ -178,6 +186,7 @@ func TestAssets(t *testing.T) {
 }
 
 func TestWithoutABuiltFrontend(t *testing.T) {
+	t.Parallel()
 	h := newTestServer(fstest.MapFS{".gitkeep": {Data: nil}})
 	res := get(t, h, runKey1.LinkPath())
 	if res.StatusCode != http.StatusServiceUnavailable || !strings.Contains(body(t, res), "npm run build") {
@@ -189,6 +198,7 @@ func TestWithoutABuiltFrontend(t *testing.T) {
 }
 
 func TestSecurityHeaders(t *testing.T) {
+	t.Parallel()
 	for _, path := range []string{"/", "/healthz", contract.ContractPath, "/missing"} {
 		res := get(t, newTestServer(builtAssets()), path)
 		if res.Header.Get("Content-Security-Policy") != contentSecurityPolicy ||
@@ -199,6 +209,7 @@ func TestSecurityHeaders(t *testing.T) {
 }
 
 func TestTruncateKeepsRunes(t *testing.T) {
+	t.Parallel()
 	s := strings.Repeat("é", 10) // 2 bytes each
 	got := truncate(s, 5)
 	if !utf8.ValidString(got) || len(got) != 4 {
@@ -206,5 +217,40 @@ func TestTruncateKeepsRunes(t *testing.T) {
 	}
 	if truncate("short", 10) != "short" {
 		t.Error("a short string was changed")
+	}
+}
+
+func TestNilLoggerFallsBackToDefault(t *testing.T) {
+	t.Parallel()
+	h := New(fstest.MapFS{}, nil)
+	if res := get(t, h, runKey1.LinkPath()); res.StatusCode != http.StatusServiceUnavailable {
+		t.Errorf("status %d, want 503 without a frontend", res.StatusCode)
+	}
+}
+
+func TestEncodedPathIsAnInvalidKey(t *testing.T) {
+	t.Parallel()
+	r := httptest.NewRequest(http.MethodGet, "/runs/example/agents/"+encodedTaskUID, nil)
+	if err := validRunKey(r); !errors.Is(err, contract.ErrInvalidKey) {
+		t.Errorf("err = %v, want ErrInvalidKey", err)
+	}
+}
+
+func TestUnencodableResponseIsAnErrorResponse(t *testing.T) {
+	t.Parallel()
+	s := &server{logger: slog.New(slog.DiscardHandler)}
+	rec := httptest.NewRecorder()
+	s.writeJSON(rec, http.StatusOK, make(chan int))
+	res := rec.Result()
+	if res.StatusCode != http.StatusInternalServerError {
+		t.Errorf("status %d, want 500", res.StatusCode)
+	}
+	data := body(t, res)
+	if err := contract.Validate(contract.DefErrorResponse, []byte(data)); err != nil {
+		t.Fatal(err)
+	}
+	var got contract.ErrorResponse
+	if err := json.Unmarshal([]byte(data), &got); err != nil || got.Error.Code != contract.ErrorInternal {
+		t.Errorf("code %q (%v), want %q", got.Error.Code, err, contract.ErrorInternal)
 	}
 }

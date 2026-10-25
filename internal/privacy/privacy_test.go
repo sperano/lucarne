@@ -3,6 +3,7 @@ package privacy
 import "testing"
 
 func TestScanFlagsPrivateData(t *testing.T) {
+	t.Parallel()
 	cases := map[string]string{
 		"private name":                   "see Vikunja task 12",
 		"github token":                   "token ghp_abcdefghijklmnopqrstuvwxyz0123",
@@ -15,6 +16,7 @@ func TestScanFlagsPrivateData(t *testing.T) {
 	}
 	for rule, input := range cases {
 		t.Run(rule, func(t *testing.T) {
+			t.Parallel()
 			if !hasRule(Scan(input), rule) {
 				t.Errorf("Scan(%q) = %v, want a %q finding", input, Scan(input), rule)
 			}
@@ -23,6 +25,7 @@ func TestScanFlagsPrivateData(t *testing.T) {
 }
 
 func TestScanAllowsExampleData(t *testing.T) {
+	t.Parallel()
 	inputs := []string{
 		"pr: https://github.com/example/widget/pull/7",
 		"see https://docs.example.com/page and http://localhost:8080/",
@@ -38,6 +41,7 @@ func TestScanAllowsExampleData(t *testing.T) {
 }
 
 func TestScanRejectsOtherGitHubOwners(t *testing.T) {
+	t.Parallel()
 	if !hasRule(Scan("https://github.com/someone/private-repo"), "url outside example domains") {
 		t.Error("a GitHub URL outside the example owner is not flagged")
 	}

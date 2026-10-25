@@ -4,7 +4,7 @@ package server
 
 import (
 	"encoding/json"
-	"errors"
+	"fmt"
 	"io/fs"
 	"log/slog"
 	"net/http"
@@ -35,11 +35,20 @@ const (
 	allowedMethods = "GET, HEAD"
 )
 
-var errEncodedPath = errors.New("run key is percent-encoded: its parts must be in canonical form")
+// errEncodedPath wraps contract.ErrInvalidKey, as every other run key error
+// does.
+var errEncodedPath = fmt.Errorf("%w: run key is percent-encoded: its parts must be in canonical form", contract.ErrInvalidKey)
+
+// internalErrorBody is the ErrorResponse sent when a response cannot be
+// encoded, so that even that failure answers the contract.
+var internalErrorBody = []byte(`{"error":{"code":"` + contract.ErrorInternal + `","message":"internal error"}}` + "\n")
 
 // New returns the handler serving the API and the frontend in assets, the
-// contents of web/dist.
+// contents of web/dist. A nil logger means slog.Default().
 func New(assets fs.FS, logger *slog.Logger) http.Handler {
+	if logger == nil {
+		logger = slog.Default()
+	}
 	index, err := fs.ReadFile(assets, indexFile)
 	if err != nil {
 		logger.Warn("serving without a frontend", "error", err)
@@ -174,13 +183,14 @@ func (s *server) writeJSON(w http.ResponseWriter, status int, v any) {
 	body, err := json.Marshal(v)
 	if err != nil {
 		s.logger.Error("encode response", "error", err)
-		http.Error(w, "internal error", http.StatusInternalServerError)
-		return
+		status, body = http.StatusInternalServerError, internalErrorBody
+	} else {
+		body = append(body, '\n')
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Cache-Control", "no-store")
 	w.WriteHeader(status)
-	s.write(w, append(body, '\n'))
+	s.write(w, body)
 }
 
 // write sends a response body. A failure means the client went away, so it
