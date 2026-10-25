@@ -1,0 +1,336 @@
+[
+  {
+    "seq": 1,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0:7e7ff0a245dfcf07:1:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0",
+    "kind": "lifecycle",
+    "source": {
+      "line": 1,
+      "part": 0,
+      "type": "system"
+    },
+    "lifecycle": {
+      "phase": "session_started",
+      "sessionId": "0b1c2d3e-4f50-4617-8293-a4b5c6d7e8f9",
+      "model": "claude-opus-5-5",
+      "runnerVersion": "2.1.296"
+    }
+  },
+  {
+    "seq": 2,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0:7e7ff0a245dfcf07:2:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0",
+    "kind": "message",
+    "source": {
+      "line": 2,
+      "part": 0,
+      "type": "assistant"
+    },
+    "message": {
+      "role": "assistant",
+      "type": "text",
+      "text": "I'll read a.go and have a subagent review b.go.",
+      "messageId": "msg_01ExampleP"
+    }
+  },
+  {
+    "seq": 3,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0:7e7ff0a245dfcf07:3:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0",
+    "kind": "tool_call",
+    "source": {
+      "line": 3,
+      "part": 0,
+      "type": "assistant"
+    },
+    "toolCall": {
+      "callId": "toolu_01ExampleParRead",
+      "name": "Read",
+      "input": {
+        "file_path": "/workspace/repo/a.go"
+      }
+    }
+  },
+  {
+    "seq": 4,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0:7e7ff0a245dfcf07:4:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0",
+    "kind": "tool_call",
+    "source": {
+      "line": 4,
+      "part": 0,
+      "type": "assistant"
+    },
+    "toolCall": {
+      "callId": "toolu_01ExampleParTask",
+      "name": "Task",
+      "input": {
+        "description": "Review b.go",
+        "prompt": "Review b.go for errors.",
+        "subagent_type": "general-purpose"
+      }
+    }
+  },
+  {
+    "seq": 5,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0:7e7ff0a245dfcf07:5:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0",
+    "kind": "tool_call",
+    "source": {
+      "line": 5,
+      "part": 0,
+      "type": "assistant"
+    },
+    "toolCall": {
+      "callId": "toolu_01ExampleSubRead",
+      "name": "Read",
+      "input": {
+        "file_path": "/workspace/repo/b.go"
+      },
+      "parentCallId": "toolu_01ExampleParTask"
+    }
+  },
+  {
+    "seq": 6,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0:7e7ff0a245dfcf07:6:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0",
+    "kind": "tool_result",
+    "source": {
+      "line": 6,
+      "part": 0,
+      "type": "user"
+    },
+    "toolResult": {
+      "callId": "toolu_01ExampleParRead",
+      "status": "ok",
+      "output": "     1\tpackage widget\n"
+    }
+  },
+  {
+    "seq": 7,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0:7e7ff0a245dfcf07:7:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0",
+    "kind": "tool_result",
+    "source": {
+      "line": 7,
+      "part": 0,
+      "type": "user"
+    },
+    "toolResult": {
+      "callId": "toolu_01ExampleSubRead",
+      "status": "ok",
+      "output": "     1\tpackage widget\n"
+    }
+  },
+  {
+    "seq": 8,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0:7e7ff0a245dfcf07:8:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0",
+    "kind": "message",
+    "source": {
+      "line": 8,
+      "part": 0,
+      "type": "assistant"
+    },
+    "message": {
+      "role": "assistant",
+      "type": "text",
+      "text": "b.go has no errors.",
+      "messageId": "msg_01ExampleT"
+    }
+  },
+  {
+    "seq": 9,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0:7e7ff0a245dfcf07:8:1",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0",
+    "kind": "usage",
+    "source": {
+      "line": 8,
+      "part": 1,
+      "type": "assistant"
+    },
+    "usage": {
+      "scope": "message",
+      "inputTokens": 4,
+      "outputTokens": 9,
+      "cacheReadTokens": 1024,
+      "cacheWriteTokens": 0
+    }
+  },
+  {
+    "seq": 10,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0:7e7ff0a245dfcf07:9:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0",
+    "kind": "tool_result",
+    "source": {
+      "line": 9,
+      "part": 0,
+      "type": "user"
+    },
+    "toolResult": {
+      "callId": "toolu_01ExampleParTask",
+      "status": "ok",
+      "output": "b.go has no errors."
+    }
+  },
+  {
+    "seq": 11,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0:7e7ff0a245dfcf07:10:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0",
+    "kind": "raw",
+    "source": {
+      "line": 10,
+      "part": 0,
+      "type": "stream_event"
+    },
+    "raw": {
+      "reason": "unsupported",
+      "text": "{\"type\":\"stream_event\",\"event\":{\"type\":\"content_block_delta\",\"index\":0,\"delta\":{\"type\":\"text_delta\",\"text\":\"Both files\"}},\"parent_tool_use_id\":null,\"session_id\":\"0b1c2d3e-4f50-4617-8293-a4b5c6d7e8f9\",\"uuid\":\"00000000-0000-4000-8000-000000000033\"}",
+      "bytes": 246
+    }
+  },
+  {
+    "seq": 12,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0:7e7ff0a245dfcf07:11:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0",
+    "kind": "tool_call",
+    "source": {
+      "line": 11,
+      "part": 0,
+      "type": "assistant"
+    },
+    "toolCall": {
+      "callId": "toolu_01ExampleSleep",
+      "name": "Bash",
+      "input": {
+        "command": "sleep 600",
+        "description": "Wait for the build"
+      }
+    }
+  },
+  {
+    "seq": 13,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0:7e7ff0a245dfcf07:12:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0",
+    "kind": "tool_result",
+    "source": {
+      "line": 12,
+      "part": 0,
+      "type": "user"
+    },
+    "toolResult": {
+      "callId": "toolu_01ExampleSleep",
+      "status": "error",
+      "output": "[Request interrupted by user for tool use]"
+    }
+  },
+  {
+    "seq": 14,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0:7e7ff0a245dfcf07:13:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0",
+    "kind": "message",
+    "source": {
+      "line": 13,
+      "part": 0,
+      "type": "assistant"
+    },
+    "message": {
+      "role": "assistant",
+      "type": "text",
+      "text": "Both files are fine.",
+      "messageId": "msg_01ExampleR"
+    }
+  },
+  {
+    "seq": 15,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0:7e7ff0a245dfcf07:13:1",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0",
+    "kind": "usage",
+    "source": {
+      "line": 13,
+      "part": 1,
+      "type": "assistant"
+    },
+    "usage": {
+      "scope": "message",
+      "inputTokens": 3,
+      "outputTokens": 6,
+      "cacheReadTokens": 13568,
+      "cacheWriteTokens": 0
+    }
+  },
+  {
+    "seq": 16,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0:7e7ff0a245dfcf07:14:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0",
+    "kind": "message",
+    "source": {
+      "line": 14,
+      "part": 0,
+      "type": "assistant"
+    },
+    "message": {
+      "role": "assistant",
+      "type": "text",
+      "text": "Both files are fine.",
+      "messageId": "msg_01ExampleR"
+    }
+  },
+  {
+    "seq": 17,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0:7e7ff0a245dfcf07:14:1",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0",
+    "kind": "usage",
+    "source": {
+      "line": 14,
+      "part": 1,
+      "type": "assistant"
+    },
+    "usage": {
+      "scope": "message",
+      "inputTokens": 3,
+      "outputTokens": 6,
+      "cacheReadTokens": 13568,
+      "cacheWriteTokens": 0
+    }
+  },
+  {
+    "seq": 18,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0:7e7ff0a245dfcf07:15:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0",
+    "kind": "lifecycle",
+    "source": {
+      "line": 15,
+      "part": 0,
+      "type": "result"
+    },
+    "lifecycle": {
+      "phase": "session_completed",
+      "subtype": "success",
+      "isError": false,
+      "stopReason": "end_turn"
+    }
+  },
+  {
+    "seq": 19,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0:7e7ff0a245dfcf07:15:1",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0",
+    "kind": "usage",
+    "source": {
+      "line": 15,
+      "part": 1,
+      "type": "result"
+    },
+    "usage": {
+      "scope": "session",
+      "inputTokens": 17,
+      "outputTokens": 183,
+      "cacheReadTokens": 52480,
+      "cacheWriteTokens": 1024,
+      "costUSD": "0.0874",
+      "durationMs": 48210,
+      "apiDurationMs": 39876,
+      "turns": 3
+    }
+  }
+]

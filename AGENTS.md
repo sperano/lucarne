@@ -12,10 +12,10 @@ them live in the browser, first as a conversation, later as an inspector.
 Lucarne observes; it never takes part. It does not start, steer or stop
 agents, and nothing in the agent pipeline waits on it.
 
-Status: bootstrapped. The contract, the fixtures, the server skeleton and
-the UI shell exist; the runner adapters, the Kubernetes log source, the
-snapshot/SSE endpoints and the conversation view do not yet (the run
-endpoints answer 501).
+Status: bootstrapped. The contract, the fixtures, the server skeleton, the
+UI shell and the Claude Code adapter exist; the Codex and OpenCode
+adapters, the Kubernetes log source, the snapshot/SSE endpoints and the
+conversation view do not yet (the run endpoints answer 501).
 
 ## What lives here, and what does not
 
@@ -35,6 +35,7 @@ expect. One executable, no database.
 | `contract/` | The versioned transcript/API contract: `README.md` (the specification: identity, events, states, limits, deep links, HTTP and SSE/replay), `v1/transcript.schema.json`, its valid and invalid examples, and the Go types and `Validate`. |
 | `fixtures/` | Sanitized, provenance-labelled runner output per runner and version, with `manifest.json`; see its `README.md`. |
 | `cmd/lucarne/` | The executable. |
+| `internal/adapter/` | Runner-neutral normalization of one attempt's log lines: event IDs and parts, the contract's bounds, raw fallback, the Kelos marker lines. `claude/` is the Claude Code stream-json runner, with golden tests over the fixtures (`go test ./internal/adapter/claude/ -update` rewrites them) and its capability gaps in `doc.go`. |
 | `internal/server/` | HTTP: `/healthz`, `/api/v1/...`, the embedded UI and its deep links, security headers. |
 | `internal/privacy/` | The scan that keeps private data out of fixtures and examples. |
 | `web/` | The UI (Vite, Svelte 5, TypeScript). `web/src/lib/contract.ts` mirrors the contract; `web/embed.go` embeds `web/dist`. |
