@@ -152,10 +152,14 @@ func parseCanonicalNonNegative(s string) (int64, error) {
 	return n, nil
 }
 
-// schemaPattern compiles the pattern of one string definition of the
-// embedded schema. It panics, as regexp.MustCompile does, when the
-// definition has no pattern Go can compile.
-func schemaPattern(def string) *regexp.Regexp {
+// schemaPatterns maps each definition of the embedded schema to its pattern,
+// empty for a definition without one. It is decoded once, at init, however
+// many patterns are compiled from it.
+var schemaPatterns = decodeSchemaPatterns()
+
+// decodeSchemaPatterns reads the pattern of every definition of the embedded
+// schema. It panics when the schema is not valid JSON.
+func decodeSchemaPatterns() map[string]string {
 	var doc struct {
 		Defs map[string]struct {
 			Pattern string `json:"pattern"`
@@ -164,7 +168,18 @@ func schemaPattern(def string) *regexp.Regexp {
 	if err := json.Unmarshal(SchemaJSON, &doc); err != nil {
 		panic(fmt.Sprintf("contract: decode schema: %v", err))
 	}
-	pattern := doc.Defs[def].Pattern
+	patterns := make(map[string]string, len(doc.Defs))
+	for name, def := range doc.Defs {
+		patterns[name] = def.Pattern
+	}
+	return patterns
+}
+
+// schemaPattern compiles the pattern of one string definition of the
+// embedded schema. It panics, as regexp.MustCompile does, when the
+// definition has no pattern Go can compile.
+func schemaPattern(def string) *regexp.Regexp {
+	pattern := schemaPatterns[def]
 	if pattern == "" {
 		panic(fmt.Sprintf("contract: $defs/%s has no pattern", def))
 	}

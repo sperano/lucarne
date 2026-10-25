@@ -34,6 +34,10 @@ const (
 
 	// allowedMethods is the Allow header of a 405: every endpoint is GET.
 	allowedMethods = "GET, HEAD"
+
+	// internalErrorMessage is the message of the 500 sent when a response
+	// cannot be encoded.
+	internalErrorMessage = "internal error"
 )
 
 // errEncodedPath wraps contract.ErrInvalidKey, as every other run key error
@@ -42,7 +46,20 @@ var errEncodedPath = fmt.Errorf("%w: run key is percent-encoded: its parts must 
 
 // internalErrorBody is the ErrorResponse sent when a response cannot be
 // encoded, so that even that failure answers the contract.
-var internalErrorBody = []byte(`{"error":{"code":"` + contract.ErrorInternal + `","message":"internal error"}}` + "\n")
+var internalErrorBody = mustEncodeInternalError()
+
+// mustEncodeInternalError encodes the 500 fallback once, at init, from the
+// contract's own types.
+func mustEncodeInternalError() []byte {
+	body, err := json.Marshal(contract.ErrorResponse{Error: contract.ErrorBody{
+		Code:    contract.ErrorInternal,
+		Message: internalErrorMessage,
+	}})
+	if err != nil {
+		panic(fmt.Sprintf("server: encode the internal error body: %v", err))
+	}
+	return append(body, '\n')
+}
 
 // New returns the handler serving the API and the frontend in assets, the
 // contents of web/dist. A nil logger means slog.Default().
