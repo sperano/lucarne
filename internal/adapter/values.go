@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"regexp"
 	"strconv"
-	"unicode/utf8"
 
 	"github.com/sperano/lucarne/contract"
 )
@@ -75,9 +74,5 @@ func SetToolInput(call *contract.ToolCall, raw json.RawMessage, cut *Truncation)
 	if !ok {
 		return
 	}
-	if len(input) <= contract.MaxToolInputBytes && utf8.ValidString(input) {
-		call.Input = json.RawMessage(input)
-		return
-	}
-	call.InputText = cut.Text("inputText", input, contract.MaxToolInputBytes)
+	cut.ToolInput(call, input)
 }
