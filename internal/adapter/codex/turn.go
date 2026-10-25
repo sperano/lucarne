@@ -12,8 +12,6 @@ import (
 // Ranges the contract accepts; a value outside them is dropped, not
 // clamped.
 const (
-	// maxCount is the schema's Count maximum, JSON's largest safe integer.
-	maxCount = 1<<53 - 1
 	// maxRetryCount bounds a retry's attempt and max.
 	maxRetryCount = 999999
 )
@@ -122,11 +120,11 @@ func (u *tokenUsage) usage() (contract.Usage, bool) {
 	}
 	usage := contract.Usage{
 		Scope:            contract.ScopeSession,
-		InputTokens:      count(u.InputTokens),
-		CacheReadTokens:  count(u.CachedInput),
-		CacheWriteTokens: count(u.CacheWriteInput),
-		OutputTokens:     count(u.OutputTokens),
-		ReasoningTokens:  count(u.ReasoningTokens),
+		InputTokens:      adapter.Count(u.InputTokens),
+		CacheReadTokens:  adapter.Count(u.CachedInput),
+		CacheWriteTokens: adapter.Count(u.CacheWriteInput),
+		OutputTokens:     adapter.Count(u.OutputTokens),
+		ReasoningTokens:  adapter.Count(u.ReasoningTokens),
 	}
 	for _, n := range []*int64{usage.InputTokens, usage.CacheReadTokens, usage.CacheWriteTokens, usage.OutputTokens, usage.ReasoningTokens} {
 		if n != nil && *n > 0 {
@@ -134,14 +132,6 @@ func (u *tokenUsage) usage() (contract.Usage, bool) {
 		}
 	}
 	return contract.Usage{}, false
-}
-
-// count is n when it is a valid counter, nil otherwise.
-func count(n *int64) *int64 {
-	if n == nil || *n < 0 || *n > maxCount {
-		return nil
-	}
-	return n
 }
 
 func lifecycle(phase contract.LifecyclePhase) contract.Event {

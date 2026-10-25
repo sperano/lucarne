@@ -12,6 +12,8 @@ import (
 // Ranges the contract accepts; a value outside them is dropped, not
 // clamped.
 const (
+	// MaxCount is the schema's Count maximum, JSON's largest safe integer.
+	MaxCount      = 1<<53 - 1
 	minHTTPStatus = 100
 	maxHTTPStatus = 599
 )
@@ -21,7 +23,7 @@ var decimalUSD = regexp.MustCompile(`^(0|[1-9][0-9]{0,15})(\.[0-9]{1,18})?$`)
 
 // Count is n when it is a valid counter, nil otherwise.
 func Count(n *int64) *int64 {
-	if n == nil || *n < 0 {
+	if n == nil || *n < 0 || *n > MaxCount {
 		return nil
 	}
 	return n

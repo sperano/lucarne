@@ -28,9 +28,9 @@ func TestCostUSD(t *testing.T) {
 
 func TestCountAndHTTPStatus(t *testing.T) {
 	t.Parallel()
-	n, neg := int64(3), int64(-1)
-	if Count(&n) == nil || Count(&neg) != nil || Count(nil) != nil {
-		t.Error("Count keeps only non-negative counters")
+	n, neg, top, over := int64(3), int64(-1), int64(MaxCount), int64(MaxCount+1)
+	if Count(&n) == nil || Count(&neg) != nil || Count(nil) != nil || Count(&top) == nil || Count(&over) != nil {
+		t.Error("Count keeps only counters from 0 to MaxCount")
 	}
 	ok, low, high := 529, 99, 600
 	if HTTPStatus(&ok) == nil || HTTPStatus(&low) != nil || HTTPStatus(&high) != nil || HTTPStatus(nil) != nil {
