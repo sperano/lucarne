@@ -48,6 +48,7 @@ export function parseRoute(pathname: string, search: string, hash: string): Rout
     page: 'run',
     key: { cluster, namespace, taskUID },
     view,
+    // exactOptionalPropertyTypes rejects `attempt: undefined`: omit absent keys instead.
     ...(attempt === null ? {} : { attempt }),
     ...(event === null ? {} : { event }),
   };
