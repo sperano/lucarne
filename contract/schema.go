@@ -8,7 +8,6 @@ import (
 	"bytes"
 	_ "embed"
 	"fmt"
-	"sync"
 
 	"github.com/santhosh-tekuri/jsonschema/v6"
 )
@@ -40,18 +39,12 @@ var Documents = []string{
 	DefReset, DefEnd, DefErrorResponse, DefContractInfo,
 }
 
-var (
-	compileOnce sync.Once
-	compiled    map[string]*jsonschema.Schema
-	compileErr  error
-)
+// compiled maps each of Documents to its compiled schema. It is compiled
+// once, at init: the schema is embedded, so a failure is a programmer error.
+var compiled = mustCompileAll()
 
 // Validate checks a JSON document against one definition of the schema.
 func Validate(def string, document []byte) error {
-	compileOnce.Do(compileAll)
-	if compileErr != nil {
-		return compileErr
-	}
 	schema, ok := compiled[def]
 	if !ok {
 		return fmt.Errorf("unknown definition %q", def)
@@ -66,24 +59,24 @@ func Validate(def string, document []byte) error {
 	return nil
 }
 
-func compileAll() {
+// mustCompileAll compiles every definition of Documents from the embedded
+// schema. It panics when the schema does not decode or compile.
+func mustCompileAll() map[string]*jsonschema.Schema {
 	doc, err := jsonschema.UnmarshalJSON(bytes.NewReader(SchemaJSON))
 	if err != nil {
-		compileErr = fmt.Errorf("decode schema: %w", err)
-		return
+		panic(fmt.Sprintf("contract: decode schema: %v", err))
 	}
 	compiler := jsonschema.NewCompiler()
 	if err := compiler.AddResource(SchemaID, doc); err != nil {
-		compileErr = err
-		return
+		panic(fmt.Sprintf("contract: add schema: %v", err))
 	}
-	compiled = make(map[string]*jsonschema.Schema, len(Documents))
+	schemas := make(map[string]*jsonschema.Schema, len(Documents))
 	for _, def := range Documents {
 		schema, err := compiler.Compile(SchemaID + "#/$defs/" + def)
 		if err != nil {
-			compileErr = fmt.Errorf("compile %s: %w", def, err)
-			return
+			panic(fmt.Sprintf("contract: compile %s: %v", def, err))
 		}
-		compiled[def] = schema
+		schemas[def] = schema
 	}
+	return schemas
 }
