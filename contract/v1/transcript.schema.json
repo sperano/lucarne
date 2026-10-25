@@ -1,0 +1,537 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/sperano/lucarne/contract/v1/transcript.schema.json",
+  "title": "Lucarne transcript and API contract, version 1",
+  "description": "Validate a document against one of the $defs: Snapshot, Event, AttemptUpdate, RunUpdate, Reset, End, ErrorResponse, ContractInfo. contract/README.md is the prose specification.",
+  "$defs": {
+    "SchemaVersion": { "const": "lucarne.transcript/v1" },
+    "Label": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "Text": { "type": "string", "maxLength": 65536 },
+    "ToolInputText": { "type": "string", "maxLength": 16384 },
+    "ToolOutputText": { "type": "string", "maxLength": 32768 },
+    "DiffText": { "type": "string", "maxLength": 65536 },
+    "RawText": { "type": "string", "maxLength": 8192 },
+    "Path": { "type": "string", "minLength": 1, "maxLength": 4096 },
+    "Count": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+    "Seq": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+    "Line": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+    "Time": {
+      "description": "RFC 3339 in UTC, as the source gave it; never inferred.",
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{1,9})?Z$"
+    },
+    "DNSLabel": {
+      "type": "string",
+      "pattern": "^[a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?$"
+    },
+    "UID": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "AttemptID": {
+      "description": "<podUID>.<container>.<restart>",
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\\.[a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?\\.(0|[1-9][0-9]{0,9})$"
+    },
+    "EventID": {
+      "description": "<attemptID>:<line>:<part>, or <attemptID>:<line>:gap for a gap event.",
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\\.[a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?\\.(0|[1-9][0-9]{0,9}):[1-9][0-9]{0,15}:((0|[1-9][0-9]{0,5})|gap)$"
+    },
+    "Epoch": { "type": "string", "pattern": "^[0-9a-z]{1,32}$" },
+    "DecimalUSD": {
+      "description": "The source's cost as a plain decimal string, never a float.",
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]{0,15})(\\.[0-9]{1,18})?$"
+    },
+    "RunnerKind": { "enum": ["claude-code", "codex", "opencode", "unknown"] },
+
+    "RunKey": {
+      "type": "object",
+      "required": ["cluster", "namespace", "taskUID"],
+      "properties": {
+        "cluster": { "$ref": "#/$defs/DNSLabel" },
+        "namespace": { "$ref": "#/$defs/DNSLabel" },
+        "taskUID": { "$ref": "#/$defs/UID" }
+      },
+      "additionalProperties": false
+    },
+    "AttemptKey": {
+      "type": "object",
+      "required": ["podUID", "container", "restart"],
+      "properties": {
+        "podUID": { "$ref": "#/$defs/UID" },
+        "container": { "$ref": "#/$defs/DNSLabel" },
+        "restart": { "type": "integer", "minimum": 0, "maximum": 9999999999 }
+      },
+      "additionalProperties": false
+    },
+    "Run": {
+      "type": "object",
+      "required": ["key", "taskName", "phase"],
+      "properties": {
+        "key": { "$ref": "#/$defs/RunKey" },
+        "taskName": { "$ref": "#/$defs/Label" },
+        "runner": { "$ref": "#/$defs/RunnerKind" },
+        "phase": {
+          "enum": ["pending", "waiting", "running", "succeeded", "failed", "unknown"]
+        },
+        "deleted": { "type": "boolean" },
+        "created": { "$ref": "#/$defs/Time" },
+        "started": { "$ref": "#/$defs/Time" },
+        "completed": { "$ref": "#/$defs/Time" }
+      },
+      "additionalProperties": false
+    },
+    "Runner": {
+      "type": "object",
+      "required": ["kind"],
+      "properties": {
+        "kind": { "$ref": "#/$defs/RunnerKind" },
+        "version": { "$ref": "#/$defs/Label" }
+      },
+      "additionalProperties": false
+    },
+    "ContainerState": {
+      "type": "object",
+      "required": ["state"],
+      "properties": {
+        "state": { "enum": ["waiting", "running", "terminated", "unknown"] },
+        "exitCode": { "type": "integer" },
+        "reason": { "$ref": "#/$defs/Label" },
+        "startedAt": { "$ref": "#/$defs/Time" },
+        "finishedAt": { "$ref": "#/$defs/Time" }
+      },
+      "additionalProperties": false
+    },
+    "Coverage": {
+      "type": "object",
+      "required": ["state", "lines", "gaps", "truncatedLines"],
+      "properties": {
+        "state": { "enum": ["pending", "following", "ended", "unavailable", "expired"] },
+        "lines": { "$ref": "#/$defs/Count" },
+        "gaps": { "$ref": "#/$defs/Count" },
+        "truncatedLines": { "$ref": "#/$defs/Count" },
+        "reason": { "$ref": "#/$defs/Label" }
+      },
+      "additionalProperties": false
+    },
+    "Attempt": {
+      "type": "object",
+      "required": ["id", "key", "podName", "runner", "container", "coverage"],
+      "properties": {
+        "id": { "$ref": "#/$defs/AttemptID" },
+        "key": { "$ref": "#/$defs/AttemptKey" },
+        "podName": { "$ref": "#/$defs/Label" },
+        "runner": { "$ref": "#/$defs/Runner" },
+        "container": { "$ref": "#/$defs/ContainerState" },
+        "coverage": { "$ref": "#/$defs/Coverage" }
+      },
+      "additionalProperties": false
+    },
+    "Stream": {
+      "type": "object",
+      "required": ["epoch", "lastSeq", "droppedEvents"],
+      "properties": {
+        "epoch": { "$ref": "#/$defs/Epoch" },
+        "lastSeq": { "$ref": "#/$defs/Count" },
+        "droppedEvents": { "$ref": "#/$defs/Count" }
+      },
+      "additionalProperties": false
+    },
+    "Limits": {
+      "type": "object",
+      "required": [
+        "maxLineBytes",
+        "maxAttemptLogBytes",
+        "maxTextBytes",
+        "maxToolInputBytes",
+        "maxToolOutputBytes",
+        "maxDiffBytes",
+        "maxRawBytes",
+        "maxPathBytes",
+        "maxLabelBytes",
+        "maxEventsPerRun",
+        "maxRunBytes",
+        "maxAttemptsPerRun",
+        "maxReplayUpdates",
+        "maxClientQueue"
+      ],
+      "properties": {
+        "maxLineBytes": { "$ref": "#/$defs/Count" },
+        "maxAttemptLogBytes": { "$ref": "#/$defs/Count" },
+        "maxTextBytes": { "$ref": "#/$defs/Count" },
+        "maxToolInputBytes": { "$ref": "#/$defs/Count" },
+        "maxToolOutputBytes": { "$ref": "#/$defs/Count" },
+        "maxDiffBytes": { "$ref": "#/$defs/Count" },
+        "maxRawBytes": { "$ref": "#/$defs/Count" },
+        "maxPathBytes": { "$ref": "#/$defs/Count" },
+        "maxLabelBytes": { "$ref": "#/$defs/Count" },
+        "maxEventsPerRun": { "$ref": "#/$defs/Count" },
+        "maxRunBytes": { "$ref": "#/$defs/Count" },
+        "maxAttemptsPerRun": { "$ref": "#/$defs/Count" },
+        "maxReplayUpdates": { "$ref": "#/$defs/Count" },
+        "maxClientQueue": { "$ref": "#/$defs/Count" }
+      },
+      "additionalProperties": false
+    },
+
+    "Source": {
+      "type": "object",
+      "required": ["line", "part"],
+      "properties": {
+        "line": { "$ref": "#/$defs/Line" },
+        "part": { "type": "integer", "minimum": 0, "maximum": 999999 },
+        "type": { "$ref": "#/$defs/Label" },
+        "logTime": { "$ref": "#/$defs/Time" },
+        "runnerTime": { "$ref": "#/$defs/Time" }
+      },
+      "additionalProperties": false
+    },
+    "Message": {
+      "type": "object",
+      "required": ["role", "type", "text"],
+      "properties": {
+        "role": { "enum": ["user", "assistant"] },
+        "type": { "enum": ["text", "reasoning"] },
+        "text": { "$ref": "#/$defs/Text" },
+        "messageId": { "$ref": "#/$defs/Label" }
+      },
+      "additionalProperties": false
+    },
+    "ToolCall": {
+      "type": "object",
+      "required": ["callId", "name"],
+      "properties": {
+        "callId": { "$ref": "#/$defs/Label" },
+        "name": { "$ref": "#/$defs/Label" },
+        "input": { "description": "The source's input when it fits maxToolInputBytes serialized." },
+        "inputText": { "$ref": "#/$defs/ToolInputText" },
+        "title": { "$ref": "#/$defs/Label" },
+        "parentCallId": { "$ref": "#/$defs/Label" }
+      },
+      "not": {
+        "properties": { "input": true, "inputText": true },
+        "required": ["input", "inputText"]
+      },
+      "additionalProperties": false
+    },
+    "ToolResult": {
+      "type": "object",
+      "required": ["callId", "status"],
+      "properties": {
+        "callId": { "$ref": "#/$defs/Label" },
+        "status": { "enum": ["ok", "error", "declined", "unknown"] },
+        "output": { "$ref": "#/$defs/ToolOutputText" },
+        "exitCode": { "type": "integer" }
+      },
+      "additionalProperties": false
+    },
+    "Edit": {
+      "type": "object",
+      "required": ["path", "change"],
+      "properties": {
+        "callId": { "$ref": "#/$defs/Label" },
+        "path": { "$ref": "#/$defs/Path" },
+        "change": { "enum": ["add", "update", "delete", "unknown"] },
+        "diff": { "$ref": "#/$defs/DiffText" },
+        "before": { "$ref": "#/$defs/DiffText" },
+        "after": { "$ref": "#/$defs/DiffText" }
+      },
+      "additionalProperties": false
+    },
+    "Usage": {
+      "type": "object",
+      "required": ["scope"],
+      "properties": {
+        "scope": { "enum": ["message", "step", "turn", "session"] },
+        "inputTokens": { "$ref": "#/$defs/Count" },
+        "outputTokens": { "$ref": "#/$defs/Count" },
+        "cacheReadTokens": { "$ref": "#/$defs/Count" },
+        "cacheWriteTokens": { "$ref": "#/$defs/Count" },
+        "reasoningTokens": { "$ref": "#/$defs/Count" },
+        "totalTokens": { "$ref": "#/$defs/Count" },
+        "costUSD": { "$ref": "#/$defs/DecimalUSD" },
+        "durationMs": { "$ref": "#/$defs/Count" },
+        "apiDurationMs": { "$ref": "#/$defs/Count" },
+        "turns": { "$ref": "#/$defs/Count" }
+      },
+      "additionalProperties": false
+    },
+    "Retry": {
+      "type": "object",
+      "required": ["attempt"],
+      "properties": {
+        "attempt": { "type": "integer", "minimum": 1, "maximum": 999999 },
+        "max": { "type": "integer", "minimum": 1, "maximum": 999999 },
+        "delayMs": { "$ref": "#/$defs/Count" }
+      },
+      "additionalProperties": false
+    },
+    "ErrorInfo": {
+      "type": "object",
+      "required": ["message"],
+      "properties": {
+        "message": { "$ref": "#/$defs/Text" },
+        "code": { "$ref": "#/$defs/Label" },
+        "status": { "type": "integer", "minimum": 100, "maximum": 599 },
+        "retry": { "$ref": "#/$defs/Retry" }
+      },
+      "additionalProperties": false
+    },
+    "Output": {
+      "type": "object",
+      "required": ["key", "value"],
+      "properties": {
+        "key": { "$ref": "#/$defs/Label" },
+        "value": { "$ref": "#/$defs/Text" }
+      },
+      "additionalProperties": false
+    },
+    "Lifecycle": {
+      "type": "object",
+      "required": ["phase"],
+      "properties": {
+        "phase": {
+          "enum": [
+            "setup_started",
+            "setup_completed",
+            "setup_failed",
+            "session_started",
+            "turn_started",
+            "turn_completed",
+            "turn_failed",
+            "compacted",
+            "session_completed",
+            "limit_hit",
+            "kelos_outputs"
+          ]
+        },
+        "sessionId": { "$ref": "#/$defs/Label" },
+        "model": { "$ref": "#/$defs/Label" },
+        "runnerVersion": { "$ref": "#/$defs/Label" },
+        "subtype": { "$ref": "#/$defs/Label" },
+        "isError": { "type": "boolean" },
+        "stopReason": { "$ref": "#/$defs/Label" },
+        "exitCode": { "type": "integer" },
+        "detail": { "$ref": "#/$defs/Text" },
+        "outputs": {
+          "type": "array",
+          "maxItems": 64,
+          "items": { "$ref": "#/$defs/Output" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "Raw": {
+      "type": "object",
+      "required": ["reason", "text", "bytes"],
+      "properties": {
+        "reason": {
+          "enum": ["text", "malformed_json", "unknown_type", "unsupported", "oversized"]
+        },
+        "text": { "$ref": "#/$defs/RawText" },
+        "bytes": { "$ref": "#/$defs/Count" }
+      },
+      "additionalProperties": false
+    },
+    "Gap": {
+      "type": "object",
+      "required": ["reason"],
+      "properties": {
+        "reason": {
+          "enum": ["source_truncated", "read_interrupted", "input_limit", "attempt_expired"]
+        },
+        "lines": { "$ref": "#/$defs/Count" },
+        "detail": { "$ref": "#/$defs/Label" }
+      },
+      "additionalProperties": false
+    },
+
+    "Event": {
+      "type": "object",
+      "required": ["seq", "id", "attempt", "kind", "source"],
+      "properties": {
+        "seq": { "$ref": "#/$defs/Seq" },
+        "id": { "$ref": "#/$defs/EventID" },
+        "attempt": { "$ref": "#/$defs/AttemptID" },
+        "kind": {
+          "enum": [
+            "message",
+            "tool_call",
+            "tool_result",
+            "edit",
+            "usage",
+            "error",
+            "lifecycle",
+            "raw",
+            "gap"
+          ]
+        },
+        "source": { "$ref": "#/$defs/Source" },
+        "truncated": {
+          "type": "array",
+          "maxItems": 8,
+          "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^[a-z][A-Za-z]{0,31}$" }
+        }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "kind": { "const": "message" },
+            "message": { "$ref": "#/$defs/Message" }
+          },
+          "required": ["message"]
+        },
+        {
+          "properties": {
+            "kind": { "const": "tool_call" },
+            "toolCall": { "$ref": "#/$defs/ToolCall" }
+          },
+          "required": ["toolCall"]
+        },
+        {
+          "properties": {
+            "kind": { "const": "tool_result" },
+            "toolResult": { "$ref": "#/$defs/ToolResult" }
+          },
+          "required": ["toolResult"]
+        },
+        {
+          "properties": {
+            "kind": { "const": "edit" },
+            "edit": { "$ref": "#/$defs/Edit" }
+          },
+          "required": ["edit"]
+        },
+        {
+          "properties": {
+            "kind": { "const": "usage" },
+            "usage": { "$ref": "#/$defs/Usage" }
+          },
+          "required": ["usage"]
+        },
+        {
+          "properties": {
+            "kind": { "const": "error" },
+            "error": { "$ref": "#/$defs/ErrorInfo" }
+          },
+          "required": ["error"]
+        },
+        {
+          "properties": {
+            "kind": { "const": "lifecycle" },
+            "lifecycle": { "$ref": "#/$defs/Lifecycle" }
+          },
+          "required": ["lifecycle"]
+        },
+        {
+          "properties": {
+            "kind": { "const": "raw" },
+            "raw": { "$ref": "#/$defs/Raw" }
+          },
+          "required": ["raw"]
+        },
+        {
+          "properties": {
+            "kind": { "const": "gap" },
+            "gap": { "$ref": "#/$defs/Gap" }
+          },
+          "required": ["gap"]
+        }
+      ],
+      "if": { "properties": { "kind": { "const": "gap" } } },
+      "then": { "properties": { "id": { "type": "string", "pattern": ":gap$" } } },
+      "else": { "properties": { "id": { "type": "string", "pattern": ":[0-9]+$" } } },
+      "unevaluatedProperties": false
+    },
+
+    "Snapshot": {
+      "type": "object",
+      "required": ["schema", "run", "attempts", "events", "stream", "limits"],
+      "properties": {
+        "schema": { "$ref": "#/$defs/SchemaVersion" },
+        "run": { "$ref": "#/$defs/Run" },
+        "attempts": {
+          "type": "array",
+          "maxItems": 16,
+          "items": { "$ref": "#/$defs/Attempt" }
+        },
+        "events": {
+          "type": "array",
+          "maxItems": 20000,
+          "items": { "$ref": "#/$defs/Event" }
+        },
+        "stream": { "$ref": "#/$defs/Stream" },
+        "limits": { "$ref": "#/$defs/Limits" }
+      },
+      "additionalProperties": false
+    },
+    "AttemptUpdate": {
+      "type": "object",
+      "required": ["seq", "attempt"],
+      "properties": {
+        "seq": { "$ref": "#/$defs/Seq" },
+        "attempt": { "$ref": "#/$defs/Attempt" }
+      },
+      "additionalProperties": false
+    },
+    "RunUpdate": {
+      "type": "object",
+      "required": ["seq", "run"],
+      "properties": {
+        "seq": { "$ref": "#/$defs/Seq" },
+        "run": { "$ref": "#/$defs/Run" }
+      },
+      "additionalProperties": false
+    },
+    "Reset": {
+      "type": "object",
+      "required": ["epoch", "reason"],
+      "properties": {
+        "epoch": { "$ref": "#/$defs/Epoch" },
+        "reason": {
+          "enum": ["epoch_changed", "replay_expired", "client_too_slow", "bad_cursor"]
+        }
+      },
+      "additionalProperties": false
+    },
+    "End": {
+      "type": "object",
+      "required": ["seq", "reason"],
+      "properties": {
+        "seq": { "$ref": "#/$defs/Seq" },
+        "reason": { "enum": ["attempts_ended", "run_deleted"] }
+      },
+      "additionalProperties": false
+    },
+    "ErrorResponse": {
+      "type": "object",
+      "required": ["error"],
+      "properties": {
+        "error": {
+          "type": "object",
+          "required": ["code", "message"],
+          "properties": {
+            "code": {
+              "enum": ["invalid_run_key", "run_not_found", "not_implemented", "internal"]
+            },
+            "message": { "$ref": "#/$defs/Label" }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "ContractInfo": {
+      "type": "object",
+      "required": ["schema", "limits"],
+      "properties": {
+        "schema": { "$ref": "#/$defs/SchemaVersion" },
+        "limits": { "$ref": "#/$defs/Limits" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

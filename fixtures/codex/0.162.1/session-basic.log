@@ -1,0 +1,27 @@
+
+---KELOS_SETUP_COMMAND_START---
+Cloning into '/workspace/repo'...
+
+---KELOS_SETUP_COMMAND_DONE---
+{"type":"thread.started","thread_id":"0199a1b2-c3d4-7e5f-8a6b-7c8d9e0f1a2b"}
+{"type":"turn.started"}
+{"type":"item.completed","item":{"id":"item_0","type":"reasoning","text":"**Checking the greeting**\n\nThe test expects the world to be named."}}
+{"type":"item.started","item":{"id":"item_1","type":"todo_list","items":[{"text":"Read greet.go","completed":true},{"text":"Fix the greeting","completed":false}]}}
+{"type":"item.started","item":{"id":"item_2","type":"command_execution","command":"/bin/bash -lc 'cat greet.go'","aggregated_output":"","exit_code":null,"status":"in_progress"}}
+{"type":"item.completed","item":{"id":"item_2","type":"command_execution","command":"/bin/bash -lc 'cat greet.go'","aggregated_output":"package widget\n\nfunc Greeting() string {\n\treturn \"Hello\"\n}\n","exit_code":0,"status":"completed"}}
+{"type":"item.completed","item":{"id":"item_3","type":"file_change","changes":[{"path":"/workspace/repo/greet.go","kind":"update"}],"status":"completed"}}
+{"type":"item.updated","item":{"id":"item_1","type":"todo_list","items":[{"text":"Read greet.go","completed":true},{"text":"Fix the greeting","completed":true}]}}
+{"type":"item.started","item":{"id":"item_4","type":"command_execution","command":"/bin/bash -lc 'go test ./...'","aggregated_output":"","exit_code":null,"status":"in_progress"}}
+{"type":"item.completed","item":{"id":"item_4","type":"command_execution","command":"/bin/bash -lc 'go test ./...'","aggregated_output":"ok  \texample.com/widget\t0.004s\n","exit_code":0,"status":"completed"}}
+{"type":"item.completed","item":{"id":"item_5","type":"agent_message","text":"The greeting now reads \"Hello, world\" and the tests pass."}}
+{"type":"item.completed","item":{"id":"item_1","type":"todo_list","items":[{"text":"Read greet.go","completed":true},{"text":"Fix the greeting","completed":true}]}}
+{"type":"turn.completed","usage":{"input_tokens":48210,"cached_input_tokens":40960,"cache_write_input_tokens":0,"output_tokens":1210,"reasoning_output_tokens":640}}
+---KELOS_OUTPUTS_START---
+branch: agent/example-42
+pr: https://github.com/example/widget/pull/7
+commit: 9f2c4e1a7b3d5f60812e4c9a0b1d2e3f4a5b6c7d
+base-branch: main
+input-tokens: 48210
+output-tokens: 1210
+response: VGhlIGdyZWV0aW5nIG5vdyByZWFkcyAiSGVsbG8sIHdvcmxkIiBhbmQgdGhlIHRlc3RzIHBhc3Mu
+---KELOS_OUTPUTS_END---

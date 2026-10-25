@@ -1,0 +1,66 @@
+{
+  "schema": "lucarne.transcript/v1",
+  "run": {
+    "key": {
+      "cluster": "example",
+      "namespace": "agents",
+      "taskUID": "3F8E2A4C-1B2D-4E5F-8A9B-0C1D2E3F4A5B"
+    },
+    "taskName": "example-claude-42",
+    "runner": "claude-code",
+    "phase": "succeeded",
+    "created": "2026-10-25T09:00:00Z",
+    "started": "2026-10-25T09:00:02Z",
+    "completed": "2026-10-25T09:01:03Z"
+  },
+  "attempts": [
+    {
+      "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0",
+      "key": {
+        "podUID": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f",
+        "container": "claude-code",
+        "restart": 0
+      },
+      "podName": "example-claude-42-x7k2p",
+      "runner": {
+        "kind": "claude-code",
+        "version": "2.1.296"
+      },
+      "container": {
+        "state": "terminated",
+        "exitCode": 0,
+        "reason": "Completed",
+        "startedAt": "2026-10-25T09:00:04Z",
+        "finishedAt": "2026-10-25T09:01:02Z"
+      },
+      "coverage": {
+        "state": "ended",
+        "lines": 26,
+        "gaps": 0,
+        "truncatedLines": 0
+      }
+    }
+  ],
+  "events": [],
+  "stream": {
+    "epoch": "k3v9q2",
+    "lastSeq": 20,
+    "droppedEvents": 0
+  },
+  "limits": {
+    "maxLineBytes": 1048576,
+    "maxAttemptLogBytes": 67108864,
+    "maxTextBytes": 65536,
+    "maxToolInputBytes": 16384,
+    "maxToolOutputBytes": 32768,
+    "maxDiffBytes": 65536,
+    "maxRawBytes": 8192,
+    "maxPathBytes": 4096,
+    "maxLabelBytes": 256,
+    "maxEventsPerRun": 20000,
+    "maxRunBytes": 33554432,
+    "maxAttemptsPerRun": 16,
+    "maxReplayUpdates": 5000,
+    "maxClientQueue": 1024
+  }
+}

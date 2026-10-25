@@ -1,0 +1,4 @@
+{"type":"thread.started","thread_id":"0199a1b2-c3d4-7e5f-8a6b-7c8d9e0f1a2b"}
+{"type":"turn.started"}
+{"type":"error","message":"example: unexpected status 401 Unauthorized"}
+{"type":"turn.failed","error":{"message":"example: unexpected status 401 Unauthorized"}}

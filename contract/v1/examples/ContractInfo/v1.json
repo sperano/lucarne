@@ -1,0 +1,19 @@
+{
+  "schema": "lucarne.transcript/v1",
+  "limits": {
+    "maxLineBytes": 1048576,
+    "maxAttemptLogBytes": 67108864,
+    "maxTextBytes": 65536,
+    "maxToolInputBytes": 16384,
+    "maxToolOutputBytes": 32768,
+    "maxDiffBytes": 65536,
+    "maxRawBytes": 8192,
+    "maxPathBytes": 4096,
+    "maxLabelBytes": 256,
+    "maxEventsPerRun": 20000,
+    "maxRunBytes": 33554432,
+    "maxAttemptsPerRun": 16,
+    "maxReplayUpdates": 5000,
+    "maxClientQueue": 1024
+  }
+}

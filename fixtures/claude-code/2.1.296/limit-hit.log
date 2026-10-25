@@ -1,0 +1,14 @@
+{"type":"system","subtype":"init","cwd":"/workspace/repo","session_id":"0b1c2d3e-4f50-4617-8293-a4b5c6d7e8f9","tools":["Task","Bash","Glob","Grep","Read","Edit","Write","TodoWrite"],"mcp_servers":[{"name":"tracker","status":"connected"}],"model":"claude-opus-5-5","permissionMode":"bypassPermissions","slash_commands":["review"],"apiKeySource":"none","betas":[],"claude_code_version":"2.1.296","output_style":"default","agents":["general-purpose"],"skills":[],"plugins":[],"analytics_disabled":false,"product_feedback_disabled":false,"uuid":"00000000-0000-4000-8000-00000000001b"}
+{"type":"rate_limit_event","rate_limit_info":{"status":"rejected","unifiedRateLimitFallbackAvailable":false,"resetsAt":1792936800,"rateLimitType":"five_hour"},"uuid":"00000000-0000-4000-8000-00000000001c","session_id":"0b1c2d3e-4f50-4617-8293-a4b5c6d7e8f9"}
+{"type":"assistant","message":{"model":"claude-opus-5-5","id":"msg_01ExampleK","type":"message","role":"assistant","content":[{"type":"text","text":"Usage limit reached."}],"stop_reason":"stop_sequence","stop_sequence":null,"usage":{"input_tokens":0,"cache_creation_input_tokens":0,"cache_read_input_tokens":0,"output_tokens":0,"service_tier":"standard"}},"parent_tool_use_id":null,"session_id":"0b1c2d3e-4f50-4617-8293-a4b5c6d7e8f9","uuid":"00000000-0000-4000-8000-00000000001d","error":"rate_limit"}
+{"type":"result","subtype":"success","is_error":true,"duration_ms":48210,"duration_api_ms":39876,"num_turns":1,"result":"Usage limit reached.","stop_reason":"stop_sequence","session_id":"0b1c2d3e-4f50-4617-8293-a4b5c6d7e8f9","total_cost_usd":0,"usage":{"input_tokens":0,"cache_creation_input_tokens":0,"cache_read_input_tokens":0,"output_tokens":0,"service_tier":"standard"},"modelUsage":{"claude-opus-5-5":{"inputTokens":0,"outputTokens":0,"cacheReadInputTokens":0,"cacheCreationInputTokens":0,"webSearchRequests":0,"costUSD":0,"contextWindow":1000000,"maxOutputTokens":64000}},"permission_denials":[],"uuid":"00000000-0000-4000-8000-00000000001e","api_error_status":429}
+---KELOS_OUTPUTS_START---
+branch: agent/example-42
+pr: https://github.com/example/widget/pull/7
+commit: 9f2c4e1a7b3d5f60812e4c9a0b1d2e3f4a5b6c7d
+base-branch: main
+limit-resets-at: 1792936800
+limit-type: five_hour
+---KELOS_OUTPUTS_END---
+
+---KELOS_LIMIT_HIT--- {"status": "rejected", "unifiedRateLimitFallbackAvailable": false, "resetsAt": 1792936800, "rateLimitType": "five_hour"}

@@ -1,0 +1,7 @@
+{"type":"thread.started","thread_id":"0199a1b2-c3d4-7e5f-8a6b-7c8d9e0f1a2b"}
+{"type":"turn.started"}
+{"type":"error","message":"Reconnecting... 1/5 (stream disconnected before completion: example transport error)"}
+{"type":"error","message":"Reconnecting... 2/5 (stream disconnected before completion: example transport error)"}
+{"type":"item.completed","item":{"id":"item_0","type":"error","message":"model rerouted: example-model-a -> example-model-b (HighRiskCyberActivity)"}}
+{"type":"item.completed","item":{"id":"item_1","type":"agent_message","text":"Done after two reconnects."}}
+{"type":"turn.completed","usage":{"input_tokens":9120,"cached_input_tokens":8192,"cache_write_input_tokens":0,"output_tokens":54,"reasoning_output_tokens":0}}

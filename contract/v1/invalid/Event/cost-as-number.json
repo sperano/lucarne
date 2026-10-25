@@ -1,0 +1,22 @@
+{
+  "seq": 18,
+  "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0:16:1",
+  "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0",
+  "kind": "usage",
+  "source": {
+    "line": 16,
+    "part": 1,
+    "type": "result"
+  },
+  "usage": {
+    "scope": "session",
+    "inputTokens": 18,
+    "outputTokens": 202,
+    "cacheReadTokens": 48384,
+    "cacheWriteTokens": 2048,
+    "costUSD": 0.4182,
+    "durationMs": 48210,
+    "apiDurationMs": 39876,
+    "turns": 4
+  }
+}

@@ -1,0 +1,7 @@
+Warning: Unrecognized provider prefix 'example' in KELOS_MODEL, defaulting to Anthropic
+{"type":"step_start","timestamp":1792915200100,"sessionID":"ses_01ExampleSession","part":{"id":"prt_31","sessionID":"ses_01ExampleSession","messageID":"msg_01ExampleF","type":"step-start"}}
+{"type":"text","timestamp":1792915200900,"sessionID":"ses_01ExampleSession","part":{"id":"prt_32","sessionID":"ses_01ExampleSession","messageID":"msg_0
+{"type":"text","timestamp":1792915201000,}
+{"type":"example_future_event","timestamp":1792915201000,"sessionID":"ses_01ExampleSession","part":{"id":"prt_33","sessionID":"ses_01ExampleSession","messageID":"msg_01ExampleF","type":"example-future-part"}}
+{"type":"text","timestamp":1792915201600,"sessionID":"ses_01ExampleSession","part":{"id":"prt_34","sessionID":"ses_01ExampleSession","messageID":"msg_01ExampleF","type":"text","text":"Recovered after the bad lines.","time":{"start":1792915201100,"end":1792915201600}}}
+{"type":"step_finish","timestamp":1792915201700,"sessionID":"ses_01ExampleSession","part":{"id":"prt_35","sessionID":"ses_01ExampleSession","messageID":"msg_01ExampleF","type":"step-finish","reason":"stop","cost":0.002,"tokens":{"total":135,"input":128,"output":7,"reasoning":0,"cache":{"read":0,"write":0}}}}
