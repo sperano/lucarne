@@ -185,9 +185,9 @@
       "runner": "opencode",
       "version": "1.19.0",
       "provenance": "synthetic",
-      "scenarios": ["assistant_text", "parallel_tools", "subagent", "tool_success", "tool_failure", "non_json_line", "duplicate_line", "compaction", "session_failure", "truncated_line", "usage", "cost"],
-      "lines": { "blank": 0, "json": 11, "text": 2 },
-      "notes": "Three calls of one step printed as each finishes (read before the bash call issued first), a stderr line between them, a task call whose subagent prints nothing of its own, the read printed again when compaction prunes it (state.time.compacted), the synthetic user text of the compaction prompt, a bash call aborted while running (Tool execution aborted, metadata.interrupted), the MessageAbortedError, and a last line cut when the log ends. When pruning happens and the abort error's wording are illustrative."
+      "scenarios": ["assistant_text", "parallel_tools", "subagent", "edit", "tool_success", "tool_failure", "non_json_line", "duplicate_line", "compaction", "session_failure", "truncated_line", "usage", "cost"],
+      "lines": { "blank": 0, "json": 13, "text": 2 },
+      "notes": "Four calls of one step printed as each finishes (read before the bash call issued first), a stderr line between them, an edit, a task call whose subagent prints nothing of its own, the read and the edit printed again when compaction prunes them (state.time.compacted), the synthetic user text of the compaction prompt, a bash call aborted while running (Tool execution aborted, metadata.interrupted), the MessageAbortedError, and a last line cut when the log ends. When pruning happens and the abort error's wording are illustrative."
     },
     {
       "file": "opencode/1.19.0/errors.log",

@@ -28,6 +28,23 @@ type toolState struct {
 	Title       string          `json:"title"`
 	Metadata    json.RawMessage `json:"metadata"`
 	Attachments json.RawMessage `json:"attachments"`
+	Time        json.RawMessage `json:"time"`
+}
+
+// toolTime is the part's time; compacted is set only by compaction's
+// prune, on a part already printed as completed.
+type toolTime struct {
+	Compacted json.RawMessage `json:"compacted"`
+}
+
+// pruned reports whether compaction pruned the part, which run.ts then
+// prints a second time.
+func (s *toolState) pruned() bool {
+	var t toolTime
+	if !isObject(s.Time) || json.Unmarshal(s.Time, &t) != nil {
+		return false
+	}
+	return len(t.Compacted) > 0 && string(t.Compacted) != "null"
 }
 
 // exitMetadata is the bash tool's exit code, null when the command was
@@ -38,7 +55,8 @@ type exitMetadata struct {
 
 // renderTool adds a tool part: its call, then its result, attachments and
 // file changes. A completed or failed part holds both the call and its
-// outcome, so they share the line.
+// outcome, so they share the line. A pruned part's file changes were
+// already given by its first print, so its re-print leaves them out.
 func renderTool(p part, out *adapter.Emitter) bool {
 	if p.Type != partTool || p.CallID == "" || p.Tool == "" || p.State == nil || p.State.Status == "" {
 		return false
@@ -61,6 +79,9 @@ func renderTool(p part, out *adapter.Emitter) bool {
 	}
 	if attachments, ok := adapter.CompactJSON(state.Attachments); ok {
 		out.Raw(contract.RawUnsupported, []byte(attachments))
+	}
+	if state.pruned() {
+		return true
 	}
 	for _, ev := range edits(p.Tool, call.CallID, state) {
 		out.Emit(ev)

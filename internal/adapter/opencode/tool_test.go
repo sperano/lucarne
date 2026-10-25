@@ -101,3 +101,34 @@ func TestToolAttachmentsAreRaw(t *testing.T) {
 		t.Errorf("events = %s", adaptertest.Dump(events))
 	}
 }
+
+func TestPrunedToolPartLeavesOutItsEdits(t *testing.T) {
+	t.Parallel()
+	const state = `{"status":"completed","input":{"filePath":"/workspace/repo/a.go","oldString":"a","newString":"b"},` +
+		`"output":"Edit applied successfully.","metadata":{"filediff":{"file":"/workspace/repo/a.go","patch":"@@ -1 +1 @@\n-a\n+b\n"}},` +
+		`"time":{"start":1,"end":2%s}}`
+	cases := []struct {
+		name  string
+		time  string
+		edits int
+	}{
+		{"printed once completed", ``, 1},
+		{"compacted null", `,"compacted":null`, 1},
+		{"re-printed when pruned", `,"compacted":3`, 0},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			events := normalize(t, toolLine("edit", strings.Replace(state, "%s", c.time, 1)))
+			got := 0
+			for _, ev := range events {
+				if ev.Kind == contract.KindEdit {
+					got++
+				}
+			}
+			if got != c.edits || events[0].Kind != contract.KindToolCall || events[1].Kind != contract.KindToolResult {
+				t.Errorf("events = %s, want call, result and %d edits", adaptertest.Dump(events), c.edits)
+			}
+		})
+	}
+}

@@ -62,8 +62,10 @@
 //   - Subagents: run.ts prints only the parts of the run's own session, so a
 //     task call's subagent is its call and result only.
 //   - Repeated parts: a completed tool part is printed again when compaction
-//     prunes its output (state.time.compacted); each print is its own call
-//     and result events.
+//     prunes its output (state.time.compacted); each print is its own call,
+//     result and attachment events. The re-print's file changes are left
+//     out, so an edit is given once; in a session continued from an earlier
+//     run, its first print, and so its edits, are in that run's log.
 //   - Not rendered: a failed call's metadata (the output an aborted command
 //     had streamed, interrupted), a completed call's other metadata, the
 //     step snapshots, and the time and ID of each part.
