@@ -1,0 +1,17 @@
+{
+  "seq": 12,
+  "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.codex.1:b81f4c2d9e07a356:4:0",
+  "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.codex.1",
+  "kind": "tool_result",
+  "source": {
+    "line": 4,
+    "part": 0,
+    "type": "item.completed"
+  },
+  "toolResult": {
+    "callId": "item_0",
+    "status": "error",
+    "exitCode": 1,
+    "output": "--- FAIL: TestGreeting (0.00s)\nFAIL\nFAIL\texample.com/widget\t0.004s\nFAIL\n"
+  }
+}

@@ -1,0 +1,184 @@
+{
+  "manifestVersion": 1,
+  "deployed": {
+    "recordedOn": "2026-10-25",
+    "kelos": "v0.60.0",
+    "runners": {
+      "claude-code": "2.1.296",
+      "codex": "0.162.1",
+      "opencode": "1.19.0"
+    },
+    "source": "sperano/hollingsworth docker/kelos-agent/Dockerfile at 066eab4: KELOS_VERSION, CLAUDE_CODE_VERSION, CODEX_VERSION, OPENCODE_VERSION"
+  },
+  "captureGap": "No fixture is captured from a real run: no authorized, sanitized capture exists yet. Every fixture is synthetic, written from the upstream sources named in basis. Replace or complement them with captured fixtures (provenance \"captured\") once a capture is authorized; private transcripts never go in this repository.",
+  "basis": {
+    "claude-code": [
+      "kelos-dev/kelos v0.60.0 claude-code/kelos_entrypoint.sh: claude --dangerously-skip-permissions --output-format stream-json --verbose -p, piped to /kelos/kelos-capture",
+      "@anthropic-ai/claude-code 2.1.296 bundled CLI: system/init, system/api_retry, system/compact_boundary, rate_limit_event and result message builders",
+      "sperano/hollingsworth docker/kelos-agent/limit_capture.py and kelos_entrypoint.sh: limit-resets-at/limit-type outputs and the ---KELOS_LIMIT_HIT--- stderr line"
+    ],
+    "codex": [
+      "kelos-dev/kelos v0.60.0 codex/kelos_entrypoint.sh: codex exec --dangerously-bypass-approvals-and-sandbox --json, piped to /kelos/kelos-capture",
+      "openai/codex rust-v0.162.1 codex-rs/exec/src/exec_events.rs: ThreadEvent and ThreadItem shapes",
+      "openai/codex rust-v0.162.1 codex-rs/exec/src/event_processor_with_jsonl_output.rs: item ids item_<n>, warnings and reroutes as error items, server errors as top-level error events"
+    ],
+    "opencode": [
+      "kelos-dev/kelos v0.60.0 opencode/kelos_entrypoint.sh: opencode run --format json --auto, piped to /kelos/kelos-capture; no --thinking",
+      "sst/opencode v1.19.0 packages/opencode/src/cli/cmd/run.ts: emit() writes {type, timestamp, sessionID, ...} for tool_use, step_start, step_finish, text, reasoning and error",
+      "sst/opencode v1.19.0 packages/schema/src/v1/session.ts: part, tool state and named error shapes"
+    ],
+    "kelos": [
+      "kelos-dev/kelos v0.60.0 internal/capture/capture.go: the ---KELOS_OUTPUTS_START--- / ---KELOS_OUTPUTS_END--- block on stdout, keys branch, pr, commit, base-branch, cost-usd, input-tokens, output-tokens, response (base64), degenerate",
+      "kelos-dev/kelos v0.60.0 */kelos_entrypoint.sh: ---KELOS_SETUP_COMMAND_START---, _DONE--- and _FAILED--- exit=<n> on stderr, each after an empty line"
+    ]
+  },
+  "notObservable": {
+    "claude-code": {},
+    "codex": {
+      "cost": "codex exec --json reports token counts only (turn.completed usage), never a cost.",
+      "edit_diff": "file_change items carry path and kind (add, delete, update) but no diff or file content."
+    },
+    "opencode": {
+      "retry": "run --format json never emits RetryPart or session.status retry; only the final session.error reaches stdout.",
+      "reasoning": "reasoning parts are emitted only with --thinking, which the Kelos entrypoint does not pass.",
+      "session_start": "no session or turn start event; every line carries sessionID, and step_start/step_finish bound each model step."
+    }
+  },
+  "fixtures": [
+    {
+      "file": "claude-code/2.1.296/session-basic.log",
+      "runner": "claude-code",
+      "version": "2.1.296",
+      "provenance": "synthetic",
+      "scenarios": ["startup_text", "setup_markers", "session_start", "reasoning", "assistant_text", "tool_success", "edit", "usage", "cost", "kelos_outputs"],
+      "lines": { "blank": 2, "json": 11, "text": 13 },
+      "notes": "One assistant line per content block, repeating the message id and usage, as stream-json does. Per-line timestamp fields are not modelled: the bundle shows user and assistant lines may carry one; verify with a capture."
+    },
+    {
+      "file": "claude-code/2.1.296/tool-failures.log",
+      "runner": "claude-code",
+      "version": "2.1.296",
+      "provenance": "synthetic",
+      "scenarios": ["session_start", "tool_failure", "usage", "cost"],
+      "lines": { "blank": 0, "json": 9, "text": 0 },
+      "notes": "Bash exit code 1, Read of a missing file and an Edit whose old_string is absent, each a tool_result with is_error true. The error texts are illustrative."
+    },
+    {
+      "file": "claude-code/2.1.296/api-retries.log",
+      "runner": "claude-code",
+      "version": "2.1.296",
+      "provenance": "synthetic",
+      "scenarios": ["retry", "rate_limit", "usage", "cost"],
+      "lines": { "blank": 0, "json": 6, "text": 0 },
+      "notes": "system/api_retry with error_status 529 and with a no_response wait, then an allowed_warning rate_limit_event."
+    },
+    {
+      "file": "claude-code/2.1.296/limit-hit.log",
+      "runner": "claude-code",
+      "version": "2.1.296",
+      "provenance": "synthetic",
+      "scenarios": ["rate_limit", "limit_hit", "session_failure", "kelos_outputs"],
+      "lines": { "blank": 1, "json": 4, "text": 9 },
+      "notes": "A rejected rate_limit_event, the Hollingsworth limit outputs and the ---KELOS_LIMIT_HIT--- stderr line written with Python's json.dump spacing. The assistant and result texts are illustrative."
+    },
+    {
+      "file": "claude-code/2.1.296/failed-session.log",
+      "runner": "claude-code",
+      "version": "2.1.296",
+      "provenance": "synthetic",
+      "scenarios": ["session_failure", "non_json_line"],
+      "lines": { "blank": 0, "json": 3, "text": 1 },
+      "notes": "result subtype error_during_execution, then a kelos-capture error on stderr."
+    },
+    {
+      "file": "claude-code/2.1.296/malformed-lines.log",
+      "runner": "claude-code",
+      "version": "2.1.296",
+      "provenance": "synthetic",
+      "scenarios": ["non_json_line", "truncated_line", "malformed_json", "unknown_event", "unknown_item", "compaction"],
+      "lines": { "blank": 0, "json": 7, "text": 3 },
+      "notes": "A stderr warning, an assistant line cut in half, invalid JSON, an unknown type, an unknown system subtype, an unknown content block and a compact_boundary."
+    },
+    {
+      "file": "codex/0.162.1/session-basic.log",
+      "runner": "codex",
+      "version": "0.162.1",
+      "provenance": "synthetic",
+      "scenarios": ["startup_text", "setup_markers", "session_start", "reasoning", "assistant_text", "tool_success", "edit", "todo", "usage", "kelos_outputs"],
+      "lines": { "blank": 2, "json": 13, "text": 12 },
+      "notes": "turn.completed usage is the thread's running total (last_total_token_usage), not the turn's own."
+    },
+    {
+      "file": "codex/0.162.1/tool-failures.log",
+      "runner": "codex",
+      "version": "0.162.1",
+      "provenance": "synthetic",
+      "scenarios": ["tool_failure", "mcp_tool", "usage"],
+      "lines": { "blank": 0, "json": 10, "text": 0 },
+      "notes": "A failed command (exit 1), a failed file_change, a failed MCP call and a declined command."
+    },
+    {
+      "file": "codex/0.162.1/reconnects.log",
+      "runner": "codex",
+      "version": "0.162.1",
+      "provenance": "synthetic",
+      "scenarios": ["retry", "usage"],
+      "lines": { "blank": 0, "json": 7, "text": 0 },
+      "notes": "Stream retries surface as top-level error events; their \"Reconnecting... n/m\" wording is illustrative and must be checked against a capture. A model reroute is an error item."
+    },
+    {
+      "file": "codex/0.162.1/failed-session.log",
+      "runner": "codex",
+      "version": "0.162.1",
+      "provenance": "synthetic",
+      "scenarios": ["session_failure"],
+      "lines": { "blank": 0, "json": 4, "text": 0 },
+      "notes": "An error event followed by turn.failed carrying the same message."
+    },
+    {
+      "file": "codex/0.162.1/malformed-lines.log",
+      "runner": "codex",
+      "version": "0.162.1",
+      "provenance": "synthetic",
+      "scenarios": ["non_json_line", "truncated_line", "malformed_json", "unknown_event", "unknown_item", "duplicate_keys"],
+      "lines": { "blank": 0, "json": 8, "text": 3 },
+      "notes": "The web_search item repeats \"id\" with two values (serde flatten of ThreadItem.id and WebSearchItem.id); a decoder keeps one of them. collab_tool_call is a known item type no adapter is required to render."
+    },
+    {
+      "file": "opencode/1.19.0/session-basic.log",
+      "runner": "opencode",
+      "version": "1.19.0",
+      "provenance": "synthetic",
+      "scenarios": ["startup_text", "setup_markers", "assistant_text", "tool_success", "edit", "usage", "cost", "kelos_outputs"],
+      "lines": { "blank": 2, "json": 9, "text": 12 },
+      "notes": "timestamp is Date.now() in milliseconds when the line was written; tool and text parts also carry their own start/end times. The edit tool's diff is in state.metadata.diff."
+    },
+    {
+      "file": "opencode/1.19.0/tool-failures.log",
+      "runner": "opencode",
+      "version": "1.19.0",
+      "provenance": "synthetic",
+      "scenarios": ["tool_failure", "usage", "cost"],
+      "lines": { "blank": 0, "json": 8, "text": 0 },
+      "notes": "tool_use lines whose state.status is error carry state.error instead of output."
+    },
+    {
+      "file": "opencode/1.19.0/errors.log",
+      "runner": "opencode",
+      "version": "1.19.0",
+      "provenance": "synthetic",
+      "scenarios": ["session_failure"],
+      "lines": { "blank": 0, "json": 4, "text": 0 },
+      "notes": "session.error as error lines with NamedError shapes: APIError (isRetryable), ProviderAuthError, UnknownError."
+    },
+    {
+      "file": "opencode/1.19.0/malformed-lines.log",
+      "runner": "opencode",
+      "version": "1.19.0",
+      "provenance": "synthetic",
+      "scenarios": ["startup_text", "non_json_line", "truncated_line", "malformed_json", "unknown_event"],
+      "lines": { "blank": 0, "json": 4, "text": 3 },
+      "notes": "The first line is the Kelos entrypoint's warning for an unrecognized provider prefix, written to stderr before opencode starts."
+    }
+  ]
+}

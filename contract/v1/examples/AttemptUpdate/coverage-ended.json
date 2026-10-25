@@ -1,0 +1,29 @@
+{
+  "seq": 21,
+  "attempt": {
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0",
+    "key": {
+      "podUID": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f",
+      "container": "claude-code",
+      "restart": 0
+    },
+    "podName": "example-claude-42-x7k2p",
+    "runner": {
+      "kind": "claude-code",
+      "version": "2.1.296"
+    },
+    "container": {
+      "state": "terminated",
+      "exitCode": 0,
+      "reason": "Completed",
+      "startedAt": "2026-10-25T09:00:04Z",
+      "finishedAt": "2026-10-25T09:01:02Z"
+    },
+    "coverage": {
+      "state": "ended",
+      "lines": 26,
+      "gaps": 0,
+      "truncatedLines": 0
+    }
+  }
+}

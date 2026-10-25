@@ -1,0 +1,4 @@
+{"type":"step_start","timestamp":1792915200100,"sessionID":"ses_01ExampleSession","part":{"id":"prt_21","sessionID":"ses_01ExampleSession","messageID":"msg_01ExampleE","type":"step-start"}}
+{"type":"error","timestamp":1792915230000,"sessionID":"ses_01ExampleSession","error":{"name":"APIError","data":{"message":"Overloaded","statusCode":529,"isRetryable":true}}}
+{"type":"error","timestamp":1792915231000,"sessionID":"ses_01ExampleSession","error":{"name":"ProviderAuthError","data":{"providerID":"anthropic","message":"example: invalid credentials"}}}
+{"type":"error","timestamp":1792915232000,"sessionID":"ses_01ExampleSession","error":{"name":"UnknownError","data":{"message":"example: unknown failure"}}}

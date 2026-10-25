@@ -1,0 +1,18 @@
+{
+  "seq": 11,
+  "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0:2c9e7a1f05d34b88:6:1",
+  "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0",
+  "kind": "edit",
+  "source": {
+    "line": 6,
+    "part": 1,
+    "type": "tool_use"
+  },
+  "edit": {
+    "callId": "call_01ExampleEmpty",
+    "path": "/workspace/repo/notes.txt",
+    "change": "update",
+    "before": "draft\n",
+    "after": ""
+  }
+}

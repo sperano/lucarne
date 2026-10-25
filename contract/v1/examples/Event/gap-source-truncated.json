@@ -1,0 +1,14 @@
+{
+  "seq": 1,
+  "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0:f42d105a67e2bb2e:1:gap.0",
+  "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0",
+  "kind": "gap",
+  "source": {
+    "line": 1,
+    "part": 0
+  },
+  "gap": {
+    "reason": "source_truncated",
+    "detail": "the log starts after a rotation"
+  }
+}

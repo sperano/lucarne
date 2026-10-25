@@ -1,0 +1,21 @@
+{
+  "seq": 5,
+  "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0:635a06eb36cc2997:7:0",
+  "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0",
+  "kind": "error",
+  "source": {
+    "line": 7,
+    "part": 0,
+    "type": "system",
+    "logTime": "2026-10-25T09:00:06.120394512Z"
+  },
+  "error": {
+    "message": "overloaded",
+    "status": 529,
+    "retry": {
+      "attempt": 1,
+      "max": 10,
+      "delayMs": 1137
+    }
+  }
+}

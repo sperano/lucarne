@@ -1,0 +1,10 @@
+{"type":"thread.started","thread_id":"0199a1b2-c3d4-7e5f-8a6b-7c8d9e0f1a2b"}
+{"type":"turn.started"}
+{"type":"item.started","item":{"id":"item_0","type":"command_execution","command":"/bin/bash -lc 'go test ./...'","aggregated_output":"","exit_code":null,"status":"in_progress"}}
+{"type":"item.completed","item":{"id":"item_0","type":"command_execution","command":"/bin/bash -lc 'go test ./...'","aggregated_output":"--- FAIL: TestGreeting (0.00s)\n    greet_test.go:9: got \"Hello\", want \"Hello, world\"\nFAIL\nFAIL\texample.com/widget\t0.004s\nFAIL\n","exit_code":1,"status":"failed"}}
+{"type":"item.completed","item":{"id":"item_1","type":"file_change","changes":[{"path":"/workspace/repo/missing.go","kind":"update"}],"status":"failed"}}
+{"type":"item.started","item":{"id":"item_2","type":"mcp_tool_call","server":"tracker","tool":"get_item","arguments":{"id":42},"result":null,"error":null,"status":"in_progress"}}
+{"type":"item.completed","item":{"id":"item_2","type":"mcp_tool_call","server":"tracker","tool":"get_item","arguments":{"id":42},"result":null,"error":{"message":"example: item 42 not found"},"status":"failed"}}
+{"type":"item.completed","item":{"id":"item_3","type":"command_execution","command":"/bin/bash -lc 'rm -rf build'","aggregated_output":"","exit_code":null,"status":"declined"}}
+{"type":"item.completed","item":{"id":"item_4","type":"agent_message","text":"The tests fail and the tracker lookup failed; stopping."}}
+{"type":"turn.completed","usage":{"input_tokens":20480,"cached_input_tokens":16384,"cache_write_input_tokens":0,"output_tokens":410,"reasoning_output_tokens":128}}

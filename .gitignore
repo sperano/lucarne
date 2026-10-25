@@ -1,0 +1,8 @@
+# Frontend dependencies and build output; Go embeds web/dist, which keeps
+# only its placeholder in git.
+/web/node_modules/
+/web/dist/*
+!/web/dist/.gitkeep
+
+# The binary `just build` writes.
+/lucarne

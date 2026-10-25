@@ -1,0 +1,131 @@
+{
+  "schema": "lucarne.transcript/v1",
+  "run": {
+    "key": {
+      "cluster": "example",
+      "namespace": "agents",
+      "taskUID": "5d6e7f80-91a2-4b3c-8d4e-5f60718293a4"
+    },
+    "taskName": "example-codex-43",
+    "runner": "codex",
+    "phase": "running",
+    "created": "2026-10-25T10:00:00Z",
+    "started": "2026-10-25T10:00:03Z"
+  },
+  "attempts": [
+    {
+      "id": "1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d.codex.0",
+      "key": {
+        "podUID": "1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d",
+        "container": "codex",
+        "restart": 0
+      },
+      "podName": "example-codex-43-abcde",
+      "runner": {
+        "kind": "codex"
+      },
+      "container": {
+        "state": "unknown"
+      },
+      "coverage": {
+        "state": "expired",
+        "lines": 0,
+        "gaps": 0,
+        "truncatedLines": 0,
+        "reason": "pod deleted before its log was read"
+      }
+    },
+    {
+      "id": "9e8d7c6b-5a4f-4e3d-8c2b-1a0f9e8d7c6b.codex.0",
+      "key": {
+        "podUID": "9e8d7c6b-5a4f-4e3d-8c2b-1a0f9e8d7c6b",
+        "container": "codex",
+        "restart": 0
+      },
+      "podName": "example-codex-43-fghij",
+      "runner": {
+        "kind": "codex"
+      },
+      "container": {
+        "state": "running",
+        "startedAt": "2026-10-25T10:04:11Z"
+      },
+      "coverage": {
+        "state": "following",
+        "lines": 3,
+        "gaps": 0,
+        "truncatedLines": 0
+      }
+    }
+  ],
+  "events": [
+    {
+      "seq": 4,
+      "id": "9e8d7c6b-5a4f-4e3d-8c2b-1a0f9e8d7c6b.codex.0:e4a17d0c3b9f6251:1:0",
+      "attempt": "9e8d7c6b-5a4f-4e3d-8c2b-1a0f9e8d7c6b.codex.0",
+      "kind": "lifecycle",
+      "source": {
+        "line": 1,
+        "part": 0,
+        "type": "thread.started"
+      },
+      "lifecycle": {
+        "phase": "session_started",
+        "sessionId": "0199a1b2-c3d4-7e5f-8a6b-7c8d9e0f1a2b"
+      }
+    },
+    {
+      "seq": 5,
+      "id": "9e8d7c6b-5a4f-4e3d-8c2b-1a0f9e8d7c6b.codex.0:e4a17d0c3b9f6251:2:0",
+      "attempt": "9e8d7c6b-5a4f-4e3d-8c2b-1a0f9e8d7c6b.codex.0",
+      "kind": "lifecycle",
+      "source": {
+        "line": 2,
+        "part": 0,
+        "type": "turn.started"
+      },
+      "lifecycle": {
+        "phase": "turn_started"
+      }
+    },
+    {
+      "seq": 6,
+      "id": "9e8d7c6b-5a4f-4e3d-8c2b-1a0f9e8d7c6b.codex.0:e4a17d0c3b9f6251:3:0",
+      "attempt": "9e8d7c6b-5a4f-4e3d-8c2b-1a0f9e8d7c6b.codex.0",
+      "kind": "error",
+      "source": {
+        "line": 3,
+        "part": 0,
+        "type": "error"
+      },
+      "error": {
+        "message": "Reconnecting... 1/5 (stream disconnected before completion: example transport error)",
+        "retry": {
+          "attempt": 1,
+          "max": 5
+        }
+      }
+    }
+  ],
+  "stream": {
+    "epoch": "k3v9q2",
+    "lastSeq": 6,
+    "droppedEvents": 0
+  },
+  "limits": {
+    "maxLineBytes": 1048576,
+    "maxAttemptLogBytes": 67108864,
+    "maxTextBytes": 65536,
+    "maxToolInputBytes": 16384,
+    "maxToolOutputBytes": 32768,
+    "maxDiffBytes": 65536,
+    "maxRawBytes": 8192,
+    "maxPathBytes": 4096,
+    "maxLabelBytes": 256,
+    "maxEventsPerRun": 20000,
+    "maxRunBytes": 33554432,
+    "maxAttemptsPerRun": 16,
+    "maxReplayUpdates": 5000,
+    "maxClientQueue": 1024
+  }
+}

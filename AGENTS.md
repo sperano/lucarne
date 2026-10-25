@@ -12,8 +12,10 @@ them live in the browser, first as a conversation, later as an inspector.
 Lucarne observes; it never takes part. It does not start, steer or stop
 agents, and nothing in the agent pipeline waits on it.
 
-Status: nothing is implemented yet. The repository holds only this file, the
-README and the LICENSE.
+Status: bootstrapped. The contract, the fixtures, the server skeleton and
+the UI shell exist; the runner adapters, the Kubernetes log source, the
+snapshot/SSE endpoints and the conversation view do not yet (the run
+endpoints answer 501).
 
 ## What lives here, and what does not
 
@@ -22,10 +24,40 @@ README and the LICENSE.
 | `sperano/lucarne` (here) | The transcript/API contract, the runner adapters, the log source, the server, the frontend, tests, fixtures, CI and the container build. |
 | `sperano/hollingsworth` | Everything that deploys or wires Lucarne into the cluster: Helm chart and values, ApplicationSet entry, RBAC, Gateway and Authentik, the image pin, Gordon's announcement links, and the Kelos onboarding of this repository itself (`helm/kelos/values-hollingsworth.yaml`, including `vikunjaSpawners.prReadiness.ciChecks`). |
 
-The planned layout, Go at the repository root with the Svelte/TypeScript
-frontend in `web/`, matches the agent stacks this repository is onboarded
-with (`go-service`, then `web`). Whoever bootstraps the code replaces this
-paragraph with the real layout table and gates.
+## Layout
+
+Go at the repository root, the Svelte/TypeScript frontend in `web/`, as the
+agent stacks this repository is onboarded with (`go-service`, then `web`)
+expect. One executable, no database.
+
+| Path | Holds |
+| --- | --- |
+| `contract/` | The versioned transcript/API contract: `README.md` (the specification: identity, events, states, limits, deep links, HTTP and SSE/replay), `v1/transcript.schema.json`, its valid and invalid examples, and the Go types and `Validate`. |
+| `fixtures/` | Sanitized, provenance-labelled runner output per runner and version, with `manifest.json`; see its `README.md`. |
+| `cmd/lucarne/` | The executable. |
+| `internal/server/` | HTTP: `/healthz`, `/api/v1/...`, the embedded UI and its deep links, security headers. |
+| `internal/privacy/` | The scan that keeps private data out of fixtures and examples. |
+| `web/` | The UI (Vite, Svelte 5, TypeScript). `web/src/lib/contract.ts` mirrors the contract; `web/embed.go` embeds `web/dist`. |
+| `scripts/smoke.sh` | Starts a built binary and checks the UI, an asset, a deep link and the contract endpoint. |
+
+A contract change touches the schema, the Go types, `web/src/lib/contract.ts`
+and an example in one pull request; both test suites fail otherwise.
+
+## Gates
+
+`just check` runs every gate locally, as three CI jobs will once
+`.github/workflows/ci.yml` is added (agent tokens cannot push workflow
+files; the owner adds or changes them).
+
+| Job | Steps |
+| --- | --- |
+| `web` | in `web/`: `npm ci`, `npm run check` (svelte-check), `npm run lint` (Prettier, ESLint), `npm test` (Vitest), `npm run build` |
+| `go` | `gofmt -l .` empty, `go vet ./...`, staticcheck v0.8.1, `go build ./...`, `go test -race ./...` |
+| `app` | after `web`: `go build` with the built UI embedded, then `scripts/smoke.sh` |
+
+`go build` works without a frontend build (the binary then answers UI
+requests with 503). `go.mod` ignores `web/node_modules`, which can contain Go
+files.
 
 ## Tasks that target another repository
 

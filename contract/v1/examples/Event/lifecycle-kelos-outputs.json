@@ -1,0 +1,47 @@
+{
+  "seq": 19,
+  "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0:635a06eb36cc2997:17:0",
+  "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0",
+  "kind": "lifecycle",
+  "source": {
+    "line": 17,
+    "part": 0
+  },
+  "lifecycle": {
+    "phase": "kelos_outputs",
+    "outputs": [
+      {
+        "key": "branch",
+        "value": "agent/example-42"
+      },
+      {
+        "key": "pr",
+        "value": "https://github.com/example/widget/pull/7"
+      },
+      {
+        "key": "commit",
+        "value": "9f2c4e1a7b3d5f60812e4c9a0b1d2e3f4a5b6c7d"
+      },
+      {
+        "key": "base-branch",
+        "value": "main"
+      },
+      {
+        "key": "cost-usd",
+        "value": "0.4182"
+      },
+      {
+        "key": "input-tokens",
+        "value": "50450"
+      },
+      {
+        "key": "output-tokens",
+        "value": "202"
+      },
+      {
+        "key": "response",
+        "value": "VGhlIGdyZWV0aW5nIG5vdyByZWFkcyAiSGVsbG8sIHdvcmxkIiBhbmQgdGhlIHRlc3RzIHBhc3Mu"
+      }
+    ]
+  }
+}

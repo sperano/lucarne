@@ -1,0 +1,11 @@
+Warning: example notice printed on stderr before the stream
+{"type":"thread.started","thread_id":"0199a1b2-c3d4-7e5f-8a6b-7c8d9e0f1a2b"}
+{"type":"turn.started"}
+{"type":"item.completed","item":{"id":"item_1","type":"agent_message","te
+{"type":"item.completed","item":{"id":"item_2",}}
+{"type":"thread.example_future_event","thread_id":"0199a1b2-c3d4-7e5f-8a6b-7c8d9e0f1a2b"}
+{"type":"item.completed","item":{"id":"item_3","type":"example_future_item","data":{}}}
+{"type":"item.completed","item":{"id":"item_4","type":"web_search","id":"ws_example","query":"example query","action":{"type":"search","query":"example query"}}}
+{"type":"item.started","item":{"id":"item_5","type":"collab_tool_call","tool":"spawn_agent","sender_thread_id":"0199a1b2-c3d4-7e5f-8a6b-7c8d9e0f1a2b","receiver_thread_ids":[],"prompt":null,"agents_states":{},"status":"in_progress"}}
+{"type":"item.completed","item":{"id":"item_6","type":"agent_message","text":"Recovered after the bad lines."}}
+{"type":"turn.completed","usage":{"input_tokens":4096,"cached_input_tokens":0,"cache_write_input_tokens":0,"output_tokens":21,"reasoning_output_tokens":0}}

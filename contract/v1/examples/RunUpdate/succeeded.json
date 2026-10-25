@@ -1,0 +1,16 @@
+{
+  "seq": 20,
+  "run": {
+    "key": {
+      "cluster": "example",
+      "namespace": "agents",
+      "taskUID": "3f8e2a4c-1b2d-4e5f-8a9b-0c1d2e3f4a5b"
+    },
+    "taskName": "example-claude-42",
+    "runner": "claude-code",
+    "phase": "succeeded",
+    "created": "2026-10-25T09:00:00Z",
+    "started": "2026-10-25T09:00:02Z",
+    "completed": "2026-10-25T09:01:03Z"
+  }
+}
