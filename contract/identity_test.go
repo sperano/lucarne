@@ -106,6 +106,18 @@ func TestIdentifiersMatchSchemaPatterns(t *testing.T) {
 	}
 }
 
+// TestIdentityPatternsAreTheSchemas keeps the server's key validation and
+// the schema's DNSLabel and UID one pattern each.
+func TestIdentityPatternsAreTheSchemas(t *testing.T) {
+	t.Parallel()
+	defs := schemaDefs(t)
+	for def, re := range map[string]*regexp.Regexp{"DNSLabel": dnsLabelPattern, "UID": uidPattern} {
+		if got, want := re.String(), defs[def]["pattern"]; got != want {
+			t.Errorf("$defs/%s pattern = %v, Go validates with %q", def, want, got)
+		}
+	}
+}
+
 func TestLogOriginNamesTheFirstLine(t *testing.T) {
 	t.Parallel()
 	if got := LogOrigin([]byte(exampleFirstLine)); got != exampleOrigin {

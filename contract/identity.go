@@ -3,6 +3,7 @@ package contract
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"regexp"
@@ -10,10 +11,11 @@ import (
 	"strings"
 )
 
-// Identity patterns, kept identical to the schema's DNSLabel and UID.
+// Identity patterns, compiled from the schema's own DNSLabel and UID so that
+// a key the server accepts is one the schema and the UI accept.
 var (
-	dnsLabelPattern = regexp.MustCompile(`^[a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?$`)
-	uidPattern      = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
+	dnsLabelPattern = schemaPattern("DNSLabel")
+	uidPattern      = schemaPattern("UID")
 )
 
 // Separators of the attempt and event identifiers. Neither can occur in a
@@ -145,4 +147,23 @@ func parseCanonicalNonNegative(s string) (int64, error) {
 		return 0, fmt.Errorf("%q is not a canonical non-negative integer", s)
 	}
 	return n, nil
+}
+
+// schemaPattern compiles the pattern of one string definition of the
+// embedded schema. It panics, as regexp.MustCompile does, when the
+// definition has no pattern Go can compile.
+func schemaPattern(def string) *regexp.Regexp {
+	var doc struct {
+		Defs map[string]struct {
+			Pattern string `json:"pattern"`
+		} `json:"$defs"`
+	}
+	if err := json.Unmarshal(SchemaJSON, &doc); err != nil {
+		panic(fmt.Sprintf("contract: decode schema: %v", err))
+	}
+	pattern := doc.Defs[def].Pattern
+	if pattern == "" {
+		panic(fmt.Sprintf("contract: $defs/%s has no pattern", def))
+	}
+	return regexp.MustCompile(pattern)
 }
