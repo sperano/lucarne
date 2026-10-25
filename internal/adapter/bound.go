@@ -1,6 +1,7 @@
 package adapter
 
 import (
+	"encoding/json"
 	"slices"
 	"strings"
 	"unicode/utf8"
@@ -57,3 +58,14 @@ func (t *Truncation) Mark(field string) {
 
 // Fields is the Truncated list, nil when nothing was cut.
 func (t *Truncation) Fields() []string { return t.fields }
+
+// ToolInput sets call's Input to input, a serialized JSON value, when it
+// fits contract.MaxToolInputBytes as valid UTF-8, and otherwise InputText
+// to its cut serialization.
+func (t *Truncation) ToolInput(call *contract.ToolCall, input string) {
+	if len(input) <= contract.MaxToolInputBytes && utf8.ValidString(input) {
+		call.Input = json.RawMessage(input)
+		return
+	}
+	call.InputText = t.Text("inputText", input, contract.MaxToolInputBytes)
+}

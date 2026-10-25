@@ -113,6 +113,10 @@ their limit.
 | `raw` | `reason`, `text` (cut to `maxRawBytes`), `bytes` (the length of what `text` holds before the cut) | a line, or a part of one such as a content block, no adapter rendered |
 | `gap` | `reason`, `lines?`, `detail?` | lines missing before `source.line`; `source.part` numbers the gaps before that line |
 
+A `tool_call` that repeats an earlier `callId` is the same call, its input
+changed in place (Codex updates a todo list this way); the later one
+supersedes the earlier.
+
 Lifecycle phases: `setup_started`, `setup_completed`, `setup_failed`
 (`exitCode`) for the Kelos setup markers on stderr; `session_started`,
 `step_started`, `step_completed` (`stopReason`; one model call, as OpenCode

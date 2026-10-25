@@ -1,0 +1,8 @@
+{"type":"thread.started","thread_id":"0199a1b2-c3d4-7e5f-8a6b-7c8d9e0f1a2b"}
+{"type":"turn.started"}
+{"type":"item.started","item":{"id":"item_0","type":"command_execution","command":"/bin/bash -lc 'go build ./...'","aggregated_output":"","exit_code":null,"status":"in_progress"}}
+{"type":"item.completed","item":{"id":"item_0","type":"command_execution","command":"/bin/bash -lc 'go build ./...'","aggregated_output":"","exit_code":0,"status":"completed"}}
+{"type":"item.started","item":{"id":"item_1","type":"command_execution","command":"/bin/bash -lc 'go test -count=1 ./...'","aggregated_output":"","exit_code":null,"status":"in_progress"}}
+{"type":"item.started","item":{"id":"item_2","type":"mcp_tool_call","server":"tracker","tool":"get_item","arguments":{"id":7},"result":null,"error":null,"status":"in_progress"}}
+{"type":"item.completed","item":{"id":"item_1","type":"command_execution","command":"/bin/bash -lc 'go test -count=1 ./...'","aggregated_output":"","exit_code":null,"status":"in_progress"}}
+{"type":"item.completed","item":{"id":"item_2","type":"mcp_tool_call","server":"tracker","tool":"get_item","arguments":{"id":7},"result":null,"error":null,"status":"in_progress"}}

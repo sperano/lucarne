@@ -154,6 +154,24 @@
       "notes": "The web_search item repeats \"id\" with two values (serde flatten of ThreadItem.id and WebSearchItem.id); a decoder keeps one of them. collab_tool_call is a known item type no adapter is required to render."
     },
     {
+      "file": "codex/0.162.1/interleaved.log",
+      "runner": "codex",
+      "version": "0.162.1",
+      "provenance": "synthetic",
+      "scenarios": ["session_start", "reasoning", "todo", "parallel_tools", "mcp_tool", "tool_success", "duplicate_update", "assistant_text", "usage"],
+      "lines": { "blank": 0, "json": 16, "text": 0 },
+      "notes": "Two commands and an MCP call in flight together, completing out of order between todo_list updates. The plan is updated twice with the same items (Codex prints an item.updated for every plan update, changed or not), and the todo_list's item.completed at the turn's end repeats its last update. Whether 0.162.1 runs these calls in parallel is unverified."
+    },
+    {
+      "file": "codex/0.162.1/interrupted.log",
+      "runner": "codex",
+      "version": "0.162.1",
+      "provenance": "synthetic",
+      "scenarios": ["session_start", "tool_success", "cancelled_tool", "mcp_tool"],
+      "lines": { "blank": 0, "json": 8, "text": 0 },
+      "notes": "A turn interrupted while a command and an MCP call run: Codex completes the items it started from the turn's state and prints no turn line. The in_progress status of those completions is illustrative; what an interrupted command reports must be checked against a capture."
+    },
+    {
       "file": "opencode/1.19.0/session-basic.log",
       "runner": "opencode",
       "version": "1.19.0",
