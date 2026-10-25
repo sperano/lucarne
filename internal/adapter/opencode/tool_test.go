@@ -102,7 +102,7 @@ func TestToolAttachmentsAreRaw(t *testing.T) {
 	}
 }
 
-func TestPrunedToolPartLeavesOutItsEdits(t *testing.T) {
+func TestPrunedToolPartReprintIsRaw(t *testing.T) {
 	t.Parallel()
 	const state = `{"status":"completed","input":{"filePath":"/workspace/repo/a.go","oldString":"a","newString":"b"},` +
 		`"output":"Edit applied successfully.","metadata":{"filediff":{"file":"/workspace/repo/a.go","patch":"@@ -1 +1 @@\n-a\n+b\n"}},` +
@@ -110,24 +110,26 @@ func TestPrunedToolPartLeavesOutItsEdits(t *testing.T) {
 	cases := []struct {
 		name  string
 		time  string
-		edits int
+		kinds []contract.EventKind
 	}{
-		{"printed once completed", ``, 1},
-		{"compacted null", `,"compacted":null`, 1},
-		{"re-printed when pruned", `,"compacted":3`, 0},
+		{"printed once completed", ``, []contract.EventKind{contract.KindToolCall, contract.KindToolResult, contract.KindEdit}},
+		{"compacted null", `,"compacted":null`, []contract.EventKind{contract.KindToolCall, contract.KindToolResult, contract.KindEdit}},
+		{"re-printed when pruned", `,"compacted":3`, []contract.EventKind{contract.KindRaw}},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 			events := normalize(t, toolLine("edit", strings.Replace(state, "%s", c.time, 1)))
-			got := 0
-			for _, ev := range events {
-				if ev.Kind == contract.KindEdit {
-					got++
+			if len(events) != len(c.kinds) {
+				t.Fatalf("events = %s, want kinds %v", adaptertest.Dump(events), c.kinds)
+			}
+			for i, ev := range events {
+				if ev.Kind != c.kinds[i] {
+					t.Errorf("events = %s, want kinds %v", adaptertest.Dump(events), c.kinds)
 				}
 			}
-			if got != c.edits || events[0].Kind != contract.KindToolCall || events[1].Kind != contract.KindToolResult {
-				t.Errorf("events = %s, want call, result and %d edits", adaptertest.Dump(events), c.edits)
+			if raw := events[0].Raw; raw != nil && raw.Reason != contract.RawUnsupported {
+				t.Errorf("re-print reason = %s, want %s", raw.Reason, contract.RawUnsupported)
 			}
 		})
 	}

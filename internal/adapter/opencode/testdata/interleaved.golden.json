@@ -263,80 +263,38 @@
     "seq": 15,
     "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0:854bd1743e57b01e:9:0",
     "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0",
-    "kind": "tool_call",
+    "kind": "raw",
     "source": {
       "line": 9,
       "part": 0,
       "type": "tool_use",
       "runnerTime": "2026-10-25T08:00:09Z"
     },
-    "toolCall": {
-      "callId": "call_01ExampleRead",
-      "name": "read",
-      "input": {
-        "filePath": "/workspace/repo/config.yaml"
-      },
-      "title": "config.yaml"
+    "raw": {
+      "reason": "unsupported",
+      "text": "{\"type\":\"tool_use\",\"timestamp\":1792915209000,\"sessionID\":\"ses_01ExampleSession\",\"part\":{\"id\":\"prt_44\",\"sessionID\":\"ses_01ExampleSession\",\"messageID\":\"msg_01ExampleG\",\"type\":\"tool\",\"callID\":\"call_01ExampleRead\",\"tool\":\"read\",\"state\":{\"status\":\"completed\",\"input\":{\"filePath\":\"/workspace/repo/config.yaml\"},\"output\":\"\u003cfile\u003e\\n00001| name: widget\\n\u003c/file\u003e\",\"title\":\"config.yaml\",\"metadata\":{\"preview\":\"name: widget\"},\"time\":{\"start\":1792915201100,\"end\":1792915201300,\"compacted\":1792915209000}}}}",
+      "bytes": 492
     }
   },
   {
     "seq": 16,
-    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0:854bd1743e57b01e:9:1",
-    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0",
-    "kind": "tool_result",
-    "source": {
-      "line": 9,
-      "part": 1,
-      "type": "tool_use",
-      "runnerTime": "2026-10-25T08:00:09Z"
-    },
-    "toolResult": {
-      "callId": "call_01ExampleRead",
-      "status": "ok",
-      "output": "\u003cfile\u003e\n00001| name: widget\n\u003c/file\u003e"
-    }
-  },
-  {
-    "seq": 17,
     "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0:854bd1743e57b01e:10:0",
     "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0",
-    "kind": "tool_call",
+    "kind": "raw",
     "source": {
       "line": 10,
       "part": 0,
       "type": "tool_use",
       "runnerTime": "2026-10-25T08:00:09.001Z"
     },
-    "toolCall": {
-      "callId": "call_01ExampleGreet",
-      "name": "edit",
-      "input": {
-        "filePath": "/workspace/repo/greeting.go",
-        "oldString": "const Greeting = \"Hello\"",
-        "newString": "const Greeting = \"Hello, widget\""
-      },
-      "title": "greeting.go"
+    "raw": {
+      "reason": "unsupported",
+      "text": "{\"type\":\"tool_use\",\"timestamp\":1792915209001,\"sessionID\":\"ses_01ExampleSession\",\"part\":{\"id\":\"prt_58\",\"sessionID\":\"ses_01ExampleSession\",\"messageID\":\"msg_01ExampleG\",\"type\":\"tool\",\"callID\":\"call_01ExampleGreet\",\"tool\":\"edit\",\"state\":{\"status\":\"completed\",\"input\":{\"filePath\":\"/workspace/repo/greeting.go\",\"oldString\":\"const Greeting = \\\"Hello\\\"\",\"newString\":\"const Greeting = \\\"Hello, widget\\\"\"},\"output\":\"Edit applied successfully.\",\"title\":\"greeting.go\",\"metadata\":{\"diagnostics\":{},\"diff\":\"Index: /workspace/repo/greeting.go\\n===================================================================\\n--- /workspace/repo/greeting.go\\n+++ /workspace/repo/greeting.go\\n@@ -1,3 +1,3 @@\\n package widget\\n \\n-const Greeting = \\\"Hello\\\"\\n+const Greeting = \\\"Hello, widget\\\"\\n\",\"filediff\":{\"file\":\"/workspace/repo/greeting.go\",\"patch\":\"Index: /workspace/repo/greeting.go\\n===================================================================\\n--- /workspace/repo/greeting.go\\n+++ /workspace/repo/greeting.go\\n@@ -1,3 +1,3 @@\\n package widget\\n \\n-const Greeting = \\\"Hello\\\"\\n+const Greeting = \\\"Hello, widget\\\"\\n\",\"additions\":1,\"deletions\":1}},\"time\":{\"start\":1792915204300,\"end\":1792915204900,\"compacted\":1792915209000}}}}",
+      "bytes": 1212
     }
   },
   {
-    "seq": 18,
-    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0:854bd1743e57b01e:10:1",
-    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0",
-    "kind": "tool_result",
-    "source": {
-      "line": 10,
-      "part": 1,
-      "type": "tool_use",
-      "runnerTime": "2026-10-25T08:00:09.001Z"
-    },
-    "toolResult": {
-      "callId": "call_01ExampleGreet",
-      "status": "ok",
-      "output": "Edit applied successfully."
-    }
-  },
-  {
-    "seq": 19,
+    "seq": 17,
     "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0:854bd1743e57b01e:11:0",
     "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0",
     "kind": "message",
@@ -354,7 +312,7 @@
     }
   },
   {
-    "seq": 20,
+    "seq": 18,
     "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0:854bd1743e57b01e:12:0",
     "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0",
     "kind": "lifecycle",
@@ -370,7 +328,7 @@
     }
   },
   {
-    "seq": 21,
+    "seq": 19,
     "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0:854bd1743e57b01e:13:0",
     "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0",
     "kind": "tool_call",
@@ -390,7 +348,7 @@
     }
   },
   {
-    "seq": 22,
+    "seq": 20,
     "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0:854bd1743e57b01e:13:1",
     "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0",
     "kind": "tool_result",
@@ -407,7 +365,7 @@
     }
   },
   {
-    "seq": 23,
+    "seq": 21,
     "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0:854bd1743e57b01e:14:0",
     "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0",
     "kind": "error",
@@ -423,7 +381,7 @@
     }
   },
   {
-    "seq": 24,
+    "seq": 22,
     "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0:854bd1743e57b01e:15:0",
     "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0",
     "kind": "raw",

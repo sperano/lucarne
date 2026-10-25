@@ -55,13 +55,18 @@ type exitMetadata struct {
 
 // renderTool adds a tool part: its call, then its result, attachments and
 // file changes. A completed or failed part holds both the call and its
-// outcome, so they share the line. A pruned part's file changes were
-// already given by its first print, so its re-print leaves them out.
+// outcome, so they share the line. A pruned part restates a call its first
+// print gave, so its re-print is kept raw rather than given as a second
+// call with the same callId.
 func renderTool(p part, out *adapter.Emitter) bool {
 	if p.Type != partTool || p.CallID == "" || p.Tool == "" || p.State == nil || p.State.Status == "" {
 		return false
 	}
 	state := p.State
+	if state.pruned() {
+		out.RawLine(contract.RawUnsupported)
+		return true
+	}
 	var cut adapter.Truncation
 	call := &contract.ToolCall{
 		CallID: cut.Text("callId", p.CallID, contract.MaxLabelBytes),
@@ -79,9 +84,6 @@ func renderTool(p part, out *adapter.Emitter) bool {
 	}
 	if attachments, ok := adapter.CompactJSON(state.Attachments); ok {
 		out.Raw(contract.RawUnsupported, []byte(attachments))
-	}
-	if state.pruned() {
-		return true
 	}
 	for _, ev := range edits(p.Tool, call.CallID, state) {
 		out.Emit(ev)
