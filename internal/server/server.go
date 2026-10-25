@@ -46,6 +46,7 @@ func New(assets fs.FS, logger *slog.Logger) http.Handler {
 	mux.HandleFunc("GET /"+assetsDir+"/{file}", s.asset)
 	mux.HandleFunc("GET /{$}", s.home)
 	mux.HandleFunc("GET /runs/{cluster}/{namespace}/{taskUID}", s.runPage)
+	mux.HandleFunc("GET /runs/", s.notARunLink)
 	return securityHeaders(mux)
 }
 
@@ -101,6 +102,13 @@ func (s *server) runPage(w http.ResponseWriter, r *http.Request) {
 		status = http.StatusNotFound
 	}
 	s.writeIndex(w, status)
+}
+
+// notARunLink serves the UI, which says what is wrong, with status 404 for a
+// path under /runs/ of another shape: a trailing slash, too few or too many
+// parts.
+func (s *server) notARunLink(w http.ResponseWriter, _ *http.Request) {
+	s.writeIndex(w, http.StatusNotFound)
 }
 
 func (s *server) writeIndex(w http.ResponseWriter, status int) {

@@ -104,6 +104,10 @@ func TestDeepLinksServeTheUI(t *testing.T) {
 		"/":                                      http.StatusOK,
 		runKey1.LinkPath():                       http.StatusOK,
 		"/runs/example/agents/example-claude-42": http.StatusNotFound,
+		runKey1.LinkPath() + "/":                 http.StatusNotFound,
+		runKey1.LinkPath() + "/extra":            http.StatusNotFound,
+		"/runs/example/" + runKey1.TaskUID:       http.StatusNotFound,
+		"/runs/":                                 http.StatusNotFound,
 	}
 	for path, status := range cases {
 		res := get(t, h, path)

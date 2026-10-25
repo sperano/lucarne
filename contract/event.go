@@ -75,23 +75,26 @@ type ToolCall struct {
 	ParentCallID string          `json:"parentCallId,omitempty"`
 }
 
-// ToolResult is the outcome of the tool call with the same CallID.
+// ToolResult is the outcome of the tool call with the same CallID. Output
+// is nil when the source reported none, and empty when the tool printed
+// nothing.
 type ToolResult struct {
-	CallID   string `json:"callId"`
-	Status   string `json:"status"`
-	Output   string `json:"output,omitempty"`
-	ExitCode *int   `json:"exitCode,omitempty"`
+	CallID   string  `json:"callId"`
+	Status   string  `json:"status"`
+	Output   *string `json:"output,omitempty"`
+	ExitCode *int    `json:"exitCode,omitempty"`
 }
 
 // Edit is a file change, with whichever of a diff or before/after text the
-// source carried.
+// source carried; a nil text is one the source did not carry, an empty one
+// is empty content (an emptied file).
 type Edit struct {
-	CallID string `json:"callId,omitempty"`
-	Path   string `json:"path"`
-	Change string `json:"change"`
-	Diff   string `json:"diff,omitempty"`
-	Before string `json:"before,omitempty"`
-	After  string `json:"after,omitempty"`
+	CallID string  `json:"callId,omitempty"`
+	Path   string  `json:"path"`
+	Change string  `json:"change"`
+	Diff   *string `json:"diff,omitempty"`
+	Before *string `json:"before,omitempty"`
+	After  *string `json:"after,omitempty"`
 }
 
 // Usage holds only the counters the source reported, over Scope.
@@ -125,7 +128,8 @@ type Retry struct {
 	DelayMs *int64 `json:"delayMs,omitempty"`
 }
 
-// Lifecycle is a session, turn or Kelos marker the source emitted.
+// Lifecycle is a session, turn or Kelos marker the source emitted. Detail
+// is nil when the source line had none.
 type Lifecycle struct {
 	Phase         string   `json:"phase"`
 	SessionID     string   `json:"sessionId,omitempty"`
@@ -135,7 +139,7 @@ type Lifecycle struct {
 	IsError       *bool    `json:"isError,omitempty"`
 	StopReason    string   `json:"stopReason,omitempty"`
 	ExitCode      *int     `json:"exitCode,omitempty"`
-	Detail        string   `json:"detail,omitempty"`
+	Detail        *string  `json:"detail,omitempty"`
 	Outputs       []Output `json:"outputs,omitempty"`
 }
 

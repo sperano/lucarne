@@ -32,7 +32,8 @@ property is an error, not something to ignore.
 - **Only what the source emitted.** Every event comes from a line of an
   attempt's log, or is a gap saying lines are missing. Nothing is inferred:
   no prompt, reasoning, time, cost or outcome the source did not write. A
-  field the source did not give is absent, never zero or empty.
+  field the source did not give is absent, never zero or empty, and one it
+  gave empty (a command that printed nothing, an emptied file) stays empty.
 - **Loss is explicit.** Truncation, gaps, expired pods and replay that can
   no longer be served are states the client sees, not silent omissions.
 - **Bounded.** Every input and output has a named limit (see "Limits").
