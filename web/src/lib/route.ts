@@ -40,24 +40,27 @@ export function parseRoute(pathname: string, search: string, hash: string): Rout
   const query = new URLSearchParams(search);
   const view = query.get('view') ?? DEFAULT_VIEW;
   if (!isView(view)) return invalid('view', view);
-  const route: Route = { page: 'run', key: { cluster, namespace, taskUID }, view };
-
   const attempt = query.get('attempt');
-  if (attempt !== null) {
-    if (!patterns.attempt.test(attempt)) return invalid('attempt', attempt);
-    route.attempt = attempt;
-  }
-  if (hash.startsWith(EVENT_FRAGMENT_PREFIX)) {
-    const event = hash.slice(EVENT_FRAGMENT_PREFIX.length);
-    if (!patterns.event.test(event)) return invalid('event', event);
-    route.event = event;
-  }
-  return route;
+  if (attempt !== null && !patterns.attempt.test(attempt)) return invalid('attempt', attempt);
+  const event = eventFragment(hash);
+  if (event !== null && !patterns.event.test(event)) return invalid('event', event);
+  return {
+    page: 'run',
+    key: { cluster, namespace, taskUID },
+    view,
+    ...(attempt === null ? {} : { attempt }),
+    ...(event === null ? {} : { event }),
+  };
 }
 
 /** The canonical deep link of a run. */
 export function runLink(key: RunKey): string {
   return `/${RUNS_PREFIX}/${key.cluster}/${key.namespace}/${key.taskUID}`;
+}
+
+/** The event ID of a `#event=` fragment, or null for any other fragment. */
+function eventFragment(hash: string): string | null {
+  return hash.startsWith(EVENT_FRAGMENT_PREFIX) ? hash.slice(EVENT_FRAGMENT_PREFIX.length) : null;
 }
 
 function isView(view: string): view is View {
