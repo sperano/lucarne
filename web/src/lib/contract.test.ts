@@ -94,6 +94,7 @@ describe('shared examples', () => {
 });
 
 type Defs = Record<string, { properties?: Record<string, unknown>; required?: string[] }>;
+// The JSON import is typed per definition literal; every $defs entry is a JSON Schema object, of which Defs reads only properties and required.
 const defs = schema.$defs as unknown as Defs;
 
 /** Each key of T, true when T requires it: checked against T by the compiler. */
