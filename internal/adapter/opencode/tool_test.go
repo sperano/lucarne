@@ -94,11 +94,32 @@ func TestToolInputAndOutputAreBounded(t *testing.T) {
 
 func TestToolAttachmentsAreRaw(t *testing.T) {
 	t.Parallel()
-	events := normalize(t, toolLine("read",
-		`{"status":"completed","input":{},"output":"Image read.","attachments":[{"type":"file","mime":"image/png","url":"data:image/png;base64,AA=="}]}`))
-	if len(events) != 3 || events[2].Kind != contract.KindRaw || events[2].Raw.Reason != contract.RawUnsupported ||
-		!strings.Contains(events[2].Raw.Text, "image/png") {
-		t.Errorf("events = %s", adaptertest.Dump(events))
+	cases := []struct {
+		name        string
+		attachments string
+		raw         string
+	}{
+		{"file", `[{"type":"file","mime":"image/png","url":"data:image/png;base64,AA=="}]`, "image/png"},
+		{"not an array", `{"type":"file"}`, `{"type":"file"}`},
+		{"empty", `[]`, ""},
+		{"null", `null`, ""},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			events := normalize(t, toolLine("read",
+				`{"status":"completed","input":{},"output":"Image read.","attachments":`+c.attachments+`}`))
+			if c.raw == "" {
+				if len(events) != 2 || events[0].Kind != contract.KindToolCall || events[1].Kind != contract.KindToolResult {
+					t.Errorf("events = %s, want the call and its result only", adaptertest.Dump(events))
+				}
+				return
+			}
+			if len(events) != 3 || events[2].Kind != contract.KindRaw || events[2].Raw.Reason != contract.RawUnsupported ||
+				!strings.Contains(events[2].Raw.Text, c.raw) {
+				t.Errorf("events = %s", adaptertest.Dump(events))
+			}
+		})
 	}
 }
 

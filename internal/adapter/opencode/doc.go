@@ -24,9 +24,9 @@
 //     holds the call and its outcome: a tool call (input, and the title of a
 //     completed call), then a tool result: ok with the output when
 //     completed, error with OpenCode's error text when failed. The bash
-//     tool's metadata.exit is the exit code. A completed call's attachments
-//     follow as a raw unsupported event, then the file changes of edit,
-//     write and apply_patch as edits.
+//     tool's metadata.exit is the exit code. A completed call's attachments,
+//     unless an empty array, follow as a raw unsupported event, then the
+//     file changes of edit, write and apply_patch as edits.
 //   - error: an error event: a named error's data.message (its name when it
 //     has none), the name as code and APIError's statusCode as status; any
 //     other error shape keeps its JSON as the message.

@@ -82,13 +82,24 @@ func renderTool(p part, out *adapter.Emitter) bool {
 	if state.Status != statusCompleted {
 		return true
 	}
-	if attachments, ok := adapter.CompactJSON(state.Attachments); ok {
-		out.Raw(contract.RawUnsupported, []byte(attachments))
+	if files, ok := attachments(state.Attachments); ok {
+		out.Raw(contract.RawUnsupported, []byte(files))
 	}
 	for _, ev := range edits(p.Tool, call.CallID, state) {
 		out.Emit(ev)
 	}
 	return true
+}
+
+// attachments is the compact JSON of a completed call's attachments, which
+// the contract has no part for. An empty array is no attachment at all; a
+// value that is not an array is kept as it is.
+func attachments(raw json.RawMessage) (string, bool) {
+	var files []json.RawMessage
+	if json.Unmarshal(raw, &files) == nil && len(files) == 0 {
+		return "", false
+	}
+	return adapter.CompactJSON(raw)
 }
 
 // toolResult is the outcome of a completed or failed call: the output, or
