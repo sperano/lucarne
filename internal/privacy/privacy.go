@@ -1,10 +1,15 @@
 // Package privacy finds data that must not appear in Lucarne's public
-// fixtures and examples: credentials, private hostnames and addresses, and
-// URLs or e-mail addresses outside the reserved example domains.
+// fixtures and examples: credentials, names of private systems, IP
+// addresses outside the loopback and documentation ranges, hostnames under
+// private-use TLDs, and URLs or e-mail addresses outside the reserved
+// example domains. Hostnames under public TLDs are found only inside a URL
+// or an e-mail address, which includes a scp-style remote with a user
+// (git@host:repo).
 package privacy
 
 import (
 	"fmt"
+	"net/netip"
 	"regexp"
 	"strings"
 )
@@ -36,7 +41,30 @@ var credentialPatterns = map[string]*regexp.Regexp{
 var (
 	urlPattern   = regexp.MustCompile(`https?://([^/\s"'\\)<>]+)(/[^\s"'\\)<>]*)?`)
 	emailPattern = regexp.MustCompile(`[A-Za-z0-9._%+-]+@([A-Za-z0-9-]+(\.[A-Za-z0-9-]+)+)`)
+	// ipv4Pattern and ipv6Pattern find candidates; netip.ParseAddr decides.
+	ipv4Pattern = regexp.MustCompile(`\b\d{1,3}(\.\d{1,3}){3}\b`)
+	ipv6Pattern = regexp.MustCompile(`(?i)([0-9a-f]{0,4}:){2,7}[0-9a-f]{0,4}`)
+	// dottedNamePattern finds whole dotted names, so a file name such as
+	// settings.local.json is judged by its last label, not by ".local".
+	dottedNamePattern = regexp.MustCompile(`(?i)\b[a-z0-9-]+(\.[a-z0-9-]+)+\b`)
 )
+
+// allowedAddressRanges are the ranges that identify no real host: the
+// documentation ranges of RFC 5737 and RFC 3849. Loopback and unspecified
+// addresses are allowed too.
+var allowedAddressRanges = []netip.Prefix{
+	netip.MustParsePrefix("192.0.2.0/24"),
+	netip.MustParsePrefix("198.51.100.0/24"),
+	netip.MustParsePrefix("203.0.113.0/24"),
+	netip.MustParsePrefix("2001:db8::/32"),
+}
+
+// privateTLDs are the top-level names used for private networks
+// (RFC 6762, RFC 8375, ICANN's .internal, and common conventions).
+var privateTLDs = []string{"lan", "internal", "local", "localdomain", "corp", "home", "intranet", "private"}
+
+// privateSuffixes are private-use names of more than one label.
+var privateSuffixes = []string{".home.arpa"}
 
 // exampleDomains are the domains RFC 2606 reserves for examples.
 var exampleDomains = []string{"example.com", "example.org", "example.net"}
@@ -60,7 +88,9 @@ func Scan(data string) []Finding {
 		}
 	}
 	findings = append(findings, scanURLs(data)...)
-	return append(findings, scanEmails(data)...)
+	findings = append(findings, scanEmails(data)...)
+	findings = append(findings, scanAddresses(data)...)
+	return append(findings, scanPrivateHostnames(data)...)
 }
 
 func scanURLs(data string) []Finding {
@@ -83,6 +113,57 @@ func scanEmails(data string) []Finding {
 		}
 	}
 	return findings
+}
+
+func scanAddresses(data string) []Finding {
+	var findings []Finding
+	for _, pattern := range []*regexp.Regexp{ipv4Pattern, ipv6Pattern} {
+		for _, match := range pattern.FindAllString(data, -1) {
+			addr, err := netip.ParseAddr(match)
+			if err == nil && !isAllowedAddress(addr) {
+				findings = append(findings, Finding{Rule: "ip address outside documentation ranges", Match: match})
+			}
+		}
+	}
+	return findings
+}
+
+func isAllowedAddress(addr netip.Addr) bool {
+	addr = addr.Unmap()
+	if addr.IsLoopback() || addr.IsUnspecified() {
+		return true
+	}
+	for _, prefix := range allowedAddressRanges {
+		if prefix.Contains(addr) {
+			return true
+		}
+	}
+	return false
+}
+
+func scanPrivateHostnames(data string) []Finding {
+	var findings []Finding
+	for _, name := range dottedNamePattern.FindAllString(data, -1) {
+		if isPrivateHostname(strings.ToLower(name)) {
+			findings = append(findings, Finding{Rule: "private hostname", Match: name})
+		}
+	}
+	return findings
+}
+
+func isPrivateHostname(name string) bool {
+	for _, suffix := range privateSuffixes {
+		if strings.HasSuffix(name, suffix) {
+			return true
+		}
+	}
+	tld := name[strings.LastIndexByte(name, '.')+1:]
+	for _, private := range privateTLDs {
+		if tld == private {
+			return true
+		}
+	}
+	return false
 }
 
 func isExampleHost(host string) bool {

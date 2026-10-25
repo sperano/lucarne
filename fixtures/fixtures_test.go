@@ -3,6 +3,7 @@ package fixtures
 import (
 	"encoding/json"
 	"io/fs"
+	"os"
 	"path"
 	"slices"
 	"strings"
@@ -158,15 +159,32 @@ func TestDeployedVersionsAreCovered(t *testing.T) {
 	}
 }
 
+// readmeFile documents the fixtures; it is not embedded.
+const readmeFile = "README.md"
+
 func TestFixturesHoldNoPrivateData(t *testing.T) {
 	t.Parallel()
+	files := []string{ManifestFile}
 	for _, f := range loadManifest(t).Fixtures {
-		data, err := Read(f.File)
+		files = append(files, f.File)
+	}
+	for _, file := range files {
+		data, err := Read(file)
 		if err != nil {
 			t.Fatal(err)
 		}
-		for _, finding := range privacy.Scan(string(data)) {
-			t.Errorf("%s: %v", f.File, finding)
-		}
+		scanForPrivateData(t, file, data)
+	}
+	readme, err := os.ReadFile(readmeFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	scanForPrivateData(t, readmeFile, readme)
+}
+
+func scanForPrivateData(t *testing.T, file string, data []byte) {
+	t.Helper()
+	for _, finding := range privacy.Scan(string(data)) {
+		t.Errorf("%s: %v", file, finding)
 	}
 }

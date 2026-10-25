@@ -1,3 +1,9 @@
+// Test-only: Ajv compiles its validators with `new Function`, which the
+// server's Content-Security-Policy (script-src 'self', no 'unsafe-eval')
+// forbids, so importing this module in the app works under `npm run dev`
+// (no CSP) and throws EvalError in production. eslint.config.js rejects
+// such imports. Runtime validation would need Ajv standalone validators
+// generated at build time.
 import Ajv2020, { type ValidateFunction } from 'ajv/dist/2020.js';
 import schema from '../../../contract/v1/transcript.schema.json';
 import type { DocumentName, Documents } from './contract';

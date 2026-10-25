@@ -201,6 +201,18 @@ func TestExamplesHoldNoPrivateData(t *testing.T) {
 	}
 }
 
+func TestSpecHoldsNoPrivateData(t *testing.T) {
+	t.Parallel()
+	const spec = "README.md"
+	data, err := os.ReadFile(spec)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, finding := range privacy.Scan(string(data)) {
+		t.Errorf("%s: %v", spec, finding)
+	}
+}
+
 func TestValidateRejectsUnknownDefinition(t *testing.T) {
 	t.Parallel()
 	if err := Validate("Nope", []byte(`{}`)); err == nil {

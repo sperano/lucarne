@@ -7,6 +7,9 @@ import ts from 'typescript-eslint';
 // the Vitest suites. tsconfig.node.json lists the same files.
 const NODE_FILES = ['*.config.{js,ts}', 'src/**/*.test.ts'];
 
+// The schema validator, which runs Ajv and so needs eval; see its header.
+const VALIDATOR = 'src/lib/validate.ts';
+
 export default ts.config(
   { ignores: ['dist/', 'node_modules/'] },
   js.configs.recommended,
@@ -14,6 +17,24 @@ export default ts.config(
   ...svelte.configs.recommended,
   { languageOptions: { globals: globals.browser } },
   { files: NODE_FILES, languageOptions: { globals: globals.node } },
+  {
+    files: ['src/**/*.{ts,svelte}'],
+    ignores: [...NODE_FILES, VALIDATOR],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              regex: '(^|/)validate(\\.ts)?$|^ajv(/|$)',
+              message:
+                'Ajv needs eval, which the CSP forbids: tests only (see src/lib/validate.ts).',
+            },
+          ],
+        },
+      ],
+    },
+  },
   {
     files: ['**/*.svelte', '**/*.svelte.ts'],
     languageOptions: { parserOptions: { parser: ts.parser } },
