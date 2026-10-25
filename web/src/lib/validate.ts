@@ -29,5 +29,6 @@ export function schemaErrors(name: DocumentName, document: unknown): string[] {
 export function parseDocument<N extends DocumentName>(name: N, document: unknown): Documents[N] {
   const errors = schemaErrors(name, document);
   if (errors.length > 0) throw new Error(`invalid ${name}: ${errors.join('; ')}`);
+  // Ajv just validated document against the schema's $defs/<name>, which Documents[N] mirrors.
   return document as Documents[N];
 }
