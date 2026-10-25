@@ -1,0 +1,225 @@
+[
+  {
+    "seq": 1,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.codex.0:2a444a2e06314801:1:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.codex.0",
+    "kind": "lifecycle",
+    "source": {
+      "line": 1,
+      "part": 0,
+      "type": "thread.started"
+    },
+    "lifecycle": {
+      "phase": "session_started",
+      "sessionId": "0199a1b2-c3d4-7e5f-8a6b-7c8d9e0f1a2b"
+    }
+  },
+  {
+    "seq": 2,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.codex.0:2a444a2e06314801:2:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.codex.0",
+    "kind": "lifecycle",
+    "source": {
+      "line": 2,
+      "part": 0,
+      "type": "turn.started"
+    },
+    "lifecycle": {
+      "phase": "turn_started"
+    }
+  },
+  {
+    "seq": 3,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.codex.0:2a444a2e06314801:3:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.codex.0",
+    "kind": "tool_call",
+    "source": {
+      "line": 3,
+      "part": 0,
+      "type": "item.started"
+    },
+    "toolCall": {
+      "callId": "item_0",
+      "name": "command_execution",
+      "input": {
+        "command": "/bin/bash -lc 'go test ./...'"
+      }
+    }
+  },
+  {
+    "seq": 4,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.codex.0:2a444a2e06314801:4:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.codex.0",
+    "kind": "tool_result",
+    "source": {
+      "line": 4,
+      "part": 0,
+      "type": "item.completed"
+    },
+    "toolResult": {
+      "callId": "item_0",
+      "status": "error",
+      "output": "--- FAIL: TestGreeting (0.00s)\n    greet_test.go:9: got \"Hello\", want \"Hello, world\"\nFAIL\nFAIL\texample.com/widget\t0.004s\nFAIL\n",
+      "exitCode": 1
+    }
+  },
+  {
+    "seq": 5,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.codex.0:2a444a2e06314801:5:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.codex.0",
+    "kind": "tool_call",
+    "source": {
+      "line": 5,
+      "part": 0,
+      "type": "item.completed"
+    },
+    "toolCall": {
+      "callId": "item_1",
+      "name": "file_change",
+      "input": {
+        "changes": [
+          {
+            "path": "/workspace/repo/missing.go",
+            "kind": "update"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "seq": 6,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.codex.0:2a444a2e06314801:5:1",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.codex.0",
+    "kind": "tool_result",
+    "source": {
+      "line": 5,
+      "part": 1,
+      "type": "item.completed"
+    },
+    "toolResult": {
+      "callId": "item_1",
+      "status": "error"
+    }
+  },
+  {
+    "seq": 7,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.codex.0:2a444a2e06314801:6:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.codex.0",
+    "kind": "tool_call",
+    "source": {
+      "line": 6,
+      "part": 0,
+      "type": "item.started"
+    },
+    "toolCall": {
+      "callId": "item_2",
+      "name": "mcp_tool_call",
+      "input": {
+        "arguments": {
+          "id": 42
+        },
+        "server": "tracker",
+        "tool": "get_item"
+      }
+    }
+  },
+  {
+    "seq": 8,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.codex.0:2a444a2e06314801:7:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.codex.0",
+    "kind": "tool_result",
+    "source": {
+      "line": 7,
+      "part": 0,
+      "type": "item.completed"
+    },
+    "toolResult": {
+      "callId": "item_2",
+      "status": "error",
+      "output": "example: item 42 not found"
+    }
+  },
+  {
+    "seq": 9,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.codex.0:2a444a2e06314801:8:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.codex.0",
+    "kind": "tool_call",
+    "source": {
+      "line": 8,
+      "part": 0,
+      "type": "item.completed"
+    },
+    "toolCall": {
+      "callId": "item_3",
+      "name": "command_execution",
+      "input": {
+        "command": "/bin/bash -lc 'rm -rf build'"
+      }
+    }
+  },
+  {
+    "seq": 10,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.codex.0:2a444a2e06314801:8:1",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.codex.0",
+    "kind": "tool_result",
+    "source": {
+      "line": 8,
+      "part": 1,
+      "type": "item.completed"
+    },
+    "toolResult": {
+      "callId": "item_3",
+      "status": "declined"
+    }
+  },
+  {
+    "seq": 11,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.codex.0:2a444a2e06314801:9:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.codex.0",
+    "kind": "message",
+    "source": {
+      "line": 9,
+      "part": 0,
+      "type": "item.completed"
+    },
+    "message": {
+      "role": "assistant",
+      "type": "text",
+      "text": "The tests fail and the tracker lookup failed; stopping.",
+      "messageId": "item_4"
+    }
+  },
+  {
+    "seq": 12,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.codex.0:2a444a2e06314801:10:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.codex.0",
+    "kind": "lifecycle",
+    "source": {
+      "line": 10,
+      "part": 0,
+      "type": "turn.completed"
+    },
+    "lifecycle": {
+      "phase": "turn_completed"
+    }
+  },
+  {
+    "seq": 13,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.codex.0:2a444a2e06314801:10:1",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.codex.0",
+    "kind": "usage",
+    "source": {
+      "line": 10,
+      "part": 1,
+      "type": "turn.completed"
+    },
+    "usage": {
+      "scope": "session",
+      "inputTokens": 20480,
+      "outputTokens": 410,
+      "cacheReadTokens": 16384,
+      "cacheWriteTokens": 0,
+      "reasoningTokens": 128
+    }
+  }
+]

@@ -1,0 +1,60 @@
+[
+  {
+    "seq": 1,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.codex.0:2a444a2e06314801:1:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.codex.0",
+    "kind": "lifecycle",
+    "source": {
+      "line": 1,
+      "part": 0,
+      "type": "thread.started"
+    },
+    "lifecycle": {
+      "phase": "session_started",
+      "sessionId": "0199a1b2-c3d4-7e5f-8a6b-7c8d9e0f1a2b"
+    }
+  },
+  {
+    "seq": 2,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.codex.0:2a444a2e06314801:2:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.codex.0",
+    "kind": "lifecycle",
+    "source": {
+      "line": 2,
+      "part": 0,
+      "type": "turn.started"
+    },
+    "lifecycle": {
+      "phase": "turn_started"
+    }
+  },
+  {
+    "seq": 3,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.codex.0:2a444a2e06314801:3:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.codex.0",
+    "kind": "error",
+    "source": {
+      "line": 3,
+      "part": 0,
+      "type": "error"
+    },
+    "error": {
+      "message": "example: unexpected status 401 Unauthorized"
+    }
+  },
+  {
+    "seq": 4,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.codex.0:2a444a2e06314801:4:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.codex.0",
+    "kind": "lifecycle",
+    "source": {
+      "line": 4,
+      "part": 0,
+      "type": "turn.failed"
+    },
+    "lifecycle": {
+      "phase": "turn_failed",
+      "detail": "example: unexpected status 401 Unauthorized"
+    }
+  }
+]
