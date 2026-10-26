@@ -3,6 +3,7 @@
 // a live run. Every line is fabricated: the repository is public.
 import { inject } from 'vitest';
 import type { Snapshot } from '../src/lib/contract';
+import { parseDocument } from '../src/lib/validate';
 
 /** A run of the fake cluster, as the control API describes it. */
 export interface RunInfo {
@@ -11,6 +12,25 @@ export interface RunInfo {
   readonly link: string;
   /** The path of its snapshot. */
   readonly api: string;
+}
+
+function isRunInfo(value: unknown): value is RunInfo {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'name' in value &&
+    typeof value.name === 'string' &&
+    'link' in value &&
+    typeof value.link === 'string' &&
+    'api' in value &&
+    typeof value.api === 'string'
+  );
+}
+
+/** Narrows a control API answer to a run, or throws. */
+function parseRunInfo(path: string, value: unknown): RunInfo {
+  if (!isRunInfo(value)) throw new Error(`${path}: not a run: ${JSON.stringify(value)}`);
+  return value;
 }
 
 /** How a finished Task ends (kubetest.PhaseSucceeded, kubetest.PhaseFailed). */
@@ -40,7 +60,14 @@ async function post(path: string, body?: unknown): Promise<void> {
 
 /** Every run of the world, by name. */
 export async function runs(): Promise<Record<string, RunInfo>> {
-  return (await (await call('/runs')).json()) as Record<string, RunInfo>;
+  const path = '/runs';
+  const body: unknown = await (await call(path)).json();
+  if (typeof body !== 'object' || body === null || Array.isArray(body)) {
+    throw new Error(`${path}: not a map of runs: ${JSON.stringify(body)}`);
+  }
+  return Object.fromEntries(
+    Object.entries(body).map(([name, value]) => [name, parseRunInfo(`${path} ${name}`, value)]),
+  );
 }
 
 /** The run called name. */
@@ -52,7 +79,9 @@ export async function run(name: string): Promise<RunInfo> {
 
 /** A new running Claude Code run with an empty log. */
 export async function live(): Promise<RunInfo> {
-  return (await (await call('/live', { method: 'POST' })).json()) as RunInfo;
+  const path = '/live';
+  const body: unknown = await (await call(path, { method: 'POST' })).json();
+  return parseRunInfo(path, body);
 }
 
 export const write = (r: RunInfo, lines: readonly string[]): Promise<void> =>
@@ -79,7 +108,7 @@ export function get(path: string): Promise<Response> {
 export async function snapshot(r: RunInfo): Promise<Snapshot> {
   const response = await get(r.api);
   if (!response.ok) throw new Error(`${r.api}: ${String(response.status)}`);
-  return (await response.json()) as Snapshot;
+  return parseDocument('Snapshot', await response.json());
 }
 
 // The fabricated Claude Code session of the generated lines, as in
