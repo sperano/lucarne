@@ -259,6 +259,11 @@ func isReady(e *entry) bool {
 func (h *Hub) dropLocked(key contract.RunKey) {
 	e := h.runs[key]
 	delete(h.runs, key)
+	// Fire and forget, untracked by h.wg: stop waits for the run's lock,
+	// which h.mu, held here, must not wait behind, and it only cancels
+	// the run and releases its subscribers. The run's track goroutine,
+	// which h.wg does track, ends on that cancellation, or on Close's,
+	// since the run's context is the hub's.
 	go e.run.stop()
 }
 

@@ -358,3 +358,36 @@ func TestRunErrorsNameNoSecret(t *testing.T) {
 		})
 	}
 }
+
+// TestRunErrorOfAGoneClientIsNoWarning checks that a request given up while
+// its run was opened is logged at debug level, and any other cancellation,
+// such as the hub's, as a warning.
+func TestRunErrorOfAGoneClientIsNoWarning(t *testing.T) {
+	t.Parallel()
+	for name, gone := range map[string]bool{"client gone": true, "hub canceled": false} {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			src := streamtest.NewSource(contract.PhaseRunning, contract.RunnerUnknown)
+			src.SetRunError(fmt.Errorf("get task: %w", context.Canceled))
+			hub, err := stream.New(stream.Config{Source: src, Logger: slog.New(slog.DiscardHandler)})
+			if err != nil {
+				t.Fatal(err)
+			}
+			t.Cleanup(hub.Close)
+			var logs strings.Builder
+			logger := slog.New(slog.NewTextHandler(&logs, &slog.HandlerOptions{Level: slog.LevelDebug}))
+			h := New(builtAssets(), Options{Runs: hub, Logger: logger})
+			ctx, cancel := context.WithCancel(context.Background())
+			if gone {
+				cancel()
+			}
+			defer cancel()
+			rec := httptest.NewRecorder()
+			h.ServeHTTP(rec, httptest.NewRequestWithContext(ctx, http.MethodGet, streamtest.Key.SnapshotPath(), nil))
+			warned := strings.Contains(logs.String(), "level=WARN")
+			if warned == gone || gone != (rec.Body.Len() == 0) {
+				t.Errorf("answered %d %q, logged %q", rec.Code, rec.Body, logs.String())
+			}
+		})
+	}
+}

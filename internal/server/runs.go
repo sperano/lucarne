@@ -28,7 +28,7 @@ func (s *server) snapshot(w http.ResponseWriter, r *http.Request) {
 	}
 	body, err := s.runs.Snapshot(r.Context(), key)
 	if err != nil {
-		s.runError(w, key, err)
+		s.runError(w, r, key, err)
 		return
 	}
 	s.writeEncoded(w, http.StatusOK, append(body, '\n'))
@@ -44,7 +44,7 @@ func (s *server) events(w http.ResponseWriter, r *http.Request) {
 	}
 	sub, err := s.runs.Subscribe(r.Context(), key, cursorOf(r))
 	if err != nil {
-		s.runError(w, key, err)
+		s.runError(w, r, key, err)
 		return
 	}
 	defer sub.Close()
@@ -89,8 +89,13 @@ func cursorOf(r *http.Request) string {
 }
 
 // runError answers a run that could not be served. The error itself is
-// logged, never sent.
-func (s *server) runError(w http.ResponseWriter, key contract.RunKey, err error) {
+// logged, never sent. A request given up while its run was being opened
+// gets no answer: its client is gone.
+func (s *server) runError(w http.ResponseWriter, r *http.Request, key contract.RunKey, err error) {
+	if ctx := r.Context(); ctx.Err() != nil && errors.Is(err, ctx.Err()) {
+		s.logger.Debug("serve run: client gone", "run", key.LinkPath(), "error", err)
+		return
+	}
 	switch {
 	case errors.Is(err, kube.ErrRunNotFound):
 		s.writeError(w, http.StatusNotFound, contract.ErrorRunNotFound, runNotFoundMessage)
