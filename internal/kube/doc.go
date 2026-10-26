@@ -21,7 +21,8 @@
 // identified by pod UID, container and restart count. Init containers and
 // user extra containers are never read. Kubernetes keeps the log of the
 // current and the previous instance only: older restarts are listed as
-// expired, and a deleted pod is not listed at all, since nothing says it
+// expired. While the container backs off after a crash, the instance that
+// exited is the only one left, read as the previous one. A deleted pod is not listed at all, since nothing says it
 // existed. A Task whose pods are not owned through its Job (a worker pool
 // Task, whose pod serves other Tasks too) has no attempts.
 //

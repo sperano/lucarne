@@ -170,6 +170,18 @@ func terminatedState(code int32) corev1.ContainerState {
 	}}
 }
 
+// crashLooping is the status the kubelet reports while the agent container
+// backs off after instance restarts exited: that instance is both the
+// status's container and its last termination.
+func crashLooping(restarts int32, code int32) *corev1.ContainerStatus {
+	status := waiting("CrashLoopBackOff")
+	status.RestartCount = restarts
+	status.ContainerID = "containerd://exited"
+	status.LastTerminationState = terminatedState(code)
+	status.LastTerminationState.Terminated.ContainerID = status.ContainerID
+	return status
+}
+
 func waiting(reason string) *corev1.ContainerStatus {
 	return &corev1.ContainerStatus{State: corev1.ContainerState{Waiting: &corev1.ContainerStateWaiting{Reason: reason}}}
 }

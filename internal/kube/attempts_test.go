@@ -127,6 +127,26 @@ func TestAttemptsRestarts(t *testing.T) {
 	}
 }
 
+// TestAttemptsBackOff proves that while the container backs off, the
+// instance that exited is listed as terminated and readable, and the one
+// before it, whose log the kubelet no longer serves, as expired.
+func TestAttemptsBackOff(t *testing.T) {
+	const restarts, exitCode = 2, 137
+	got := attemptsOf(t, newJob(taskName, jobUID, taskUID), newPod(podName, podUID, jobUID, 0, corev1.PodRunning, crashLooping(restarts, exitCode)))
+	if len(got) != restarts+1 {
+		t.Fatalf("attempts = %+v", got)
+	}
+	for _, a := range got[:restarts] {
+		if a.Coverage.State != contract.CoverageExpired || a.Coverage.Reason != ReasonOlderRestart || a.Container.State != contract.ContainerUnknown {
+			t.Errorf("older attempt = %+v", a)
+		}
+	}
+	last := got[restarts]
+	if last.Key.Restart != restarts || last.Container.State != contract.ContainerTerminated || *last.Container.ExitCode != exitCode || last.Coverage.State != contract.CoveragePending || last.Coverage.Reason != "" {
+		t.Errorf("exited attempt = %+v", last)
+	}
+}
+
 func TestAttemptsBounded(t *testing.T) {
 	status := running()
 	status.RestartCount = 3 * contract.MaxAttemptsPerRun

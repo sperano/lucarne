@@ -67,10 +67,11 @@ func podAttempts(pod *corev1.Pod, runner contract.Runner) []contract.Attempt {
 		return []contract.Attempt{newAttempt(pod, 0, runner, contract.ContainerState{State: contract.ContainerUnknown}, pending(reason))}
 	}
 	restarts := int64(status.RestartCount)
-	var attempts []contract.Attempt
-	for r := max(0, restarts-contract.MaxAttemptsPerRun); r < restarts-1; r++ {
-		attempts = append(attempts, newAttempt(pod, r, runner, contract.ContainerState{State: contract.ContainerUnknown}, expired(ReasonOlderRestart)))
+	if backingOff(status) {
+		attempts := olderAttempts(pod, runner, restarts, restarts)
+		return append(attempts, newAttempt(pod, restarts, runner, containerState(status.LastTerminationState), contract.Coverage{State: contract.CoveragePending}))
 	}
+	attempts := olderAttempts(pod, runner, restarts, restarts-1)
 	if restarts > 0 {
 		attempts = append(attempts, previousAttempt(pod, status, runner))
 	}
@@ -78,6 +79,27 @@ func podAttempts(pod *corev1.Pod, runner contract.Runner) []contract.Attempt {
 		attempts = append(attempts, current)
 	}
 	return attempts
+}
+
+// olderAttempts lists the instances of pod's agent container before the
+// restart numbered readable, whose logs are gone, at most
+// contract.MaxAttemptsPerRun back from the restart count.
+func olderAttempts(pod *corev1.Pod, runner contract.Runner, restarts, readable int64) []contract.Attempt {
+	var attempts []contract.Attempt
+	for r := max(0, restarts-contract.MaxAttemptsPerRun); r < readable; r++ {
+		attempts = append(attempts, newAttempt(pod, r, runner, contract.ContainerState{State: contract.ContainerUnknown}, expired(ReasonOlderRestart)))
+	}
+	return attempts
+}
+
+// backingOff reports whether the instance status counts exited and waits to
+// be restarted, as in CrashLoopBackOff. The kubelet then keeps that
+// instance's container ID on the status and describes it in
+// LastTerminationState, and serves its log for the current and the previous
+// instance alike: the instance before it can no longer be read.
+func backingOff(status *corev1.ContainerStatus) bool {
+	last := status.LastTerminationState.Terminated
+	return status.State.Waiting != nil && last != nil && last.ContainerID != "" && last.ContainerID == status.ContainerID
 }
 
 // previousAttempt is the instance before the current one, readable while

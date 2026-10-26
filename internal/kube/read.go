@@ -166,7 +166,8 @@ func (rd *reader) locate(ctx context.Context) (*instance, bool, error) {
 }
 
 // instance finds the instance the attempt key names in pod: the current
-// one, the previous one while Kubernetes keeps its log, or none.
+// one, the previous one while Kubernetes keeps its log, or none. While the
+// container backs off, the instance that exited is the only one with a log.
 func (rd *reader) instance(pod *corev1.Pod) (instance, ReadEnd, string, error) {
 	notFound := fmt.Errorf("%w: %s", ErrAttemptNotFound, rd.key.ID())
 	if !hasAgentContainer(pod) {
@@ -180,6 +181,10 @@ func (rd *reader) instance(pod *corev1.Pod) (instance, ReadEnd, string, error) {
 	switch restart := rd.key.Restart; {
 	case restart > int64(inst.restarts):
 		return instance{}, "", "", notFound
+	case restart == int64(inst.restarts) && status != nil && backingOff(status):
+		// Previous names this instance before and after the kubelet
+		// restarts the container, even while the pod's status lags.
+		inst.previous, inst.started, inst.terminated = true, true, true
 	case restart == int64(inst.restarts):
 		if status != nil {
 			inst.started = status.State.Running != nil || status.State.Terminated != nil
@@ -188,7 +193,7 @@ func (rd *reader) instance(pod *corev1.Pod) (instance, ReadEnd, string, error) {
 		if !inst.started && podFinished(pod) {
 			return instance{}, EndExpired, ReasonNeverStarted, nil
 		}
-	case restart == int64(inst.restarts)-1 && status.LastTerminationState.Terminated != nil:
+	case restart == int64(inst.restarts)-1 && status.LastTerminationState.Terminated != nil && !backingOff(status):
 		inst.previous, inst.started, inst.terminated = true, true, true
 	default:
 		return instance{}, EndExpired, ReasonOlderRestart, nil

@@ -222,6 +222,24 @@ func TestReadRestarts(t *testing.T) {
 	}
 }
 
+// TestReadBackOff proves that while the container backs off, the instance
+// that exited is read with Previous, which names it whatever the kubelet
+// restarts meanwhile, and the one before it is expired without a read.
+func TestReadBackOff(t *testing.T) {
+	const restarts = 2
+	c, run := readCluster(t, newPod(podName, podUID, jobUID, 0, corev1.PodRunning, crashLooping(restarts, 1)))
+	c.logs.responses = []logResponse{{text: lines(baseTime, 0, 1)}}
+	_, res := c.read(t, run, contract.AttemptKey{PodUID: podUID, Container: AgentContainer, Restart: restarts}, ReadOptions{Follow: true})
+	opens := c.logs.opened()
+	if res.End != EndComplete || res.Lines != 1 || len(opens) != 1 || !opens[0].Previous || opens[0].Follow {
+		t.Errorf("exited: result %+v, opens %+v", res, opens)
+	}
+	_, res = c.read(t, run, contract.AttemptKey{PodUID: podUID, Container: AgentContainer, Restart: restarts - 1}, ReadOptions{})
+	if res.End != EndExpired || res.Reason != ReasonOlderRestart || len(c.logs.opened()) != 1 {
+		t.Errorf("before: result %+v", res)
+	}
+}
+
 func TestReadNeverStarted(t *testing.T) {
 	c, run := readCluster(t, newPod(podName, podUID, jobUID, 0, corev1.PodFailed, waiting("PodInitializing")))
 	_, res := c.read(t, run, agentKey, ReadOptions{Follow: true})
