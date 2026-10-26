@@ -31,9 +31,12 @@ func TestHunks(t *testing.T) {
 		{"not a diff", "example", "example"},
 	}
 	for _, c := range cases {
-		if got := hunks(&c.diff); got == nil || *got != c.want {
-			t.Errorf("%s: hunks = %v, want %q", c.name, got, c.want)
-		}
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			if got := hunks(&c.diff); got == nil || *got != c.want {
+				t.Errorf("hunks = %v, want %q", got, c.want)
+			}
+		})
 	}
 	if hunks(nil) != nil {
 		t.Error("no diff gave a diff")
@@ -54,10 +57,13 @@ func TestEditChange(t *testing.T) {
 			contract.ChangeAdd, "/w/a.go"},
 	}
 	for _, c := range cases {
-		edits := editsOf(t, "edit", c.state)
-		if len(edits) != 1 || edits[0].Change != c.want || edits[0].Path != c.path {
-			t.Errorf("%s: edits = %+v", c.name, edits)
-		}
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			edits := editsOf(t, "edit", c.state)
+			if len(edits) != 1 || edits[0].Change != c.want || edits[0].Path != c.path {
+				t.Errorf("edits = %+v", edits)
+			}
+		})
 	}
 	if edits := editsOf(t, "edit", `{"status":"completed","input":{"filePath":"a.go"},"output":"","metadata":{}}`); edits != nil {
 		t.Errorf("an edit without oldString gave %+v", edits)
@@ -78,11 +84,14 @@ func TestWriteChange(t *testing.T) {
 		{"unsaid", `{"filepath":"/w/a"}`, contract.ChangeUnknown},
 	}
 	for _, c := range cases {
-		edits := editsOf(t, "write", `{"status":"completed","input":{"filePath":"a","content":"x\n"},"output":"","metadata":`+c.metadata+`}`)
-		if len(edits) != 1 || edits[0].Change != c.want || edits[0].Path != "/w/a" || edits[0].After == nil ||
-			*edits[0].After != "x\n" || edits[0].Diff != nil || edits[0].Before != nil {
-			t.Errorf("%s: edits = %+v", c.name, edits)
-		}
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			edits := editsOf(t, "write", `{"status":"completed","input":{"filePath":"a","content":"x\n"},"output":"","metadata":`+c.metadata+`}`)
+			if len(edits) != 1 || edits[0].Change != c.want || edits[0].Path != "/w/a" || edits[0].After == nil ||
+				*edits[0].After != "x\n" || edits[0].Diff != nil || edits[0].Before != nil {
+				t.Errorf("edits = %+v", edits)
+			}
+		})
 	}
 }
 
