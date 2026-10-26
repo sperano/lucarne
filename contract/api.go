@@ -22,6 +22,7 @@ const (
 	SSERun        = "run"
 	SSEReset      = "reset"
 	SSEEnd        = "end"
+	SSELive       = "live"
 )
 
 // AttemptUpdate is the data of an "attempt" SSE event.
@@ -71,6 +72,13 @@ const (
 	EndRunDeleted  EndReason = "run_deleted"
 )
 
+// Live is the data of a "live" SSE event, sent once after the updates a
+// stream replayed: those up to LastSeq had happened before the client
+// connected, the ones after it are new.
+type Live struct {
+	LastSeq int64 `json:"lastSeq"`
+}
+
 // ErrorCode is the machine-readable code of an API error.
 type ErrorCode string
 
@@ -89,6 +97,10 @@ const (
 	ErrorNotFound ErrorCode = "not_found"
 	// ErrorMethodNotAllowed is a request with another method than GET or HEAD.
 	ErrorMethodNotAllowed ErrorCode = "method_not_allowed"
+	// ErrorUnavailable is a run the server cannot read now: the Kubernetes
+	// API did not answer or refused, or the server follows as many runs as
+	// it can.
+	ErrorUnavailable ErrorCode = "unavailable"
 )
 
 // ErrorResponse is the body of every API error.

@@ -70,7 +70,7 @@ func TestGoTypesMatchSchemaObjects(t *testing.T) {
 		"ToolCall": ToolCall{}, "ToolResult": ToolResult{}, "Edit": Edit{}, "Usage": Usage{},
 		"Retry": Retry{}, "ErrorInfo": ErrorInfo{}, "Output": Output{}, "Lifecycle": Lifecycle{},
 		"Raw": Raw{}, "Gap": Gap{}, "Event": Event{}, "Snapshot": Snapshot{},
-		"AttemptUpdate": AttemptUpdate{}, "RunUpdate": RunUpdate{}, "Reset": Reset{}, "End": End{},
+		"AttemptUpdate": AttemptUpdate{}, "RunUpdate": RunUpdate{}, "Reset": Reset{}, "End": End{}, "Live": Live{},
 		"ErrorResponse": ErrorResponse{}, "ContractInfo": ContractInfo{},
 	}
 	for name, value := range types {
@@ -174,7 +174,7 @@ func apiEnumCases(defs map[string]map[string]any) []enumCase {
 		{"end reasons", property(defs, "End", "reason"), toStrings([]EndReason{
 			EndRunFinished, EndRunDeleted})},
 		{"error codes", asMap(asMap(property(defs, "ErrorResponse", "error")["properties"])["code"]),
-			toStrings([]ErrorCode{ErrorInvalidRunKey, ErrorRunNotFound, ErrorNotImplemented, ErrorInternal, ErrorNotFound, ErrorMethodNotAllowed})},
+			toStrings([]ErrorCode{ErrorInvalidRunKey, ErrorRunNotFound, ErrorNotImplemented, ErrorInternal, ErrorNotFound, ErrorMethodNotAllowed, ErrorUnavailable})},
 	}
 }
 

@@ -35,6 +35,7 @@ import {
   type Gap,
   type Lifecycle,
   type Limits,
+  type Live,
   type Message,
   type Output,
   type Raw,
@@ -68,6 +69,7 @@ const DOCUMENT_NAMES: Record<DocumentName, true> = {
   RunUpdate: true,
   Reset: true,
   End: true,
+  Live: true,
   ErrorResponse: true,
   ContractInfo: true,
 };
@@ -254,6 +256,7 @@ const objects: Record<string, Record<string, boolean>> = {
   RunUpdate: { seq: true, run: true } satisfies RequiredKeys<RunUpdate>,
   Reset: { epoch: true, reason: true } satisfies RequiredKeys<Reset>,
   End: { seq: true, reason: true } satisfies RequiredKeys<End>,
+  Live: { lastSeq: true } satisfies RequiredKeys<Live>,
   ContractInfo: { schema: true, limits: true } satisfies RequiredKeys<ContractInfo>,
 };
 

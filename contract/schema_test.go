@@ -156,6 +156,7 @@ func newDocument(t *testing.T, def string) any {
 		DefRunUpdate:     &RunUpdate{},
 		DefReset:         &Reset{},
 		DefEnd:           &End{},
+		DefLive:          &Live{},
 		DefErrorResponse: &ErrorResponse{},
 		DefContractInfo:  &ContractInfo{},
 	}

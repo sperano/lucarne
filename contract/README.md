@@ -221,15 +221,22 @@ Errors are an `ErrorResponse` `{"error": {"code", "message"}}`: 400
 `invalid_run_key`, 404 `run_not_found` (no such run, or it expired; Lucarne
 cannot tell the two apart once the Task is gone), 404 `not_found` (no
 endpoint at this path), 405 `method_not_allowed` (any method but `GET` or
-`HEAD`), 501 `not_implemented`, 500 `internal`. Every path under
-`/api/v1/runs/` that is not one of the two run paths above, a trailing slash
-included, is an `invalid_run_key`, and so is a run key with a percent-encoded
-character, as for deep links. In this bootstrap the run endpoints validate
-the key and answer 501.
+`HEAD`), 501 `not_implemented` (a server started without a cluster to
+read), 503 `unavailable` (the Kubernetes API did not answer or refused the
+server, the server follows as many runs as it can, or it is shutting down),
+500 `internal`. Every path under `/api/v1/runs/` that is not one of the two
+run paths above, a trailing slash included, is an `invalid_run_key`, and so
+is a run key with a percent-encoded character, as for deep links. An error
+message is one of the server's own: an error of the source, which can name
+hosts or credentials, is logged and never sent.
 
 A **snapshot** is the run, its attempts, its retained events in `seq`
 order, and `stream`: the `epoch`, the `lastSeq` it reflects and
-`droppedEvents`.
+`droppedEvents`. Its `lastSeq` never counts the `end` update, so the stream
+opened after it always delivers the `end` of a run that has one. The first
+snapshot of a run the server was not following waits, a few seconds at most,
+for the logs of its terminated attempts to be read, so a finished run opens
+whole.
 
 ## SSE stream and replay
 
@@ -252,8 +259,11 @@ Last-Event-ID: {epoch}:{seq}
    | `run` | `{epoch}:{seq}` | `RunUpdate` (the run's full new state) |
    | `end` | `{epoch}:{seq}` | `End` (below): nothing more will follow; the client closes the stream and does not reconnect |
    | `reset` | none | `Reset`: drop all state, load a new snapshot, reconnect from it |
+   | `live` | none | `Live`: sent once, after the updates replayed; `lastSeq` is the last of them (the cursor when there were none), and every update after it is new |
 
-   A comment line (`: keepalive`) is sent when the stream is otherwise idle,
+   Replayed updates had happened before the client connected; `live` is
+   where they stop, so a client can tell catching up from new activity. A
+   comment line (`: keepalive`) is sent when the stream is otherwise idle,
    so proxies keep it open.
 3. `reset` reasons: `epoch_changed` (the cursor's epoch is not the current
    one), `replay_expired` (the cursor is older than the last
@@ -270,7 +280,9 @@ Last-Event-ID: {epoch}:{seq}
    again, so it keeps the stream open too, until the log is read or the
    Task is deleted. The `run` update that carries the terminal phase, and
    the last `attempt` updates, are sent before `end`.
-5. The client checks that each `seq` is its last plus one. Any other value
+5. A cursor at or after the `end` of a run is answered `204 No Content`,
+   which tells an `EventSource` not to reconnect.
+6. The client checks that each `seq` is its last plus one. Any other value
    means something was lost: it discards its state and reloads the snapshot,
    as on `reset`.
 
@@ -278,3 +290,17 @@ So a reconnect either resumes exactly or says that it cannot; it never
 silently skips or repeats an update. Events lost before the server read them
 (source loss) are not a replay problem: they are `gap` events and coverage
 counts, delivered like any other update.
+
+An update is a whole event the runner emitted, never part of one: the stream
+is as fine-grained as the runner's own output (Claude Code prints a message
+once it is complete), not token by token.
+
+A run's history lives in the server's memory while someone watches it, and
+for a few minutes after; a server restart, or a run evicted after nobody
+watched it, starts a new epoch, read again from the source. A log that could
+not be read is read again from its start: the lines up to the last one
+delivered are recognized (by their receipt time and content, so two
+identical lines stay two lines) and skipped. When a log read again does not
+line up with what was delivered, a `read_interrupted` gap says so; when its
+first line changed (rotation), it is numbered from a new origin after a
+`source_truncated` gap.
