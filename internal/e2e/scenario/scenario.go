@@ -38,6 +38,7 @@ const (
 	ForeignPod     = "foreign-pod"
 	PodDeleted     = "pod-deleted"
 	UnknownRunner  = "unknown-runner"
+	Retried        = "retried"
 	PrivateRun     = "private"
 	fixturePrefix  = "fixture/"
 	livePrefix     = "live-"
@@ -63,7 +64,7 @@ type Run struct {
 	// Runner is the Kelos agent type.
 	Runner string
 	Task   *kubetest.Run
-	// Pod is the run's pod, nil when it has none any more.
+	// Pod is the run's latest pod, nil when it has none any more.
 	Pod *kubetest.Pod
 }
 
@@ -81,7 +82,7 @@ type World struct {
 // New builds the world.
 func New() (*World, error) {
 	w := &World{Cluster: kubetest.New(Cluster), runs: map[string]*Run{}}
-	steps := []func() error{w.addFixtures, w.addHostile, w.addLong, w.addUnread, w.addOthers}
+	steps := []func() error{w.addFixtures, w.addHostile, w.addLong, w.addUnread, w.addOthers, w.addRetried}
 	for _, step := range steps {
 		if err := step(); err != nil {
 			return nil, err

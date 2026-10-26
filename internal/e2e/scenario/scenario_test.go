@@ -26,7 +26,7 @@ func TestNewBuildsEveryRun(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, name := range []string{Hostile, LongLine, LongSession, ForeignPod, PodDeleted, UnknownRunner} {
+	for _, name := range []string{Hostile, LongLine, LongSession, ForeignPod, PodDeleted, UnknownRunner, Retried} {
 		r := w.Run(name)
 		if r == nil {
 			t.Fatalf("no run %s", name)
