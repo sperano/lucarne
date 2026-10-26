@@ -30,6 +30,8 @@ const (
 		"img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; " +
 		"form-action 'none'; frame-ancestors 'none'"
 
+	drainingMessage = "draining: the server is shutting down\n"
+
 	notBuiltMessage = "frontend not built: run `npm run build` in web/\n"
 
 	notARunPathMessage = "not a run path: want runs/{cluster}/{namespace}/{taskUID}, optionally followed by /events"
@@ -73,6 +75,9 @@ type Options struct {
 	Heartbeat time.Duration
 	// Logger is where the server logs; nil means slog.Default().
 	Logger *slog.Logger
+	// Ready reports whether the server takes new requests, as /readyz
+	// says; nil means always. It turns false while the server drains.
+	Ready func() bool
 }
 
 // New returns the handler serving the API and the frontend in assets, the
@@ -91,9 +96,14 @@ func New(assets fs.FS, opts Options) http.Handler {
 	if heartbeat <= 0 {
 		heartbeat = DefaultHeartbeat
 	}
-	s := &server{assets: assets, index: index, logger: logger, runs: opts.Runs, heartbeat: heartbeat}
+	ready := opts.Ready
+	if ready == nil {
+		ready = func() bool { return true }
+	}
+	s := &server{assets: assets, index: index, logger: logger, runs: opts.Runs, heartbeat: heartbeat, ready: ready}
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", s.health)
+	mux.HandleFunc("GET /readyz", s.readiness)
 	mux.HandleFunc("GET "+contract.ContractPath, s.contractInfo)
 	mux.HandleFunc("GET "+contract.APIPrefix+"/runs/{cluster}/{namespace}/{taskUID}", s.snapshot)
 	mux.HandleFunc("GET "+contract.APIPrefix+"/runs/{cluster}/{namespace}/{taskUID}/events", s.events)
@@ -113,11 +123,26 @@ type server struct {
 	logger    *slog.Logger
 	runs      *stream.Hub
 	heartbeat time.Duration
+	ready     func() bool
 }
 
 func (s *server) health(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	s.write(w, []byte("ok\n"))
+}
+
+// readiness answers whether the server takes new requests: 503 while it
+// drains, so that the Service stops routing to it. It calls no source, so
+// that a Kubernetes API that does not answer leaves the UI reachable.
+func (s *server) readiness(w http.ResponseWriter, _ *http.Request) {
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.Header().Set("Cache-Control", "no-store")
+	if !s.ready() {
+		w.WriteHeader(http.StatusServiceUnavailable)
+		s.write(w, []byte(drainingMessage))
+		return
+	}
+	s.write(w, []byte("ready\n"))
 }
 
 func (s *server) contractInfo(w http.ResponseWriter, _ *http.Request) {

@@ -90,6 +90,19 @@ describe('Transcript of a large run', () => {
     expect(rendered(root)).toBe(2 * WINDOW_STEP);
   });
 
+  it('brings the last item into view at End', async () => {
+    const root = show();
+    const end = [...root.querySelectorAll('button')].find((b) => b.textContent.trim() === 'End');
+    end?.click();
+    const last = `event=${conversation.items.at(-1)?.id ?? ''}`;
+    await expect
+      .poll(() => {
+        const rect = document.getElementById(last)?.getBoundingClientRect();
+        return rect !== undefined && rect.top >= 0 && rect.bottom <= window.innerHeight;
+      })
+      .toBe(true);
+  });
+
   it('opens at a linked event, focused and expanded', async () => {
     const tool = conversation.items.find((item, i) => item.kind === 'tool' && i > EVENTS / 8);
     if (tool?.kind !== 'tool' || !tool.result) throw new Error('no tool item');

@@ -12,6 +12,7 @@ import (
 	"os"
 	"os/signal"
 	"strings"
+	"sync/atomic"
 	"syscall"
 	"time"
 
@@ -27,7 +28,25 @@ const (
 	readHeaderTimeout = 10 * time.Second
 	idleTimeout       = 2 * time.Minute
 	shutdownTimeout   = 10 * time.Second
+
+	// defaultVersion is the version of a binary built without setting
+	// version, such as one from a plain go build.
+	defaultVersion = "dev"
 )
+
+// version is the Lucarne build this binary was made from. The Dockerfile
+// sets it from its VERSION build argument with -ldflags "-X main.version=...".
+var version = defaultVersion
+
+// options are what run serves and how it stops.
+type options struct {
+	// runs serves the run endpoints; nil answers them 501.
+	runs *stream.Hub
+	// drainDelay is how long /readyz answers 503 after the stop signal,
+	// before the listener closes, so that the Service stops routing here.
+	drainDelay time.Duration
+	logger     *slog.Logger
+}
 
 // namespaces is a repeatable flag.
 type namespaces []string
@@ -44,6 +63,7 @@ func main() {
 	cluster := flag.String("cluster", "", "name of the cluster on run keys (Kubernetes has none)")
 	var allowed namespaces
 	flag.Var(&allowed, "namespace", "namespace whose runs may be read; repeat for several, none to serve no runs")
+	drainDelay := flag.Duration("drain-delay", 0, "how long /readyz answers 503 after SIGTERM before the server stops taking connections")
 	flag.Parse()
 	logger := slog.New(slog.NewJSONHandler(os.Stderr, nil))
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
@@ -58,7 +78,7 @@ func main() {
 		logger.Error("listen", "address", *listen, "error", err)
 		os.Exit(1)
 	}
-	if err := run(ctx, listener, runs, logger); err != nil {
+	if err := run(ctx, listener, options{runs: runs, drainDelay: *drainDelay, logger: logger}); err != nil {
 		logger.Error("lucarne stopped", "error", err)
 		os.Exit(1)
 	}
@@ -86,27 +106,38 @@ func newRuns(cluster string, allowed []string, logger *slog.Logger) (*stream.Hub
 	return stream.New(stream.Config{Source: src, Logger: logger})
 }
 
-// run serves on listener until ctx is done, then shuts down gracefully,
-// ending the streams of runs first: they would hold the shutdown open.
-func run(ctx context.Context, listener net.Listener, runs *stream.Hub, logger *slog.Logger) error {
+// run serves on listener until ctx is done, then drains and shuts down
+// gracefully, ending the streams of runs first: they would hold the
+// shutdown open.
+func run(ctx context.Context, listener net.Listener, opts options) error {
+	logger := opts.logger
+	var draining atomic.Bool
 	// WriteTimeout stays zero: SSE responses are long-lived.
 	srv := &http.Server{
-		Handler:           server.New(web.Dist(), server.Options{Runs: runs, Logger: logger}),
+		Handler: server.New(web.Dist(), server.Options{
+			Runs:   opts.runs,
+			Logger: logger,
+			Ready:  func() bool { return !draining.Load() },
+		}),
 		ReadHeaderTimeout: readHeaderTimeout,
 		IdleTimeout:       idleTimeout,
 		ErrorLog:          slog.NewLogLogger(logger.Handler(), slog.LevelWarn),
 	}
-	if runs != nil {
-		srv.RegisterOnShutdown(runs.Close)
-		defer runs.Close()
+	if opts.runs != nil {
+		srv.RegisterOnShutdown(opts.runs.Close)
+		defer opts.runs.Close()
 	}
-	logger.Info("serving", "address", listener.Addr().String(), "contract", contract.SchemaVersion)
+	logger.Info("serving", "address", listener.Addr().String(), "version", version, "contract", contract.SchemaVersion)
 	served := make(chan error, 1)
 	go func() { served <- srv.Serve(listener) }()
 	select {
 	case err := <-served:
 		return err
 	case <-ctx.Done():
+	}
+	draining.Store(true)
+	if err := drain(opts.drainDelay, served, logger); err != nil {
+		return err
 	}
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
 	defer cancel()
@@ -117,4 +148,21 @@ func run(ctx context.Context, listener net.Listener, runs *stream.Hub, logger *s
 		return err
 	}
 	return nil
+}
+
+// drain keeps serving for delay while /readyz answers 503, unless the
+// server stops first, whose error it returns.
+func drain(delay time.Duration, served <-chan error, logger *slog.Logger) error {
+	if delay <= 0 {
+		return nil
+	}
+	logger.Info("draining", "delay", delay.String())
+	timer := time.NewTimer(delay)
+	defer timer.Stop()
+	select {
+	case err := <-served:
+		return err
+	case <-timer.C:
+		return nil
+	}
 }

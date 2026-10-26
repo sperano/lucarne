@@ -5,7 +5,7 @@ import ts from 'typescript-eslint';
 
 // Code that runs under Node rather than in the browser: tooling configs and
 // the Vitest suites. tsconfig.node.json lists the same files.
-const NODE_FILES = ['*.config.{js,ts}', 'src/**/*.test.ts'];
+const NODE_FILES = ['*.config.{js,ts}', 'src/**/*.test.ts', 'e2e/**/*.ts'];
 
 // The schema validator, which runs Ajv and so needs eval; see its header.
 const VALIDATOR = 'src/lib/validate.ts';

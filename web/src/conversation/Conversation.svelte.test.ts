@@ -146,8 +146,16 @@ describe('Conversation states', () => {
   });
 
   it('says a run has no attempt yet', () => {
-    const root = show({ ...snapshotWith([]), attempts: [] });
+    const base = snapshotWith([]);
+    const root = show({ ...base, run: { ...base.run, phase: 'running' }, attempts: [] });
     expect(root.textContent).toContain('This run has no attempt yet');
+  });
+
+  it('says the pod of a finished run without attempt is gone', () => {
+    const base = snapshotWith([]);
+    const root = show({ ...base, run: { ...base.run, phase: 'succeeded' }, attempts: [] });
+    expect(root.textContent).toContain('This run lists no attempt: its pod is gone');
+    expect(root.textContent).not.toContain('has not been created');
   });
 
   it('refuses a link to an attempt the run does not have', () => {

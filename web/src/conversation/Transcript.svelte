@@ -46,6 +46,10 @@
 
   /** How close to the viewport's bottom the end must be for the reader to be at it. */
   const AT_END_SLACK_PX = 48;
+  /** How long an item brought into view is kept there while the items around it render. */
+  const PIN_SETTLE_MS = 2000;
+  /** The keys that scroll the page: pressing one is the reader taking over. */
+  const SCROLL_KEYS = new Set(['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' ']);
 
   const visible: readonly Item[] = $derived(
     filter === 'all' ? conversation.items : conversation.items.filter((i) => passes(i, filter)),
@@ -66,6 +70,10 @@
   const shown = $derived(visible.slice(range.start, range.end));
   let tail: HTMLElement | undefined = $state();
   let lastScrollY = 0;
+  // An element brought into view, and where. Items render at a placeholder's height until they
+  // are near the viewport (content-visibility), so those above it grow once it is scrolled to and
+  // push it away: it is brought back as the list resizes, until the reader acts or it settles.
+  let pin: { element: HTMLElement; block: ScrollLogicalPosition; until: number } | undefined;
   // The IDs rendered, to keep them in place when the list changes; undefined before the first render.
   let shownIds: readonly string[] | undefined;
 
@@ -116,9 +124,32 @@
     range = windowAround(index, total);
     await tick();
     const element = document.getElementById(anchor(item.id));
-    element?.scrollIntoView({ block: 'center' });
+    if (element) bringIntoView(element, 'center');
     if (t.focus) element?.focus({ preventScroll: true });
+  }
+
+  function bringIntoView(element: HTMLElement, block: ScrollLogicalPosition): void {
+    pin = { element, block, until: performance.now() + PIN_SETTLE_MS };
+    element.scrollIntoView({ block });
     lastScrollY = window.scrollY;
+  }
+
+  function keepPinned(): void {
+    if (pin === undefined) return;
+    if (!pin.element.isConnected || performance.now() > pin.until) {
+      pin = undefined;
+      return;
+    }
+    pin.element.scrollIntoView({ block: pin.block });
+    lastScrollY = window.scrollY;
+  }
+
+  function unpin(): void {
+    pin = undefined;
+  }
+
+  function onkeydown(e: KeyboardEvent): void {
+    if (SCROLL_KEYS.has(e.key) && !(e.target instanceof HTMLInputElement)) unpin();
   }
 
   function scrollToEnd(): void {
@@ -127,10 +158,12 @@
   }
 
   // Items change size after they render (content-visibility, a result filling a call): while
-  // following, every change of the list's size brings the end back into view.
+  // following, every change of the list's size brings the end back into view, else the item
+  // just brought into view.
   function keepToEnd(node: HTMLElement): () => void {
     const observer = new ResizeObserver(() => {
       if (following) scrollToEnd();
+      else keepPinned();
     });
     observer.observe(node);
     return () => {
@@ -178,13 +211,19 @@
     range = firstWindow(total);
   }
 
+  async function jumpToEnd(): Promise<void> {
+    range = lastWindow(total);
+    await tick();
+    if (tail) bringIntoView(tail, 'end');
+  }
+
   const targetId = $derived.by(() => {
     if (target === undefined) return undefined;
     return conversation.items[conversation.itemOf.get(target.event) ?? -1]?.id;
   });
 </script>
 
-<svelte:window {onscroll} />
+<svelte:window {onscroll} {onkeydown} onwheel={unpin} ontouchstart={unpin} onpointerdown={unpin} />
 
 <section class="transcript" aria-label="Transcript">
   <nav class="controls" aria-label="Transcript position">
@@ -197,13 +236,7 @@
     </span>
     {#if total > 0}
       <button type="button" disabled={range.start === 0} onclick={jumpToStart}>Start</button>
-      <button
-        type="button"
-        disabled={range.end === total}
-        onclick={() => (range = lastWindow(total))}
-      >
-        End
-      </button>
+      <button type="button" disabled={range.end === total} onclick={jumpToEnd}>End</button>
     {/if}
   </nav>
   {#if range.start > 0}

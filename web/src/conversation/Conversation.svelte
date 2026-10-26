@@ -33,6 +33,8 @@
   const live = $derived(
     connection !== undefined && connection.state !== 'ended' && connection.state !== 'stopped',
   );
+  // A finished run's pod is not created any more: one it does not list is gone.
+  const finished = $derived(view.run.phase === 'succeeded' || view.run.phase === 'failed');
   let following = $state(false);
   // Without a link naming one, the latest attempt is shown; while the reader is paused, the
   // one they read stays, and one the server stops listing is said to be gone.
@@ -135,6 +137,11 @@
     <p class="notice error" role="alert">
       This run has no attempt <code>{selection.missing}</code>: the link names a pod this run does
       not have, or no longer lists. Choose one of its attempts above.
+    </p>
+  {:else if !selected && finished}
+    <p class="notice info" role="note">
+      This run lists no attempt: its pod is gone, deleted or removed with its log, or was never
+      created.
     </p>
   {:else if !selected}
     <p class="notice info" role="note">
