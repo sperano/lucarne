@@ -9,22 +9,14 @@ import (
 	"github.com/sperano/lucarne/internal/adapter"
 )
 
-// Ranges the contract accepts; a value outside them is dropped, not
-// clamped.
-const (
-	// maxCount is the schema's Count maximum, JSON's largest safe integer.
-	maxCount = 1<<53 - 1
-	// maxRetryCount bounds a retry's attempt and max.
-	maxRetryCount = 999999
-)
-
 // reconnecting is how Codex words a stream retry it is about to make
 // (codex-rs/core/src/responses_retry.rs): "Reconnecting... n/max", then
 // the cause in parentheses. Each number is at most as wide as
-// maxRetryCount, so a longer one is not a retry the contract accepts.
+// adapter.MaxRetryCount, so a longer one is not a retry the contract
+// accepts.
 var reconnecting = regexp.MustCompile(fmt.Sprintf(
 	`^Reconnecting\.\.\. ([0-9]{1,%[1]d})/([0-9]{1,%[1]d})(?: |$)`,
-	len(strconv.Itoa(maxRetryCount))))
+	len(strconv.Itoa(adapter.MaxRetryCount))))
 
 // tokenUsage is turn.completed's usage: the thread's running total
 // (last_total_token_usage), all zeros when Codex received no token count.
@@ -98,21 +90,20 @@ func announcedRetry(message string) *contract.Retry {
 	if m == nil {
 		return nil
 	}
-	// Atoi cannot fail: reconnecting caps each number at maxRetryCount's
-	// width, far below int's range. Widening the regex breaks this.
+	// Atoi cannot fail: reconnecting caps each number at
+	// adapter.MaxRetryCount's width, far below int's range. Widening the
+	// regex breaks this.
 	attempt, _ := strconv.Atoi(m[1])
 	limit, _ := strconv.Atoi(m[2])
-	if !validRetryCount(attempt) {
+	if !adapter.ValidRetryCount(attempt) {
 		return nil
 	}
 	retry := &contract.Retry{Attempt: attempt}
-	if validRetryCount(limit) {
+	if adapter.ValidRetryCount(limit) {
 		retry.Max = &limit
 	}
 	return retry
 }
-
-func validRetryCount(n int) bool { return n >= 1 && n <= maxRetryCount }
 
 // usage holds the counters u reported; ok is false when it reported none,
 // or only zeros, which is what Codex prints when it received no count.
@@ -122,11 +113,11 @@ func (u *tokenUsage) usage() (contract.Usage, bool) {
 	}
 	usage := contract.Usage{
 		Scope:            contract.ScopeSession,
-		InputTokens:      count(u.InputTokens),
-		CacheReadTokens:  count(u.CachedInput),
-		CacheWriteTokens: count(u.CacheWriteInput),
-		OutputTokens:     count(u.OutputTokens),
-		ReasoningTokens:  count(u.ReasoningTokens),
+		InputTokens:      adapter.Count(u.InputTokens),
+		CacheReadTokens:  adapter.Count(u.CachedInput),
+		CacheWriteTokens: adapter.Count(u.CacheWriteInput),
+		OutputTokens:     adapter.Count(u.OutputTokens),
+		ReasoningTokens:  adapter.Count(u.ReasoningTokens),
 	}
 	for _, n := range []*int64{usage.InputTokens, usage.CacheReadTokens, usage.CacheWriteTokens, usage.OutputTokens, usage.ReasoningTokens} {
 		if n != nil && *n > 0 {
@@ -134,14 +125,6 @@ func (u *tokenUsage) usage() (contract.Usage, bool) {
 		}
 	}
 	return contract.Usage{}, false
-}
-
-// count is n when it is a valid counter, nil otherwise.
-func count(n *int64) *int64 {
-	if n == nil || *n < 0 || *n > maxCount {
-		return nil
-	}
-	return n
 }
 
 func lifecycle(phase contract.LifecyclePhase) contract.Event {

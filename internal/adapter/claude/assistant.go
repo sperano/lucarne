@@ -169,8 +169,6 @@ func toolCall(b block, parent string) contract.Event {
 		Name:         cut.Text("name", b.Name, contract.MaxLabelBytes),
 		ParentCallID: cut.Text("parentCallId", parent, contract.MaxLabelBytes),
 	}
-	if input, ok := compactJSON(b.Input); ok {
-		cut.ToolInput(call, input)
-	}
+	adapter.SetToolInput(call, b.Input, &cut)
 	return contract.Event{Kind: contract.KindToolCall, ToolCall: call, Truncated: cut.Fields()}
 }

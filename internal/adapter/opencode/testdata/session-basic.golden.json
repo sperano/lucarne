@@ -1,0 +1,365 @@
+[
+  {
+    "seq": 1,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0:e3b0c44298fc1c14:2:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0",
+    "kind": "lifecycle",
+    "source": {
+      "line": 2,
+      "part": 0
+    },
+    "lifecycle": {
+      "phase": "setup_started"
+    }
+  },
+  {
+    "seq": 2,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0:e3b0c44298fc1c14:3:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0",
+    "kind": "raw",
+    "source": {
+      "line": 3,
+      "part": 0
+    },
+    "raw": {
+      "reason": "text",
+      "text": "Cloning into '/workspace/repo'...",
+      "bytes": 33
+    }
+  },
+  {
+    "seq": 3,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0:e3b0c44298fc1c14:5:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0",
+    "kind": "lifecycle",
+    "source": {
+      "line": 5,
+      "part": 0
+    },
+    "lifecycle": {
+      "phase": "setup_completed"
+    }
+  },
+  {
+    "seq": 4,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0:e3b0c44298fc1c14:6:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0",
+    "kind": "lifecycle",
+    "source": {
+      "line": 6,
+      "part": 0,
+      "type": "step_start",
+      "runnerTime": "2026-10-25T08:00:00.1Z"
+    },
+    "lifecycle": {
+      "phase": "step_started",
+      "sessionId": "ses_01ExampleSession"
+    }
+  },
+  {
+    "seq": 5,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0:e3b0c44298fc1c14:7:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0",
+    "kind": "message",
+    "source": {
+      "line": 7,
+      "part": 0,
+      "type": "text",
+      "runnerTime": "2026-10-25T08:00:00.9Z"
+    },
+    "message": {
+      "role": "assistant",
+      "type": "text",
+      "text": "I'll look at the greeting first.",
+      "messageId": "msg_01ExampleA"
+    }
+  },
+  {
+    "seq": 6,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0:e3b0c44298fc1c14:8:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0",
+    "kind": "tool_call",
+    "source": {
+      "line": 8,
+      "part": 0,
+      "type": "tool_use",
+      "runnerTime": "2026-10-25T08:00:01.2Z"
+    },
+    "toolCall": {
+      "callId": "call_01ExampleRead",
+      "name": "read",
+      "input": {
+        "filePath": "/workspace/repo/greet.go"
+      },
+      "title": "greet.go"
+    }
+  },
+  {
+    "seq": 7,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0:e3b0c44298fc1c14:8:1",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0",
+    "kind": "tool_result",
+    "source": {
+      "line": 8,
+      "part": 1,
+      "type": "tool_use",
+      "runnerTime": "2026-10-25T08:00:01.2Z"
+    },
+    "toolResult": {
+      "callId": "call_01ExampleRead",
+      "status": "ok",
+      "output": "\u003cfile\u003e\n00001| package widget\n00002| \n00003| func Greeting() string {\n00004| \treturn \"Hello\"\n00005| }\n\u003c/file\u003e"
+    }
+  },
+  {
+    "seq": 8,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0:e3b0c44298fc1c14:9:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0",
+    "kind": "tool_call",
+    "source": {
+      "line": 9,
+      "part": 0,
+      "type": "tool_use",
+      "runnerTime": "2026-10-25T08:00:02.1Z"
+    },
+    "toolCall": {
+      "callId": "call_01ExampleEdit",
+      "name": "edit",
+      "input": {
+        "filePath": "/workspace/repo/greet.go",
+        "oldString": "return \"Hello\"",
+        "newString": "return \"Hello, world\""
+      },
+      "title": "greet.go"
+    }
+  },
+  {
+    "seq": 9,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0:e3b0c44298fc1c14:9:1",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0",
+    "kind": "tool_result",
+    "source": {
+      "line": 9,
+      "part": 1,
+      "type": "tool_use",
+      "runnerTime": "2026-10-25T08:00:02.1Z"
+    },
+    "toolResult": {
+      "callId": "call_01ExampleEdit",
+      "status": "ok",
+      "output": "Edit applied successfully."
+    }
+  },
+  {
+    "seq": 10,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0:e3b0c44298fc1c14:9:2",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0",
+    "kind": "edit",
+    "source": {
+      "line": 9,
+      "part": 2,
+      "type": "tool_use",
+      "runnerTime": "2026-10-25T08:00:02.1Z"
+    },
+    "edit": {
+      "callId": "call_01ExampleEdit",
+      "path": "/workspace/repo/greet.go",
+      "change": "update",
+      "diff": "@@ -3,3 +3,3 @@\n func Greeting() string {\n-\treturn \"Hello\"\n+\treturn \"Hello, world\"\n }\n"
+    }
+  },
+  {
+    "seq": 11,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0:e3b0c44298fc1c14:10:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0",
+    "kind": "tool_call",
+    "source": {
+      "line": 10,
+      "part": 0,
+      "type": "tool_use",
+      "runnerTime": "2026-10-25T08:00:04.3Z"
+    },
+    "toolCall": {
+      "callId": "call_01ExampleBash",
+      "name": "bash",
+      "input": {
+        "command": "go test ./...",
+        "description": "Run the tests"
+      },
+      "title": "go test ./..."
+    }
+  },
+  {
+    "seq": 12,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0:e3b0c44298fc1c14:10:1",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0",
+    "kind": "tool_result",
+    "source": {
+      "line": 10,
+      "part": 1,
+      "type": "tool_use",
+      "runnerTime": "2026-10-25T08:00:04.3Z"
+    },
+    "toolResult": {
+      "callId": "call_01ExampleBash",
+      "status": "ok",
+      "output": "ok  \texample.com/widget\t0.004s\n",
+      "exitCode": 0
+    }
+  },
+  {
+    "seq": 13,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0:e3b0c44298fc1c14:11:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0",
+    "kind": "lifecycle",
+    "source": {
+      "line": 11,
+      "part": 0,
+      "type": "step_finish",
+      "runnerTime": "2026-10-25T08:00:04.4Z"
+    },
+    "lifecycle": {
+      "phase": "step_completed",
+      "sessionId": "ses_01ExampleSession",
+      "stopReason": "tool-calls"
+    }
+  },
+  {
+    "seq": 14,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0:e3b0c44298fc1c14:11:1",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0",
+    "kind": "usage",
+    "source": {
+      "line": 11,
+      "part": 1,
+      "type": "step_finish",
+      "runnerTime": "2026-10-25T08:00:04.4Z"
+    },
+    "usage": {
+      "scope": "step",
+      "inputTokens": 3120,
+      "outputTokens": 214,
+      "cacheReadTokens": 10240,
+      "cacheWriteTokens": 2048,
+      "reasoningTokens": 0,
+      "totalTokens": 15622,
+      "costUSD": "0.0215"
+    }
+  },
+  {
+    "seq": 15,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0:e3b0c44298fc1c14:12:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0",
+    "kind": "lifecycle",
+    "source": {
+      "line": 12,
+      "part": 0,
+      "type": "step_start",
+      "runnerTime": "2026-10-25T08:00:04.5Z"
+    },
+    "lifecycle": {
+      "phase": "step_started",
+      "sessionId": "ses_01ExampleSession"
+    }
+  },
+  {
+    "seq": 16,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0:e3b0c44298fc1c14:13:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0",
+    "kind": "message",
+    "source": {
+      "line": 13,
+      "part": 0,
+      "type": "text",
+      "runnerTime": "2026-10-25T08:00:05.6Z"
+    },
+    "message": {
+      "role": "assistant",
+      "type": "text",
+      "text": "The greeting now reads \"Hello, world\" and the tests pass.",
+      "messageId": "msg_01ExampleB"
+    }
+  },
+  {
+    "seq": 17,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0:e3b0c44298fc1c14:14:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0",
+    "kind": "lifecycle",
+    "source": {
+      "line": 14,
+      "part": 0,
+      "type": "step_finish",
+      "runnerTime": "2026-10-25T08:00:05.7Z"
+    },
+    "lifecycle": {
+      "phase": "step_completed",
+      "sessionId": "ses_01ExampleSession",
+      "stopReason": "stop"
+    }
+  },
+  {
+    "seq": 18,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0:e3b0c44298fc1c14:14:1",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0",
+    "kind": "usage",
+    "source": {
+      "line": 14,
+      "part": 1,
+      "type": "step_finish",
+      "runnerTime": "2026-10-25T08:00:05.7Z"
+    },
+    "usage": {
+      "scope": "step",
+      "inputTokens": 410,
+      "outputTokens": 19,
+      "cacheReadTokens": 13312,
+      "cacheWriteTokens": 0,
+      "reasoningTokens": 0,
+      "totalTokens": 13741,
+      "costUSD": "0.0094"
+    }
+  },
+  {
+    "seq": 19,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0:e3b0c44298fc1c14:15:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0",
+    "kind": "lifecycle",
+    "source": {
+      "line": 15,
+      "part": 0
+    },
+    "lifecycle": {
+      "phase": "kelos_outputs",
+      "outputs": [
+        {
+          "key": "branch",
+          "value": "agent/example-42"
+        },
+        {
+          "key": "pr",
+          "value": "https://github.com/example/widget/pull/7"
+        },
+        {
+          "key": "commit",
+          "value": "9f2c4e1a7b3d5f60812e4c9a0b1d2e3f4a5b6c7d"
+        },
+        {
+          "key": "base-branch",
+          "value": "main"
+        },
+        {
+          "key": "cost-usd",
+          "value": "0.0309"
+        },
+        {
+          "key": "input-tokens",
+          "value": "3530"
+        },
+        {
+          "key": "output-tokens",
+          "value": "233"
+        }
+      ]
+    }
+  }
+]

@@ -57,10 +57,10 @@ func sessionUsage(r resultLine) (contract.Usage, bool) {
 	if !ok {
 		usage = contract.Usage{Scope: contract.ScopeSession}
 	}
-	usage.CostUSD = costUSD(r.TotalCostUSD)
-	usage.DurationMs = count(r.DurationMs)
-	usage.APIDurationMs = count(r.DurationAPIMs)
-	usage.Turns = count(r.NumTurns)
+	usage.CostUSD = adapter.CostUSD(r.TotalCostUSD)
+	usage.DurationMs = adapter.Count(r.DurationMs)
+	usage.APIDurationMs = adapter.Count(r.DurationAPIMs)
+	usage.Turns = adapter.Count(r.NumTurns)
 	return usage, ok || usage.CostUSD != "" || usage.DurationMs != nil ||
 		usage.APIDurationMs != nil || usage.Turns != nil
 }
@@ -69,7 +69,7 @@ func sessionUsage(r resultLine) (contract.Usage, bool) {
 // status when the line has one. Without errors, a status is reported with
 // the result text, the only message the line has for it.
 func resultErrors(r resultLine) []contract.Event {
-	status := httpStatus(r.APIErrorStatus)
+	status := adapter.HTTPStatus(r.APIErrorStatus)
 	var events []contract.Event
 	for _, raw := range r.Errors {
 		events = append(events, resultError(errorText(raw), status))
@@ -97,6 +97,6 @@ func errorText(raw json.RawMessage) string {
 	if json.Unmarshal(raw, &s) == nil {
 		return s
 	}
-	compact, _ := compactJSON(raw)
+	compact, _ := adapter.CompactJSON(raw)
 	return compact
 }
