@@ -508,6 +508,14 @@
       },
       "additionalProperties": false
     },
+    "Live": {
+      "type": "object",
+      "required": ["lastSeq"],
+      "properties": {
+        "lastSeq": { "$ref": "#/$defs/Count" }
+      },
+      "additionalProperties": false
+    },
     "ErrorResponse": {
       "type": "object",
       "required": ["error"],
@@ -523,7 +531,8 @@
                 "not_implemented",
                 "internal",
                 "not_found",
-                "method_not_allowed"
+                "method_not_allowed",
+                "unavailable"
               ]
             },
             "message": { "$ref": "#/$defs/Label" }

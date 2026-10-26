@@ -49,7 +49,7 @@ func body(t *testing.T, res *http.Response) string {
 }
 
 func newTestServer(assets fstest.MapFS) http.Handler {
-	return New(assets, slog.New(slog.DiscardHandler))
+	return New(assets, Options{Logger: slog.New(slog.DiscardHandler)})
 }
 
 func TestHealth(t *testing.T) {
@@ -226,7 +226,7 @@ func TestTruncateKeepsRunes(t *testing.T) {
 
 func TestNilLoggerFallsBackToDefault(t *testing.T) {
 	t.Parallel()
-	h := New(fstest.MapFS{}, nil)
+	h := New(fstest.MapFS{}, Options{})
 	if res := get(t, h, runKey1.LinkPath()); res.StatusCode != http.StatusServiceUnavailable {
 		t.Errorf("status %d, want 503 without a frontend", res.StatusCode)
 	}

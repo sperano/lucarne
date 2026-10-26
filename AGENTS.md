@@ -12,11 +12,11 @@ them live in the browser, first as a conversation, later as an inspector.
 Lucarne observes; it never takes part. It does not start, steer or stop
 agents, and nothing in the agent pipeline waits on it.
 
-Status: bootstrapped. The contract, the fixtures, the server skeleton, the
-Claude Code, Codex and OpenCode adapters, the Kubernetes log source and the
-desktop conversation view (rendering one snapshot) exist; the snapshot/SSE
-endpoints (which will wire the source into the server) do not yet (the run
-endpoints answer 501), nor does the live wiring of the view to the stream.
+Status: bootstrapped. The contract, the fixtures, the server, the UI shell,
+the Claude Code, Codex and OpenCode adapters, the Kubernetes log source and
+the snapshot/SSE endpoints that wire them together exist; the conversation
+view does not yet. Started without `-namespace`, the server reads no cluster
+and its run endpoints answer 501.
 
 ## What lives here, and what does not
 
@@ -38,7 +38,8 @@ expect. One executable, no database.
 | `cmd/lucarne/` | The executable. |
 | `internal/adapter/` | Runner-neutral normalization of one attempt's log lines: event IDs and parts, the contract's bounds, raw fallback, the Kelos marker lines. `claude/` is the Claude Code stream-json runner, `codex/` the Codex `exec --json` runner and `opencode/` the OpenCode `run --format json` runner, each with golden tests over its fixtures (`go test ./internal/adapter/<runner>/ -update` rewrites them) and its mapping and capability gaps in `doc.go`; `adaptertest/` holds what their tests share. |
 | `internal/kube/` | The Kubernetes source: resolves a run key to a Kelos Task by UID within the configured cluster and namespace allowlist, lists the attempts of its `kelos-agent` container through the Task → Job → pod controller chain (by UID), and reads their logs bounded, re-checking that chain before each stream, following and resuming across breaks. Read-only (get, list, pods/log); its RBAC and limits are in `doc.go`. Tests run against client-go fakes. |
-| `internal/server/` | HTTP: `/healthz`, `/api/v1/...`, the embedded UI and its deep links, security headers. |
+| `internal/stream/` | The live state of the runs being viewed: follows a run's Task, attempts and logs through the source and the adapters, numbers every update, keeps bounded replay and retained events, re-reads broken logs without repeating lines, and serves snapshots and subscriptions with resets, gaps and backpressure; see `doc.go`. `streamtest/` is the scripted source its tests and the server's share. |
+| `internal/server/` | HTTP: `/healthz`, `/api/v1/...` (the snapshot and the SSE stream over `internal/stream`), the embedded UI and its deep links, security headers. |
 | `internal/privacy/` | The scan that keeps private data out of fixtures and examples. |
 | `web/` | The UI (Vite, Svelte 5, TypeScript). `web/src/lib/contract.ts` mirrors the contract; `web/embed.go` embeds `web/dist`. `web/src/conversation/` is the conversation view, over the pure modules of `web/src/lib/` (its model, the Markdown parser, safe links, item windows); log content is only ever rendered as text, never with `{@html}`. `web/src/dev/` wraps the adapters' golden files in fabricated snapshots for the tests and for `npm run dev`'s `/fixtures.html` preview, which the build leaves out. |
 | `scripts/smoke.sh` | Starts a built binary and checks the UI, an asset, a deep link and the contract endpoint. |

@@ -30,7 +30,10 @@ just dev-web    # UI on http://localhost:5173, proxying /api to :8080
 ```
 
 `just build` writes the single executable `./lucarne`, embedding the last
-`web/dist` build; `./lucarne -listen :8080` serves it.
+`web/dist` build; `./lucarne -listen :8080` serves it. To read runs, name
+the cluster and each namespace it may read
+(`-cluster example -namespace agents`); it then uses the in-cluster
+credentials, or outside a cluster the kubeconfig's current context.
 
 ## License
 

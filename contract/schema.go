@@ -28,6 +28,7 @@ const (
 	DefRunUpdate     = "RunUpdate"
 	DefReset         = "Reset"
 	DefEnd           = "End"
+	DefLive          = "Live"
 	DefErrorResponse = "ErrorResponse"
 	DefContractInfo  = "ContractInfo"
 )
@@ -36,7 +37,7 @@ const (
 // against.
 var Documents = []string{
 	DefSnapshot, DefEvent, DefAttemptUpdate, DefRunUpdate,
-	DefReset, DefEnd, DefErrorResponse, DefContractInfo,
+	DefReset, DefEnd, DefLive, DefErrorResponse, DefContractInfo,
 }
 
 // compiled maps each of Documents to its compiled schema. It is compiled

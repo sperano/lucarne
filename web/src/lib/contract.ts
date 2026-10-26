@@ -46,6 +46,7 @@ export const ERROR_CODES = [
   'internal',
   'not_found',
   'method_not_allowed',
+  'unavailable',
 ] as const;
 export type ErrorCode = (typeof ERROR_CODES)[number];
 
@@ -117,6 +118,7 @@ export const SSE_EVENTS = {
   run: 'run',
   reset: 'reset',
   end: 'end',
+  live: 'live',
 } as const;
 
 /** RFC 3339 in UTC, as the source gave it. */
@@ -351,6 +353,11 @@ export interface End {
   readonly reason: EndReason;
 }
 
+/** Sent once after a stream's replay: updates after lastSeq are new. */
+export interface Live {
+  readonly lastSeq: number;
+}
+
 export interface ErrorResponse {
   readonly error: { readonly code: ErrorCode; readonly message: string };
 }
@@ -368,6 +375,7 @@ export interface Documents {
   RunUpdate: RunUpdate;
   Reset: Reset;
   End: End;
+  Live: Live;
   ErrorResponse: ErrorResponse;
   ContractInfo: ContractInfo;
 }

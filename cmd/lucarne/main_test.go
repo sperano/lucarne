@@ -18,7 +18,7 @@ func TestRunServesUntilCancelled(t *testing.T) {
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	done := make(chan error, 1)
-	go func() { done <- run(ctx, listener, slog.New(slog.DiscardHandler)) }()
+	go func() { done <- run(ctx, listener, nil, slog.New(slog.DiscardHandler)) }()
 
 	res, err := http.Get("http://" + listener.Addr().String() + "/healthz")
 	if err != nil {

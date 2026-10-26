@@ -8,9 +8,11 @@ import (
 	"io/fs"
 	"log/slog"
 	"net/http"
+	"time"
 	"unicode/utf8"
 
 	"github.com/sperano/lucarne/contract"
+	"github.com/sperano/lucarne/internal/stream"
 )
 
 const (
@@ -61,9 +63,22 @@ func mustEncodeInternalError() []byte {
 	return append(body, '\n')
 }
 
+// Options are what a server serves runs from and how.
+type Options struct {
+	// Runs serves run snapshots and streams; without it the run endpoints
+	// answer 501.
+	Runs *stream.Hub
+	// Heartbeat is how long a stream may be idle before a keepalive
+	// comment; zero means DefaultHeartbeat.
+	Heartbeat time.Duration
+	// Logger is where the server logs; nil means slog.Default().
+	Logger *slog.Logger
+}
+
 // New returns the handler serving the API and the frontend in assets, the
-// contents of web/dist. A nil logger means slog.Default().
-func New(assets fs.FS, logger *slog.Logger) http.Handler {
+// contents of web/dist.
+func New(assets fs.FS, opts Options) http.Handler {
+	logger := opts.Logger
 	if logger == nil {
 		logger = slog.Default()
 	}
@@ -72,12 +87,16 @@ func New(assets fs.FS, logger *slog.Logger) http.Handler {
 		logger.Warn("serving without a frontend", "error", err)
 		index = nil
 	}
-	s := &server{assets: assets, index: index, logger: logger}
+	heartbeat := opts.Heartbeat
+	if heartbeat <= 0 {
+		heartbeat = DefaultHeartbeat
+	}
+	s := &server{assets: assets, index: index, logger: logger, runs: opts.Runs, heartbeat: heartbeat}
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", s.health)
 	mux.HandleFunc("GET "+contract.ContractPath, s.contractInfo)
-	mux.HandleFunc("GET "+contract.APIPrefix+"/runs/{cluster}/{namespace}/{taskUID}", s.runNotImplemented)
-	mux.HandleFunc("GET "+contract.APIPrefix+"/runs/{cluster}/{namespace}/{taskUID}/events", s.runNotImplemented)
+	mux.HandleFunc("GET "+contract.APIPrefix+"/runs/{cluster}/{namespace}/{taskUID}", s.snapshot)
+	mux.HandleFunc("GET "+contract.APIPrefix+"/runs/{cluster}/{namespace}/{taskUID}/events", s.events)
 	mux.HandleFunc("GET "+contract.APIPrefix+"/runs/", s.notARunPath)
 	mux.HandleFunc(contract.APIPrefix, s.apiNotFound)
 	mux.HandleFunc(contract.APIPrefix+"/", s.apiNotFound)
@@ -89,9 +108,11 @@ func New(assets fs.FS, logger *slog.Logger) http.Handler {
 }
 
 type server struct {
-	assets fs.FS
-	index  []byte
-	logger *slog.Logger
+	assets    fs.FS
+	index     []byte
+	logger    *slog.Logger
+	runs      *stream.Hub
+	heartbeat time.Duration
 }
 
 func (s *server) health(w http.ResponseWriter, _ *http.Request) {
@@ -104,16 +125,6 @@ func (s *server) contractInfo(w http.ResponseWriter, _ *http.Request) {
 		Schema: contract.SchemaVersion,
 		Limits: contract.DefaultLimits(),
 	})
-}
-
-// runNotImplemented validates the run key as the real endpoints will, then
-// says the endpoint does not exist yet.
-func (s *server) runNotImplemented(w http.ResponseWriter, r *http.Request) {
-	if err := validRunKey(r); err != nil {
-		s.writeError(w, http.StatusBadRequest, contract.ErrorInvalidRunKey, err.Error())
-		return
-	}
-	s.writeError(w, http.StatusNotImplemented, contract.ErrorNotImplemented, "run snapshots and streams are not implemented yet")
 }
 
 // notARunPath answers a path under the runs endpoint of another shape: a
@@ -179,18 +190,25 @@ func (s *server) writeIndex(w http.ResponseWriter, status int) {
 	s.write(w, s.index)
 }
 
-// validRunKey checks the run key in the path. A canonical key has no
-// character that needs escaping, so a percent-encoded path is rejected: the
-// mux decodes it, the UI does not, and both must read a URL as one key.
+// validRunKey checks the run key in the path.
 func validRunKey(r *http.Request) error {
+	_, err := runKey(r)
+	return err
+}
+
+// runKey is the run key in the path. A canonical key has no character that
+// needs escaping, so a percent-encoded path is rejected: the mux decodes
+// it, the UI does not, and both must read a URL as one key.
+func runKey(r *http.Request) (contract.RunKey, error) {
 	if r.URL.EscapedPath() != r.URL.Path {
-		return errEncodedPath
+		return contract.RunKey{}, errEncodedPath
 	}
-	return contract.RunKey{
+	key := contract.RunKey{
 		Cluster:   r.PathValue("cluster"),
 		Namespace: r.PathValue("namespace"),
 		TaskUID:   r.PathValue("taskUID"),
-	}.Validate()
+	}
+	return key, key.Validate()
 }
 
 func (s *server) writeError(w http.ResponseWriter, status int, code contract.ErrorCode, message string) {
@@ -205,6 +223,11 @@ func (s *server) writeJSON(w http.ResponseWriter, status int, v any) {
 	} else {
 		body = append(body, '\n')
 	}
+	s.writeEncoded(w, status, body)
+}
+
+// writeEncoded sends an encoded JSON document.
+func (s *server) writeEncoded(w http.ResponseWriter, status int, body []byte) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Cache-Control", "no-store")
 	w.WriteHeader(status)
