@@ -3,6 +3,7 @@ import { userEvent } from 'vitest/browser';
 import notFound from '../../contract/v1/examples/ErrorResponse/run-not-found.json';
 import type { Snapshot, TranscriptEvent } from './lib/contract';
 import { parseRoute, runHref } from './lib/route';
+import { restoreDestination } from './lib/signin';
 import { ATTEMPT_ID, eventMaker } from './dev/events';
 import { FIXTURE_KEY, FIXTURE_RUNS, findFixture, snapshotOf } from './dev/fixtures';
 import { fakeServer, runningSnapshot, type Answer } from './dev/server';
@@ -265,10 +266,14 @@ describe('RunPage direct links', () => {
 
 describe('RunPage sign-in', () => {
   const complete = PLACE.pathname + PLACE.search + PLACE.hash;
+  // Loaded without the fragment: an address differing only by one would only scroll.
+  const loaded = PLACE.pathname + PLACE.search;
+  const saved = () => restoreDestination({ ...PLACE, hash: '' }, sessionStorage);
 
   it('signs in again at once, keeping the complete address', async () => {
     const { root } = show(['redirect']);
-    await expect.poll(() => visited).toEqual([complete]);
+    await expect.poll(() => visited).toEqual([loaded]);
+    expect(saved()).toBe(complete);
     expect(alert(root)).toContain('Signing in again');
   });
 
@@ -279,7 +284,8 @@ describe('RunPage sign-in', () => {
     await expect.poll(() => alert(root)).toContain('did just before');
     expect(visited).toHaveLength(1);
     root.querySelector('button')?.click();
-    expect(visited).toEqual([complete, complete]);
+    expect(visited).toEqual([loaded, loaded]);
+    expect(saved()).toBe(complete);
   });
 
   it('offers to sign in when the session expires while following', async () => {
@@ -290,6 +296,7 @@ describe('RunPage sign-in', () => {
     await expect.poll(() => status(root), { timeout: 3000 }).toContain('session expired');
     expect(visited).toEqual([]);
     [...root.querySelectorAll('button')].find((b) => b.textContent === 'Sign in again')?.click();
-    expect(visited).toEqual([complete]);
+    expect(visited).toEqual([loaded]);
+    expect(saved()).toBe(complete);
   });
 });

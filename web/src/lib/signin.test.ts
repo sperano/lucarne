@@ -39,9 +39,10 @@ beforeEach(() => {
 });
 
 describe('signIn', () => {
-  it('loads the complete address again', () => {
+  it('loads the address without the fragment, which would only scroll, and saves it whole', () => {
     expect(signIn(PLACE, storage, navigate, { now: NOW })).toBe(true);
-    expect(visited).toEqual([PATH + SEARCH + HASH]);
+    expect(visited).toEqual([PATH + SEARCH]);
+    expect(restoreDestination({ ...PLACE, hash: '' }, storage, NOW + 1)).toBe(PATH + SEARCH + HASH);
   });
 
   it('does not loop on a server that keeps asking, unless the reader asks', () => {

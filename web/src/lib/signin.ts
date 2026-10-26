@@ -6,6 +6,8 @@
 // sign in and back. The proxy keeps the path and query it was asked for, but
 // a browser never sends the fragment (#event=) and a sign-in form loses it:
 // the complete address is saved for this tab first and restored on return.
+// The page loads its address without the fragment: an address that differs
+// from the current one only by a fragment only scrolls, it does not load.
 
 const DESTINATION_KEY = 'lucarne.destination';
 /** A destination saved longer ago than this is stale: that sign-in was abandoned. */
@@ -31,9 +33,14 @@ export function hrefOf(place: Place): string {
   return `${place.pathname}${place.search}${place.hash}`;
 }
 
+/** The address of place without its fragment, which a browser loads rather than scrolls to. */
+export function loadHrefOf(place: Place): string {
+  return `${place.pathname}${place.search}`;
+}
+
 /**
- * Sends the page to sign in, after saving its complete address, and
- * returns true. It returns false, doing nothing, when storage is unavailable
+ * Sends the page to sign in, after saving its complete address, by loading
+ * that address without its fragment, and returns true. It returns false, doing nothing, when storage is unavailable
  * or the same address was sent to sign in less than SIGN_IN_INTERVAL_MS ago,
  * unless asked by the reader (force): the UI then offers a link instead.
  */
@@ -49,7 +56,7 @@ export function signIn(
   const recent = saved?.href === href && now - saved.at < SIGN_IN_INTERVAL_MS;
   if (options.force !== true && (storage === undefined || recent)) return false;
   write(storage, { href, at: now, restored: false });
-  navigate(href);
+  navigate(loadHrefOf(place));
   return true;
 }
 
