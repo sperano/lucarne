@@ -21,8 +21,7 @@
   <p class="notice info" role="note">The log of this attempt has not been read yet.</p>
 {:else if coverage.state === 'following'}
   <p class="notice info" role="note">
-    The attempt is still running: this transcript ends where the log had been read when it was
-    loaded.
+    The attempt is still running: its transcript grows as the log is read.
   </p>
 {:else if coverage.state === 'unavailable'}
   <p class="notice warning" role="note">

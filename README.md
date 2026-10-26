@@ -4,8 +4,9 @@ Live transcripts for coding agents: a read-only viewer for the output of
 Kelos agent runs (Claude Code, Codex, OpenCode), first as a conversation,
 later as an inspector.
 
-Status: bootstrapped. The transcript contract, runner fixtures, server
-skeleton and UI shell are in place; reading runs is not implemented yet.
+Status: bootstrapped. The transcript contract, runner fixtures, the three
+runner adapters, the Kubernetes source, the snapshot/SSE server and the live
+conversation view are in place; the inspector is not built yet.
 
 - Contract (identity, events, limits, deep links, API, SSE/replay):
   [`contract/README.md`](contract/README.md)

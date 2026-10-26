@@ -2,13 +2,17 @@ import { describe, expect, it } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import type { Attempt, Snapshot, TranscriptEvent } from '../lib/contract';
 import { buildConversation } from '../lib/conversation';
+import { formatCount } from '../lib/format';
+import { RunStore } from '../lib/runstore';
+import { WINDOW_STEP } from '../lib/window';
 import { ATTEMPT_ID, eventMaker, type EventBody } from '../dev/events';
 import { FIXTURE_RUNS, findFixture, snapshotOf } from '../dev/fixtures';
 import { render } from '../render';
 import Conversation from './Conversation.svelte';
 
 function show(snapshot: Snapshot, attempt?: string, event?: string): HTMLElement {
-  return render(Conversation, { snapshot, attempt, event, onselectattempt: () => {} });
+  const view = new RunStore(snapshot).view();
+  return render(Conversation, { view, attempt, event, onselectattempt: () => {} });
 }
 
 function snapshotWith(bodies: readonly EventBody[], attempt: Partial<Attempt> = {}): Snapshot {
@@ -180,7 +184,7 @@ describe('Conversation of several attempts', () => {
   it('follows the latest attempt and lets the reader pick another', async () => {
     const picked: string[] = [];
     const root = render(Conversation, {
-      snapshot: twoAttempts(),
+      view: new RunStore(twoAttempts()).view(),
       attempt: undefined,
       event: undefined,
       onselectattempt: (id: string) => picked.push(id),
@@ -196,5 +200,72 @@ describe('Conversation of several attempts', () => {
     const root = show(twoAttempts(), undefined, `${ATTEMPT_ID}:e3b0c44298fc1c14:1:0`);
     expect(root.querySelector('.items')?.textContent).toContain('first');
     expect(root.querySelector('[role=alert]')).toBeNull();
+  });
+});
+
+describe('Conversation search and filter', () => {
+  const CALL_AT = 2 * WINDOW_STEP;
+  function longRun(): Snapshot {
+    const bodies: EventBody[] = [];
+    for (let i = 0; i < 2 * CALL_AT; i++) {
+      bodies.push({
+        kind: 'message',
+        message: { role: 'assistant', type: 'text', text: `Step ${String(i)}` },
+      });
+      if (i === CALL_AT) {
+        bodies.push(
+          {
+            kind: 'tool_call',
+            toolCall: { callId: 'c', name: 'Bash', input: { command: 'make' } },
+          },
+          {
+            kind: 'tool_result',
+            toolResult: { callId: 'c', status: 'error', output: 'Needle in the output' },
+          },
+        );
+      }
+    }
+    bodies.push({ kind: 'raw', raw: { reason: 'unknown_type', text: '{"needle":1}', bytes: 12 } });
+    return snapshotWith(bodies);
+  }
+
+  const count = (root: HTMLElement) => root.querySelector('.finder .count')?.textContent.trim();
+  const current = (root: HTMLElement) => root.querySelector('.items > li.current');
+
+  it('finds text in collapsed content and moves between results', async () => {
+    const root = show(longRun());
+    const input = root.querySelector('input[type=search]');
+    if (!input) throw new Error('no search field');
+    await userEvent.fill(input, 'NEEDLE');
+    expect(count(root)).toBe('2 matches');
+    expect(root.querySelector('.finder .scope')?.textContent).toContain(
+      `Searches the ${formatCount(2 * CALL_AT + 2)} items of this attempt, collapsed content included`,
+    );
+    await userEvent.keyboard('{Enter}');
+    expect(count(root)).toBe('1 of 2');
+    await expect
+      .poll(() => current(root)?.querySelector<HTMLDetailsElement>('details')?.open)
+      .toBe(true);
+    expect(current(root)?.textContent).toContain('Needle in the output');
+    await userEvent.keyboard('{Enter}');
+    expect(count(root)).toBe('2 of 2');
+    await expect
+      .poll(() => current(root)?.querySelector<HTMLDetailsElement>('details.raw')?.open)
+      .toBe(true);
+    await userEvent.keyboard('{Enter}');
+    expect(count(root)).toBe('1 of 2');
+    await userEvent.keyboard('{Shift>}{Enter}{/Shift}');
+    expect(count(root)).toBe('2 of 2');
+  });
+
+  it('shows only tool calls or errors when asked', async () => {
+    const root = show(longRun());
+    const select = root.querySelector<HTMLSelectElement>('.finder select');
+    if (!select) throw new Error('no filter');
+    await userEvent.selectOptions(select, 'errors');
+    expect(root.querySelectorAll('.items > li')).toHaveLength(1);
+    expect(root.querySelector('.items')?.textContent).toContain('Bash');
+    await userEvent.selectOptions(select, 'all');
+    expect(root.querySelectorAll('.items > li')).toHaveLength(WINDOW_STEP);
   });
 });

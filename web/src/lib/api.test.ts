@@ -5,6 +5,7 @@ import { loadSnapshot, snapshotPath } from './api';
 
 const KEY = snapshot.run.key;
 const OK = 200;
+const UNAUTHORIZED = 401;
 const NOT_FOUND = 404;
 const BAD_GATEWAY = 502;
 
@@ -42,6 +43,16 @@ describe('loadSnapshot', () => {
       ok: false,
       status: BAD_GATEWAY,
       message: 'Bad Gateway',
+    });
+  });
+
+  it('asks to sign in again on a redirect or a 401', async () => {
+    const redirected = () => Promise.resolve({ type: 'opaqueredirect', status: 0 } as Response);
+    expect(await loadSnapshot(KEY, redirected)).toMatchObject({ ok: false, signIn: true });
+    expect(await loadSnapshot(KEY, answering(UNAUTHORIZED, ''))).toMatchObject({
+      ok: false,
+      status: UNAUTHORIZED,
+      signIn: true,
     });
   });
 

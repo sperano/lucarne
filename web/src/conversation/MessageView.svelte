@@ -5,7 +5,11 @@
   import Markdown from './Markdown.svelte';
   import Truncated from './Truncated.svelte';
 
-  let { event, limits }: { event: EventOf<'message'>; limits: Limits } = $props();
+  let {
+    event,
+    limits,
+    open = false,
+  }: { event: EventOf<'message'>; limits: Limits; open?: boolean } = $props();
 
   const ROLE_LABELS = { user: 'User', assistant: 'Assistant' } as const;
 
@@ -15,7 +19,7 @@
 
 <article class="message {message.role}" aria-label="{ROLE_LABELS[message.role]} message">
   {#if message.type === 'reasoning'}
-    <details class="reasoning">
+    <details class="reasoning" {open}>
       <summary><span class="role">{ROLE_LABELS[message.role]}</span> reasoning</summary>
       <Markdown {blocks} />
     </details>
