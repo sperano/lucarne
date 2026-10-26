@@ -4,5 +4,8 @@
 /web/dist/*
 !/web/dist/.gitkeep
 
+# Screenshots of failed browser tests (Vitest browser mode).
+/web/.vitest/
+
 # The binary `just build` writes.
 /lucarne

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseRoute, runLink } from './route';
+import { parseRoute, runHref, runLink } from './route';
 
 const UID = '3f8e2a4c-1b2d-4e5f-8a9b-0c1d2e3f4a5b';
 const RUN_PATH = `/runs/example/agents/${UID}`;
@@ -76,5 +76,19 @@ describe('parseRoute', () => {
 describe('runLink', () => {
   it('is the inverse of parseRoute', () => {
     expect(runLink(KEY)).toBe(RUN_PATH);
+  });
+});
+
+describe('runHref', () => {
+  it('adds the attempt and a view other than the default', () => {
+    const attempt = '7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0';
+    expect(runHref(KEY)).toBe(RUN_PATH);
+    expect(runHref(KEY, { view: 'conversation' })).toBe(RUN_PATH);
+    expect(runHref(KEY, { attempt, view: 'inspector' })).toBe(
+      `${RUN_PATH}?attempt=${attempt}&view=inspector`,
+    );
+    const href = runHref(KEY, { attempt });
+    const url = new URL(href, 'https://lucarne.example.com');
+    expect(parseRoute(url.pathname, url.search, '')).toMatchObject({ page: 'run', attempt });
   });
 });
