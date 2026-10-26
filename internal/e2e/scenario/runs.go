@@ -180,3 +180,30 @@ func mustJSON(v any) string {
 	}
 	return string(data)
 }
+
+// The messages of the retried run's two attempts.
+const (
+	RetriedFirstText  = "First attempt: the tests fail."
+	RetriedSecondText = "Second attempt: the tests pass."
+)
+
+// addRetried adds a run Kelos retried: its first pod's agent failed, the
+// Job's second pod succeeded. Both pods are created at the same instant,
+// so the pod names order them, as they order Lucarne's attempts.
+func (w *World) addRetried() error {
+	r, err := w.add(Retried, Namespace, string(contract.RunnerClaudeCode), kubetest.PhaseRunning)
+	if err != nil {
+		return err
+	}
+	r.Pod.Write(claudeInit(), claudeText(1, RetriedFirstText))
+	if err := r.Pod.Terminate(failedExitCode); err != nil {
+		return err
+	}
+	retry, err := r.Task.AddPod(taskName(Retried)+"-fghij", newUID())
+	if err != nil {
+		return err
+	}
+	r.Pod = retry
+	retry.Write(claudeInit(), claudeText(1, RetriedSecondText))
+	return r.Finish(0, kubetest.PhaseSucceeded)
+}

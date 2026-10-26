@@ -149,7 +149,7 @@ transcript; [States](contract/README.md#states) defines them.
 browser suite included: `just e2e` runs Chromium against the real server,
 stream and Kubernetes source over a fake cluster
 (`internal/e2e/cmd/lucarne-e2e`), with every runner fixture, live,
-reconnecting, failed, expired, hostile and oversized runs. `go test
+reconnecting, failed, retried, expired, hostile and oversized runs. `go test
 ./internal/e2e/` checks the same paths over HTTP.
 
 ## License

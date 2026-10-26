@@ -121,7 +121,13 @@ func TestIdleRunIsDropped(t *testing.T) {
 	t.Parallel()
 	const idle = 20 * time.Millisecond
 	h := newHub(t, source(contract.PhaseRunning, running()), func(c *Config) { c.IdleTimeout = idle })
-	sub := subscribe(t, h, cursorOf(snapshotOf(t, h)))
+	var sub *Subscription
+	eventually(t, "a live subscription", func() bool {
+		// Under load the run can go idle between the snapshot and the
+		// subscription, which then resets to the reopened run's epoch.
+		sub = subscribe(t, h, cursorOf(snapshotOf(t, h)))
+		return sub.Reset == nil
+	})
 	time.Sleep(2 * idle)
 	if h.followed(streamtest.Key) == nil {
 		t.Fatal("a watched run was dropped")
