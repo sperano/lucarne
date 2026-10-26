@@ -146,6 +146,62 @@ func TestReadReconnectLosesLines(t *testing.T) {
 	}
 }
 
+// TestReadResumeFindsNothing proves a resumed stream that ends before it
+// finds the last lines again reports a gap: the log rotated during the
+// break, or lost them otherwise.
+func TestReadResumeFindsNothing(t *testing.T) {
+	t.Parallel()
+	cases := map[string]struct {
+		follow bool
+		after  *corev1.Pod
+		end    ReadEnd
+	}{
+		"follow":   {true, newPod(podName, podUID, jobUID, 0, corev1.PodSucceeded, terminated(0)), EndComplete},
+		"snapshot": {false, newPod(podName, podUID, jobUID, 0, corev1.PodRunning, running()), EndCurrent},
+	}
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			c, run := readCluster(t)
+			c.podStates([]*corev1.Pod{newPod(podName, podUID, jobUID, 0, corev1.PodRunning, running())}, []*corev1.Pod{tc.after})
+			c.logs.responses = []logResponse{{text: lines(baseTime, 0, 2), err: errors.New("connection reset")}, {}}
+			got, res := c.read(t, run, agentKey, ReadOptions{Follow: tc.follow})
+			want := []string{"line 1", "line 2", "gap read_interrupted before 3"}
+			if !slices.Equal(got.order, want) || got.gaps[0].gap.Detail != detailNotFoundAgain || res.End != tc.end || len(c.logs.opened()) != 2 {
+				t.Errorf("order = %q, result %+v", got.order, res)
+			}
+		})
+	}
+}
+
+// TestReadQuietBreaks proves a stream that opens and breaks before a new
+// line does not count as the API failing: a follow survives quiet breaks,
+// and only maxQuietBreaks of them in a row end the read.
+func TestReadQuietBreaks(t *testing.T) {
+	t.Parallel()
+	const quiet = 3
+	broken := logResponse{text: lines(baseTime, 0, 2), err: errors.New("connection reset")}
+	c, run := readCluster(t)
+	states := [][]*corev1.Pod{}
+	for range quiet + 1 {
+		states = append(states, []*corev1.Pod{newPod(podName, podUID, jobUID, 0, corev1.PodRunning, running())})
+		c.logs.responses = append(c.logs.responses, broken)
+	}
+	c.podStates(append(states, []*corev1.Pod{newPod(podName, podUID, jobUID, 0, corev1.PodSucceeded, terminated(0))})...)
+	c.logs.responses = append(c.logs.responses, logResponse{text: lines(baseTime, 0, 3)})
+	got, res := c.read(t, run, agentKey, ReadOptions{Follow: true})
+	if want := []string{"line 1", "line 2", "line 3"}; !slices.Equal(got.order, want) || res.End != EndComplete || len(c.logs.opened()) != quiet+2 {
+		t.Errorf("order = %q, result %+v after %d opens", got.order, res, len(c.logs.opened()))
+	}
+
+	c, run = readCluster(t, newPod(podName, podUID, jobUID, 0, corev1.PodRunning, running()))
+	c.logs.responses = []logResponse{broken}
+	got, res = c.read(t, run, agentKey, ReadOptions{})
+	if res.End != EndUnavailable || res.Reason != ReasonStreamBreaks || res.Lines != 2 || len(c.logs.opened()) != maxQuietBreaks+1 {
+		t.Errorf("order = %q, result %+v after %d opens", got.order, res, len(c.logs.opened()))
+	}
+}
+
 // TestReadPodDeletedWhileFollowing proves a pod deleted mid-read ends it as
 // expired, with a gap saying the rest is missing.
 func TestReadPodDeletedWhileFollowing(t *testing.T) {

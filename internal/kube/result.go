@@ -15,6 +15,7 @@ const (
 	ReasonRunDeleted        = "task deleted"
 	ReasonForbidden         = "forbidden: the server may not read this log"
 	ReasonSourceUnavailable = "source unavailable: the Kubernetes API did not answer"
+	ReasonStreamBreaks      = "log stream kept breaking before a new line"
 	ReasonCanceled          = "read canceled"
 	// ReasonNoResume is a follow that broke after a line without a
 	// timestamp, which leaves nothing to resume from.

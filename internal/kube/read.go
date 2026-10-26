@@ -12,9 +12,16 @@ import (
 	"github.com/sperano/lucarne/internal/adapter"
 )
 
-// maxFailures is how many tries in a row may fail to open or keep a log
-// stream before the log is reported unavailable.
+// maxFailures is how many tries in a row may fail to check the instance or
+// open its log stream before the log is reported unavailable.
 const maxFailures = 3
+
+// maxQuietBreaks is how many log streams in a row may open and then break
+// with no new line before the log is reported unavailable. A stream that
+// opens resets the count of failures, so this bounds a log whose stream
+// always breaks. It is above maxFailures: the API answered each of them,
+// and a follow breaks while the agent writes nothing.
+const maxQuietBreaks = 5
 
 // errPodGone is a pod that is no longer one of the run's.
 var errPodGone = errors.New("pod gone")
@@ -74,6 +81,10 @@ type reader struct {
 	res      ReadResult
 	tail     tail
 	failures int
+	// breaks counts the quiet breaks in a row, brokenAt the lines read
+	// at the last break.
+	breaks   int
+	brokenAt int64
 }
 
 // instance is the container instance an attempt names, as last checked.
@@ -226,6 +237,7 @@ func (rd *reader) stream(ctx context.Context, inst instance) (bool, error) {
 		// The pod changed between the check and the open: check again.
 		return false, nil
 	}
+	rd.failures = 0
 	return rd.consume(ctx, newLineReader(body), inst, follow)
 }
 

@@ -31,9 +31,12 @@
 // Reads ask for timestamps, which give each line its LogTime and let a
 // follow that broke resume where it stopped: the lines read in the last
 // second must be found again, else a read_interrupted gap says lines may
-// be missing. A first read cannot tell whether rotation removed the start
-// of the log: the kubelet serves only the current log file. It is detected
-// only against an origin the caller already knew (ReadOptions.KnownOrigin).
+// be missing, also when the log ends before they are. A stream that opens
+// and breaks with no new line is a quiet break, counted apart from API
+// failures: a follow breaks while the agent writes nothing. A first read
+// cannot tell whether rotation removed the start of the log: the kubelet
+// serves only the current log file. It is detected only against an origin
+// the caller already knew (ReadOptions.KnownOrigin).
 //
 // # RBAC
 //

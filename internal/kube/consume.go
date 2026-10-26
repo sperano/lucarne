@@ -20,7 +20,7 @@ func (rd *reader) consume(ctx context.Context, lines *lineReader, inst instance,
 	for {
 		l, err := lines.next()
 		if err != nil {
-			return rd.streamEnded(ctx, err, inst, follow)
+			return rd.streamEnded(ctx, err, inst, follow, overlap != nil)
 		}
 		if !l.ended && (follow || !inst.terminated) {
 			// A line the stream cut is read again by the next stream.
@@ -42,7 +42,6 @@ func (rd *reader) consume(ctx context.Context, lines *lineReader, inst instance,
 		if done, err := rd.deliver(l); done || err != nil {
 			return true, err
 		}
-		rd.failures = 0
 	}
 }
 
@@ -50,22 +49,42 @@ func (rd *reader) consume(ctx context.Context, lines *lineReader, inst instance,
 const detailNotFoundAgain = "the log stream broke and its last lines were not found again"
 
 // streamEnded handles the end of one stream: the end of the log, of what
-// it holds so far, or a break.
-func (rd *reader) streamEnded(ctx context.Context, err error, inst instance, follow bool) (bool, error) {
+// it holds so far, or a break. A log that ends before a resumed stream
+// found its last lines again cannot prove that none are missing.
+func (rd *reader) streamEnded(ctx context.Context, err error, inst instance, follow, unresolved bool) (bool, error) {
 	switch {
 	case ctx.Err() != nil:
 		return true, ctx.Err()
 	case !errors.Is(err, io.EOF):
-		return rd.fail(ctx, classify(ctx, err, "read log"))
+		return rd.broke(ctx)
 	case follow:
 		// The instance terminated, or the server closed the stream: check
 		// the instance again, and read the rest of its log.
 		return false, nil
-	case inst.terminated:
-		return true, rd.end(ctx, EndComplete, "")
-	default:
-		return true, rd.end(ctx, EndCurrent, "")
 	}
+	if unresolved {
+		if err := rd.gap(contract.Gap{Reason: contract.GapReadInterrupted, Detail: detailNotFoundAgain}); err != nil {
+			return true, err
+		}
+	}
+	if inst.terminated {
+		return true, rd.end(ctx, EndComplete, "")
+	}
+	return true, rd.end(ctx, EndCurrent, "")
+}
+
+// broke counts a stream that opened and broke with no new line since the
+// last break; after maxQuietBreaks in a row the log is reported
+// unavailable.
+func (rd *reader) broke(ctx context.Context) (bool, error) {
+	if rd.res.Lines > rd.brokenAt {
+		rd.breaks, rd.brokenAt = 0, rd.res.Lines
+		return false, nil
+	}
+	if rd.breaks++; rd.breaks >= maxQuietBreaks {
+		return true, rd.end(ctx, EndUnavailable, ReasonStreamBreaks)
+	}
+	return false, nil
 }
 
 // deliver hands the next line to the sink, unless it takes the log past
