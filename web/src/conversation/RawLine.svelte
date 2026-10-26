@@ -5,7 +5,11 @@
   import { RAW_REASON_LABELS } from '../lib/labels';
   import Truncated from './Truncated.svelte';
 
-  let { event, limits }: { event: EventOf<'raw'>; limits: Limits } = $props();
+  let {
+    event,
+    limits,
+    open = false,
+  }: { event: EventOf<'raw'>; limits: Limits; open?: boolean } = $props();
 
   const raw = $derived(event.raw);
   // text holds the start of a longer line when the source line passed maxRawBytes.
@@ -18,7 +22,7 @@
     <pre>{raw.text}</pre>
   </figure>
 {:else}
-  <details class="raw">
+  <details class="raw" {open}>
     <summary>
       <span class="label">{RAW_REASON_LABELS[raw.reason]}</span>
       <span class="muted">{formatBytes(raw.bytes)}, line {event.source.line}</span>

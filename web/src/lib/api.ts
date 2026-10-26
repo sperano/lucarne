@@ -1,7 +1,8 @@
 // Loading a run's snapshot. The server and the UI ship in one binary and
 // agree on the contract, which the server validates; the UI checks only
 // the schema version, as it cannot run the schema validator (see
-// validate.ts).
+// validate.ts). An answer that is a redirect, or a 401, is the
+// authenticating proxy asking to sign in again (see signin.ts).
 import {
   API_PREFIX,
   SCHEMA_VERSION,
@@ -17,7 +18,11 @@ export type SnapshotLoad =
       readonly status: number;
       readonly code?: string;
       readonly message: string;
+      /** The proxy in front of the server asks to sign in again. */
+      readonly signIn?: true;
     };
+
+const UNAUTHORIZED = 401;
 
 /** The API path of a run's snapshot. */
 export function snapshotPath(key: RunKey): string {
@@ -32,8 +37,13 @@ export async function loadSnapshot(
 ): Promise<SnapshotLoad> {
   const response = await fetcher(snapshotPath(key), {
     headers: { Accept: 'application/json' },
+    // The server never redirects an API request; a proxy redirecting to its sign-in page does.
+    redirect: 'manual',
     ...(signal ? { signal } : {}),
   });
+  if (response.type === 'opaqueredirect' || response.status === UNAUTHORIZED) {
+    return { ok: false, status: response.status, message: 'sign-in required', signIn: true };
+  }
   const body: unknown = await response.json().catch(() => undefined);
   if (response.ok) {
     if (isSnapshot(body)) return { ok: true, snapshot: body };

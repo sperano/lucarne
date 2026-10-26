@@ -3,6 +3,10 @@
 // per event. Nothing is dropped: an event that cannot be grouped (a result
 // or an edit whose call is not in the transcript, a second result for one
 // call) stays an item of its own.
+//
+// Items are immutable: an event that joins a tool item replaces it with a
+// new one, so a live view can add events one at a time and the components
+// re-render exactly the items that changed.
 import type { EventKind, TranscriptEvent } from './contract';
 
 export type EventOf<K extends EventKind> = Extract<TranscriptEvent, { kind: K }>;
@@ -12,11 +16,11 @@ export interface ToolItem {
   /** The ID of the call's first event. */
   readonly id: string;
   /** The latest event of the call: a repeated callId supersedes the input. */
-  call: EventOf<'tool_call'>;
+  readonly call: EventOf<'tool_call'>;
   /** How many times a later event replaced the call's input. */
-  revisions: number;
-  result?: EventOf<'tool_result'>;
-  readonly edits: EventOf<'edit'>[];
+  readonly revisions: number;
+  readonly result?: EventOf<'tool_result'>;
+  readonly edits: readonly EventOf<'edit'>[];
   /** How many calls enclose this one through parentCallId, as far as the transcript shows. */
   readonly depth: number;
 }
@@ -44,34 +48,34 @@ export function buildConversation(
 ): Conversation {
   const builder = new ConversationBuilder();
   for (const event of events) if (event.attempt === attempt) builder.add(event);
-  return builder;
+  return builder.view();
 }
 
-class ConversationBuilder implements Conversation {
-  readonly items: Item[] = [];
-  readonly itemOf = new Map<string, number>();
-  readonly calls = new Map<string, ToolItem>();
+/** Builds one attempt's conversation an event at a time. */
+export class ConversationBuilder {
+  private readonly items: Item[] = [];
+  private readonly itemOf = new Map<string, number>();
+  private readonly calls = new Map<string, ToolItem>();
+  private current: Conversation | undefined;
 
+  /** Adds the next event of the attempt. */
   add(event: TranscriptEvent): void {
+    this.current = undefined;
     switch (event.kind) {
       case 'tool_call':
         this.addCall(event);
         return;
       case 'tool_result': {
         const tool = this.calls.get(event.toolResult.callId);
-        if (tool && !tool.result) {
-          tool.result = event;
-          this.showIn(tool, event.id);
-        } else this.push({ kind: 'event', id: event.id, event });
+        if (tool && !tool.result) this.replace(tool, { ...tool, result: event }, event.id);
+        else this.push({ kind: 'event', id: event.id, event });
         return;
       }
       case 'edit': {
         const callId = event.edit.callId;
         const tool = callId === undefined ? undefined : this.calls.get(callId);
-        if (tool) {
-          tool.edits.push(event);
-          this.showIn(tool, event.id);
-        } else this.push({ kind: 'event', id: event.id, event });
+        if (tool) this.replace(tool, { ...tool, edits: [...tool.edits, event] }, event.id);
+        else this.push({ kind: 'event', id: event.id, event });
         return;
       }
       default:
@@ -79,12 +83,20 @@ class ConversationBuilder implements Conversation {
     }
   }
 
+  /** The conversation so far; the same object until the next add. */
+  view(): Conversation {
+    this.current ??= {
+      items: this.items.slice(),
+      itemOf: new Map(this.itemOf),
+      calls: new Map(this.calls),
+    };
+    return this.current;
+  }
+
   private addCall(event: EventOf<'tool_call'>): void {
     const tool = this.calls.get(event.toolCall.callId);
     if (tool) {
-      tool.call = event;
-      tool.revisions++;
-      this.showIn(tool, event.id);
+      this.replace(tool, { ...tool, call: event, revisions: tool.revisions + 1 }, event.id);
       return;
     }
     const parentId = event.toolCall.parentCallId;
@@ -106,9 +118,12 @@ class ConversationBuilder implements Conversation {
     this.items.push(item);
   }
 
-  /** Shows event id in the item of tool, which was pushed when its call came. */
-  private showIn(tool: ToolItem, id: string): void {
+  /** Puts next in the place of tool, which was pushed when its call came, and shows event id in it. */
+  private replace(tool: ToolItem, next: ToolItem, id: string): void {
     const index = this.itemOf.get(tool.id);
-    if (index !== undefined) this.itemOf.set(id, index);
+    if (index === undefined) return;
+    this.items[index] = next;
+    this.calls.set(next.call.toolCall.callId, next);
+    this.itemOf.set(id, index);
   }
 }

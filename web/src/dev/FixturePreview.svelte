@@ -1,5 +1,6 @@
 <script lang="ts">
   import Conversation from '../conversation/Conversation.svelte';
+  import { RunStore } from '../lib/runstore';
   import { FIXTURE_RUNS } from './fixtures';
 
   let index = $state(0);
@@ -21,7 +22,7 @@
   {#if fixture}
     {#key fixture}
       <Conversation
-        snapshot={fixture.snapshot}
+        view={new RunStore(fixture.snapshot).view()}
         attempt={undefined}
         event={undefined}
         onselectattempt={() => {}}

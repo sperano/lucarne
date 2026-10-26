@@ -23,7 +23,7 @@
     conversation: Conversation;
     coverage: CoverageState;
     limits: Limits;
-    /** Whether the page's #event= link points into this item. */
+    /** Whether the page's #event= link, or the search result shown, points into this item: it opens. */
     targeted: boolean;
   } = $props();
 
@@ -42,7 +42,7 @@
     open={targeted}
   />
 {:else if item.event.kind === 'message'}
-  <MessageView event={item.event} {limits} />
+  <MessageView event={item.event} {limits} open={targeted} />
 {:else if item.event.kind === 'tool_result'}
   <OrphanResult
     event={item.event}
@@ -58,7 +58,7 @@
 {:else if item.event.kind === 'lifecycle'}
   <LifecycleLine event={item.event} {limits} />
 {:else if item.event.kind === 'raw'}
-  <RawLine event={item.event} {limits} />
+  <RawLine event={item.event} {limits} open={targeted} />
   <!-- eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- the last kind is tested so that unreachable() fails to compile when a kind is added. -->
 {:else if item.event.kind === 'gap'}
   <GapNotice event={item.event} />

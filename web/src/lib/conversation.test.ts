@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { eventMaker } from '../dev/events';
 import { FIXTURE_RUNS } from '../dev/fixtures';
-import { buildConversation } from './conversation';
+import { ConversationBuilder, buildConversation } from './conversation';
 
 const ATTEMPT = '7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.codex.0';
 const OTHER = '9e8d7c6b-5a4f-4e3d-8c2b-1a0f9e8d7c6b.codex.0';
@@ -98,4 +98,26 @@ describe('buildConversation', () => {
       for (const e of fixture.snapshot.events) expect(c.itemOf.has(e.id), e.id).toBe(true);
     },
   );
+});
+
+describe('ConversationBuilder', () => {
+  it('replaces a tool item when an event joins it, leaving the others as they were', () => {
+    const builder = new ConversationBuilder();
+    const message = ev({
+      kind: 'message',
+      message: { role: 'assistant', type: 'text', text: 'hi' },
+    });
+    builder.add(call('c9'));
+    builder.add(message);
+    const before = builder.view();
+    expect(builder.view()).toBe(before);
+    builder.add(result('c9'));
+    const after = builder.view();
+    expect(after).not.toBe(before);
+    expect(after.items[0]).not.toBe(before.items[0]);
+    expect(after.items[1]).toBe(before.items[1]);
+    const [tool] = before.items;
+    expect(tool?.kind === 'tool' && tool.result).toBeUndefined();
+    expect(after.calls.get('c9')).toBe(after.items[0]);
+  });
 });

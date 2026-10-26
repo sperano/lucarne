@@ -3,6 +3,7 @@ import {
   earlier,
   firstWindow,
   lastWindow,
+  reanchor,
   later,
   WINDOW_MAX,
   WINDOW_STEP,
@@ -41,5 +42,31 @@ describe('item windows', () => {
       expect(w.end - w.start).toBeLessThanOrEqual(WINDOW_MAX);
     }
     expect(w).toEqual({ start: 0, end: WINDOW_MAX });
+  });
+});
+
+describe('reanchor', () => {
+  const positions = (ids: string[]) => new Map(ids.map((id, i) => [id, i]));
+
+  it('keeps the items shown in view when items are added after them', () => {
+    expect(reanchor(['b', 'c'], positions(['a', 'b', 'c', 'd', 'e']), 5)).toEqual({
+      start: 1,
+      end: 3,
+    });
+  });
+
+  it('follows the items shown when older ones are dropped', () => {
+    expect(reanchor(['c', 'd'], positions(['c', 'd', 'e']), 3)).toEqual({ start: 0, end: 2 });
+  });
+
+  it('finds its place from a later item when the first shown was dropped', () => {
+    expect(reanchor(['b', 'c', 'd'], positions(['c', 'd', 'e', 'f']), 4)).toEqual({
+      start: 0,
+      end: 3,
+    });
+  });
+
+  it('starts at the start when none is left', () => {
+    expect(reanchor(['x', 'y'], positions(['a', 'b', 'c']), 3)).toEqual({ start: 0, end: 2 });
   });
 });

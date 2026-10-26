@@ -3,6 +3,7 @@
 // compile here until it has a label.
 import type {
   ContainerStateKind,
+  EndReason,
   CoverageState,
   EditChange,
   GapReason,
@@ -13,6 +14,7 @@ import type {
   ToolResultStatus,
   UsageScope,
 } from './contract';
+import type { ReloadReason } from './live';
 
 export const RUN_PHASE_LABELS: Record<RunPhase, string> = {
   pending: 'Pending',
@@ -95,4 +97,19 @@ export const GAP_REASON_LABELS: Record<GapReason, string> = {
   read_interrupted: 'The log stream broke and the reconnect could not prove continuity.',
   input_limit: 'The attempt passed the log size Lucarne reads; the rest is not shown.',
   attempt_expired: 'The pod went away while its log was being read.',
+};
+
+/** Why the page reloads the run, completing "…, so the run is loaded again." */
+export const RELOAD_REASON_LABELS: Record<ReloadReason, string> = {
+  epoch_changed: "The server's history of this run restarted",
+  replay_expired: 'The server can no longer replay what this page missed',
+  client_too_slow: 'This page fell too far behind the stream',
+  bad_cursor: 'The server refused the stream position',
+  out_of_order: 'An update of the stream was missed',
+  malformed: 'An update of the stream could not be read',
+};
+
+export const END_REASON_LABELS: Record<EndReason, string> = {
+  run_finished: 'The run finished: nothing more will arrive.',
+  run_deleted: 'The Task was deleted: nothing more will arrive.',
 };
