@@ -193,7 +193,7 @@ func (rd *reader) instance(pod *corev1.Pod) (instance, ReadEnd, string, error) {
 		if !inst.started && podFinished(pod) {
 			return instance{}, EndExpired, ReasonNeverStarted, nil
 		}
-	case restart == int64(inst.restarts)-1 && status.LastTerminationState.Terminated != nil && !backingOff(status):
+	case restart == int64(inst.restarts)-1 && status != nil && status.LastTerminationState.Terminated != nil && !backingOff(status):
 		inst.previous, inst.started, inst.terminated = true, true, true
 	default:
 		return instance{}, EndExpired, ReasonOlderRestart, nil
