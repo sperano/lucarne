@@ -67,6 +67,10 @@ func newResume(t *tail) *resume { return &resume{tail: t} }
 // step classifies the next line of the resumed stream. The tail's lines
 // must come in order; a line not in it, older than the last, is one
 // delivered before the tail started, from the same second.
+//
+// The tail must hold at least one line, and the caller must stop calling
+// step once it returns overlapFound or overlapLost: together they keep
+// matched below len(sums).
 func (r *resume) step(l rawLine) overlapStep {
 	sums := r.tail.sums
 	if l.time == nil {

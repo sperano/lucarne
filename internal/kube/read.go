@@ -216,7 +216,8 @@ func (rd *reader) stream(ctx context.Context, inst instance) (bool, error) {
 	if err != nil {
 		return rd.fail(ctx, classify(ctx, err, "open log"))
 	}
-	defer body.Close()
+	// A read-only stream has nothing to flush: its Close error is moot.
+	defer func() { _ = body.Close() }()
 	same, err := rd.s.samePod(ctx, rd.run.Key.Namespace, inst.pod, rd.key.PodUID)
 	if err != nil {
 		return rd.fail(ctx, err)
