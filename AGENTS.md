@@ -13,10 +13,10 @@ Lucarne observes; it never takes part. It does not start, steer or stop
 agents, and nothing in the agent pipeline waits on it.
 
 Status: bootstrapped. The contract, the fixtures, the server skeleton, the
-UI shell, the Claude Code, Codex and OpenCode adapters and the Kubernetes
-log source exist; the snapshot/SSE endpoints (which will wire the source
-into the server) and the conversation view do not yet (the run endpoints
-answer 501).
+Claude Code, Codex and OpenCode adapters, the Kubernetes log source and the
+desktop conversation view (rendering one snapshot) exist; the snapshot/SSE
+endpoints (which will wire the source into the server) do not yet (the run
+endpoints answer 501), nor does the live wiring of the view to the stream.
 
 ## What lives here, and what does not
 
@@ -40,7 +40,7 @@ expect. One executable, no database.
 | `internal/kube/` | The Kubernetes source: resolves a run key to a Kelos Task by UID within the configured cluster and namespace allowlist, lists the attempts of its `kelos-agent` container through the Task → Job → pod controller chain (by UID), and reads their logs bounded, re-checking that chain before each stream, following and resuming across breaks. Read-only (get, list, pods/log); its RBAC and limits are in `doc.go`. Tests run against client-go fakes. |
 | `internal/server/` | HTTP: `/healthz`, `/api/v1/...`, the embedded UI and its deep links, security headers. |
 | `internal/privacy/` | The scan that keeps private data out of fixtures and examples. |
-| `web/` | The UI (Vite, Svelte 5, TypeScript). `web/src/lib/contract.ts` mirrors the contract; `web/embed.go` embeds `web/dist`. |
+| `web/` | The UI (Vite, Svelte 5, TypeScript). `web/src/lib/contract.ts` mirrors the contract; `web/embed.go` embeds `web/dist`. `web/src/conversation/` is the conversation view, over the pure modules of `web/src/lib/` (its model, the Markdown parser, safe links, item windows); log content is only ever rendered as text, never with `{@html}`. `web/src/dev/` wraps the adapters' golden files in fabricated snapshots for the tests and for `npm run dev`'s `/fixtures.html` preview, which the build leaves out. |
 | `scripts/smoke.sh` | Starts a built binary and checks the UI, an asset, a deep link and the contract endpoint. |
 
 A contract change touches the schema, the Go types, `web/src/lib/contract.ts`
@@ -54,7 +54,7 @@ files; the owner adds or changes them).
 
 | Job | Steps |
 | --- | --- |
-| `web` | in `web/`: `npm ci`, `npm run check` (svelte-check), `npm run lint` (Prettier, ESLint), `npm test` (Vitest), `npm run build` |
+| `web` | in `web/`: `npm ci`, `npm run check` (svelte-check), `npm run lint` (Prettier, ESLint), `npm test` (Vitest: `*.test.ts` in Node, component tests `*.svelte.test.ts` in headless Chromium, which `npx playwright install chromium` provides for the pinned `playwright`), `npm run build` |
 | `go` | `gofmt -l .` empty, `go vet ./...`, staticcheck v0.8.1, `go build ./...`, `go test -race ./...` |
 | `app` | after `web`: `go build` with the built UI embedded, then `scripts/smoke.sh` |
 
