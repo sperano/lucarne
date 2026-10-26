@@ -15,7 +15,7 @@ const VALIDATOR = 'src/lib/validate.ts';
 const TS_PROJECTS = ['./tsconfig.json', './tsconfig.node.json'];
 
 export default ts.config(
-  { ignores: ['dist/', 'node_modules/'] },
+  { ignores: ['dist/', 'node_modules/', '.vitest/'] },
   js.configs.recommended,
   ...ts.configs.strictTypeChecked,
   ...svelte.configs.recommended,

@@ -41,7 +41,7 @@ expect. One executable, no database.
 | `internal/stream/` | The live state of the runs being viewed: follows a run's Task, attempts and logs through the source and the adapters, numbers every update, keeps bounded replay and retained events, re-reads broken logs without repeating lines, and serves snapshots and subscriptions with resets, gaps and backpressure; see `doc.go`. `streamtest/` is the scripted source its tests and the server's share. |
 | `internal/server/` | HTTP: `/healthz`, `/api/v1/...` (the snapshot and the SSE stream over `internal/stream`), the embedded UI and its deep links, security headers. |
 | `internal/privacy/` | The scan that keeps private data out of fixtures and examples. |
-| `web/` | The UI (Vite, Svelte 5, TypeScript). `web/src/lib/contract.ts` mirrors the contract; `web/embed.go` embeds `web/dist`. |
+| `web/` | The UI (Vite, Svelte 5, TypeScript). `web/src/lib/contract.ts` mirrors the contract; `web/embed.go` embeds `web/dist`. `web/src/conversation/` is the conversation view, over the pure modules of `web/src/lib/` (its model, the Markdown parser, safe links, item windows); log content is only ever rendered as text, never with `{@html}`. `web/src/dev/` wraps the adapters' golden files in fabricated snapshots for the tests and for `npm run dev`'s `/fixtures.html` preview, which the build leaves out. |
 | `scripts/smoke.sh` | Starts a built binary and checks the UI, an asset, a deep link and the contract endpoint. |
 
 A contract change touches the schema, the Go types, `web/src/lib/contract.ts`
@@ -55,7 +55,7 @@ files; the owner adds or changes them).
 
 | Job | Steps |
 | --- | --- |
-| `web` | in `web/`: `npm ci`, `npm run check` (svelte-check), `npm run lint` (Prettier, ESLint), `npm test` (Vitest), `npm run build` |
+| `web` | in `web/`: `npm ci`, `npm run check` (svelte-check), `npm run lint` (Prettier, ESLint), `npm test` (Vitest: `*.test.ts` in Node, component tests `*.svelte.test.ts` in headless Chromium, which `npx playwright install chromium` provides for the pinned `playwright`), `npm run build` |
 | `go` | `gofmt -l .` empty, `go vet ./...`, staticcheck v0.8.1, `go build ./...`, `go test -race ./...` |
 | `app` | after `web`: `go build` with the built UI embedded, then `scripts/smoke.sh` |
 

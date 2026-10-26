@@ -1,0 +1,200 @@
+import { describe, expect, it } from 'vitest';
+import { userEvent } from 'vitest/browser';
+import type { Attempt, Snapshot, TranscriptEvent } from '../lib/contract';
+import { buildConversation } from '../lib/conversation';
+import { ATTEMPT_ID, eventMaker, type EventBody } from '../dev/events';
+import { FIXTURE_RUNS, findFixture, snapshotOf } from '../dev/fixtures';
+import { render } from '../render';
+import Conversation from './Conversation.svelte';
+
+function show(snapshot: Snapshot, attempt?: string, event?: string): HTMLElement {
+  return render(Conversation, { snapshot, attempt, event, onselectattempt: () => {} });
+}
+
+function snapshotWith(bodies: readonly EventBody[], attempt: Partial<Attempt> = {}): Snapshot {
+  const make = eventMaker();
+  const base = snapshotOf('claude-code', 'example-run', bodies.map(make));
+  const [first] = base.attempts;
+  if (!first) throw new Error('no attempt');
+  return { ...base, attempts: [{ ...first, ...attempt }] };
+}
+
+function texts(root: HTMLElement, selector: string): string[] {
+  return [...root.querySelectorAll(selector)].map((e) => e.textContent.trim());
+}
+
+describe('Conversation over the runner fixtures', () => {
+  it.each(FIXTURE_RUNS.map((f) => [`${f.runner}/${f.scenario}`, f] as const))(
+    'renders %s',
+    (_name, { snapshot }) => {
+      const root = show(snapshot);
+      const attempt = snapshot.attempts[0]?.id ?? '';
+      const conversation = buildConversation(snapshot.events, attempt);
+      expect(root.querySelectorAll('.items > li')).toHaveLength(conversation.items.length);
+      expect(root.querySelector('h2')?.textContent).toBe(snapshot.run.taskName);
+      for (const event of snapshot.events) {
+        if (event.kind === 'message') {
+          // The fixtures' messages use no Markdown but bold.
+          for (const line of event.message.text.replaceAll('**', '').split('\n')) {
+            expect(root.textContent).toContain(line);
+          }
+        }
+        if (event.kind === 'tool_call') expect(root.textContent).toContain(event.toolCall.name);
+        if (event.kind === 'error') expect(root.textContent).toContain(event.error.message);
+      }
+      // Log content never becomes markup that loads or runs anything.
+      expect(root.querySelector('script, iframe, img, object, embed, form')).toBeNull();
+      for (const a of root.querySelectorAll('a')) expect(a.href).toMatch(/^(https?|mailto):/);
+    },
+  );
+
+  it('shows a Claude Code session: roles, tools, the edit diff, outputs', () => {
+    const root = show(findFixture('claude-code', 'session-basic').snapshot);
+    expect(texts(root, '.message .role')).toContain('Assistant');
+    expect(root.querySelector('.reasoning')?.hasAttribute('open')).toBe(false);
+    const read = [...root.querySelectorAll('.tool')].find((t) => t.textContent.includes('Read'));
+    expect(read?.querySelector('summary')?.textContent).toContain('/workspace/repo/greet.go');
+    expect(read?.querySelector('.status')?.textContent).toBe('ok');
+    expect(texts(root, '.diff .add')).toEqual(['+\treturn "Hello, world"']);
+    expect(texts(root, '.diff .delete')).toEqual(['-\treturn "Hello"']);
+    expect(root.textContent).toContain("Cloning into '/workspace/repo'...");
+    const pr = root.querySelector<HTMLAnchorElement>('.outputs a');
+    expect(pr?.href).toBe('https://github.com/example/widget/pull/7');
+    expect(pr?.rel).toBe('noopener noreferrer nofollow');
+  });
+
+  it('shows a Codex to-do list in its latest state and calls with no outcome', () => {
+    const root = show(findFixture('codex', 'interleaved').snapshot);
+    const todo = [...root.querySelectorAll('.tool')].find((t) =>
+      t.textContent.includes('todo_list'),
+    );
+    expect(todo?.querySelectorAll('.todos .done')).toHaveLength(2);
+    expect(todo?.textContent).toContain('The runner updated this call 2 times');
+    expect(texts(root, '.tool .status')).toContain('outcome unknown');
+  });
+
+  it('shows OpenCode edits, including those the log has no diff for', () => {
+    const root = show(findFixture('opencode', 'edits').snapshot);
+    expect(root.querySelectorAll('.edit')).toHaveLength(8);
+    expect(root.textContent).toContain('The log carries no diff or content for this change.');
+    expect(root.textContent).toContain('The diff in the log is empty.');
+    expect(root.textContent).toContain('The file is now empty.');
+    expect(texts(root, '.edit .change')).toContain('Deleted');
+  });
+
+  it('shows failed and declined calls', () => {
+    const statuses = texts(show(findFixture('codex', 'tool-failures').snapshot), '.tool .status');
+    expect(statuses).toEqual(['error', 'error', 'error', 'declined']);
+  });
+
+  it('keeps unrendered lines collapsed, with their reason', () => {
+    const root = show(findFixture('claude-code', 'malformed-lines').snapshot);
+    const raws = [...root.querySelectorAll<HTMLDetailsElement>('details.raw')];
+    expect(raws.length).toBeGreaterThan(0);
+    expect(raws.every((d) => !d.open)).toBe(true);
+    expect(texts(root, '.raw .label')).toContain('Malformed JSON line');
+  });
+});
+
+describe('Conversation states', () => {
+  it('marks gaps, cuts and an incomplete log', () => {
+    const root = show(
+      snapshotWith(
+        [
+          { kind: 'gap', gap: { reason: 'read_interrupted', lines: 12 } },
+          {
+            kind: 'message',
+            message: { role: 'assistant', type: 'text', text: 'cut' },
+            truncated: ['text'],
+          },
+          { kind: 'raw', raw: { reason: 'oversized', text: 'x'.repeat(10), bytes: 2000000 } },
+        ],
+        { coverage: { state: 'ended', lines: 3, gaps: 1, truncatedLines: 1 } },
+      ),
+    );
+    expect(root.textContent).toContain('12 lines are missing here.');
+    expect(root.textContent).toContain('Cut to the size limit by Lucarne: text (64 KiB).');
+    expect(root.textContent).toContain('This transcript is incomplete: 1 gap and 1 line cut');
+    expect(root.textContent).toContain('Showing the first 10 B of 1.9 MiB.');
+  });
+
+  it('says a call without a result is running only while the log is followed', () => {
+    const call: EventBody = { kind: 'tool_call', toolCall: { callId: 'c', name: 'Bash' } };
+    const following = show(
+      snapshotWith([call], {
+        coverage: { state: 'following', lines: 1, gaps: 0, truncatedLines: 0 },
+      }),
+    );
+    expect(following.querySelector('.tool .status')?.textContent).toBe('running');
+    expect(following.textContent).toContain('The attempt is still running');
+    const ended = show(snapshotWith([call]));
+    expect(ended.querySelector('.tool .status')?.textContent).toBe('no result');
+  });
+
+  it('says when the log expired or events were dropped', () => {
+    const base = snapshotWith([], {
+      coverage: { state: 'expired', lines: 0, gaps: 0, truncatedLines: 0, reason: 'pod deleted' },
+    });
+    const root = show({ ...base, stream: { ...base.stream, droppedEvents: 40 } });
+    expect(root.textContent).toContain('The log of this attempt is gone');
+    expect(root.textContent).toContain('pod deleted');
+    expect(root.textContent).toContain('The 40 oldest events of this run were dropped');
+  });
+
+  it('says a run has no attempt yet', () => {
+    const root = show({ ...snapshotWith([]), attempts: [] });
+    expect(root.textContent).toContain('This run has no attempt yet');
+  });
+
+  it('refuses a link to an attempt the run does not have', () => {
+    const gone = '1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d.claude-code.0';
+    const root = show(snapshotWith([]), gone);
+    expect(root.querySelector('[role=alert]')?.textContent).toContain(gone);
+    expect(root.querySelector('.transcript')).toBeNull();
+  });
+
+  it('says a linked event is not in the transcript', () => {
+    const stale = `${ATTEMPT_ID}:0123456789abcdef:7:0`;
+    const root = show(snapshotWith([]), undefined, stale);
+    expect(root.querySelector('[role=alert]')?.textContent).toContain('is not in this transcript');
+  });
+});
+
+describe('Conversation of several attempts', () => {
+  const second = '9e8d7c6b-5a4f-4e3d-8c2b-1a0f9e8d7c6b.claude-code.0';
+  function twoAttempts(): Snapshot {
+    const first = snapshotWith([{ kind: 'raw', raw: { reason: 'text', text: 'first', bytes: 5 } }]);
+    const events: TranscriptEvent[] = [
+      ...first.events,
+      eventMaker(second)({ kind: 'raw', raw: { reason: 'text', text: 'second', bytes: 6 } }),
+    ];
+    const [attempt] = first.attempts;
+    if (!attempt) throw new Error('no attempt');
+    return {
+      ...first,
+      events,
+      attempts: [attempt, { ...attempt, id: second, podName: 'example-b' }],
+    };
+  }
+
+  it('follows the latest attempt and lets the reader pick another', async () => {
+    const picked: string[] = [];
+    const root = render(Conversation, {
+      snapshot: twoAttempts(),
+      attempt: undefined,
+      event: undefined,
+      onselectattempt: (id: string) => picked.push(id),
+    });
+    expect(root.querySelector('.items')?.textContent).toContain('second');
+    const select = root.querySelector('select');
+    if (!select) throw new Error('no attempt picker');
+    await userEvent.selectOptions(select, ATTEMPT_ID);
+    expect(picked).toEqual([ATTEMPT_ID]);
+  });
+
+  it('shows the attempt a linked event belongs to', () => {
+    const root = show(twoAttempts(), undefined, `${ATTEMPT_ID}:e3b0c44298fc1c14:1:0`);
+    expect(root.querySelector('.items')?.textContent).toContain('first');
+    expect(root.querySelector('[role=alert]')).toBeNull();
+  });
+});

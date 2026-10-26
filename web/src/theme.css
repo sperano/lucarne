@@ -1,0 +1,130 @@
+/*
+ * Lucarne's palette and the styles the views share. Every text colour is
+ * paired with the backgrounds it is used on in theme.test.ts, which checks
+ * the WCAG AA contrast ratios; add a pair there when you add a colour.
+ */
+:root {
+  --bg: #ffffff;
+  --surface: #f6f8fa;
+  --border: #d1d9e0;
+  --text: #1f2328;
+  --text-muted: #59636e;
+  --link: #0969da;
+  --focus: #0969da;
+  --ok: #1a7f37;
+  --error: #cf222e;
+  --error-bg: #ffebe9;
+  --error-text: #82071e;
+  --warn-bg: #fff8c5;
+  --warn-text: #6c4400;
+  --warn-border: #d4a72c;
+  --info-bg: #ddf4ff;
+  --info-text: #0a3069;
+  --user-bg: #ddf4ff;
+  --code-bg: #f6f8fa;
+  --diff-add-bg: #dafbe1;
+  --diff-add-text: #116329;
+  --diff-del-bg: #ffebe9;
+  --diff-del-text: #82071e;
+  --diff-hunk-bg: #ddf4ff;
+  --diff-hunk-text: #0550ae;
+
+  --font-text: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-code: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --radius: 6px;
+  --column: 64rem;
+
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-text);
+  line-height: 1.5;
+}
+
+a {
+  color: var(--link);
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+button {
+  font: inherit;
+  color: var(--link);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.125rem 0.625rem;
+  cursor: pointer;
+}
+
+button:hover {
+  background: var(--surface);
+}
+
+code,
+pre {
+  font-family: var(--font-code);
+  font-size: 0.875rem;
+}
+
+pre {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow-x: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.notice {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-left-width: 4px;
+  border-radius: var(--radius);
+}
+
+.notice.warning {
+  background: var(--warn-bg);
+  color: var(--warn-text);
+  border-color: var(--warn-border);
+}
+
+.notice.error {
+  background: var(--error-bg);
+  color: var(--error-text);
+  border-color: var(--error);
+}
+
+.notice.info {
+  background: var(--info-bg);
+  color: var(--info-text);
+}
+
+.note {
+  margin: 0.25rem 0;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.muted {
+  color: var(--text-muted);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
