@@ -30,6 +30,7 @@ func attemptsOf(t *testing.T, objects ...runtime.Object) []contract.Attempt {
 }
 
 func TestAttemptsWithoutJob(t *testing.T) {
+	t.Parallel()
 	if got := attemptsOf(t); len(got) != 0 {
 		t.Errorf("attempts of a Task without a Job = %+v", got)
 	}
@@ -38,6 +39,7 @@ func TestAttemptsWithoutJob(t *testing.T) {
 // TestAttemptsNameReuse proves the pods of a Job another Task controls,
 // found by the same name and label, are never a run's.
 func TestAttemptsNameReuse(t *testing.T) {
+	t.Parallel()
 	got := attemptsOf(t,
 		newJob(taskName, jobUID, reusedUID),
 		newPod(podName, podUID, jobUID, 0, corev1.PodRunning, running()))
@@ -49,6 +51,7 @@ func TestAttemptsNameReuse(t *testing.T) {
 // TestAttemptsPodOfAnotherJob proves a pod with the Task's label whose
 // controller is another Job is left out.
 func TestAttemptsPodOfAnotherJob(t *testing.T) {
+	t.Parallel()
 	got := attemptsOf(t,
 		newJob(taskName, jobUID, taskUID),
 		newPod(podName, podUID, reusedUID, 0, corev1.PodRunning, running()),
@@ -59,6 +62,7 @@ func TestAttemptsPodOfAnotherJob(t *testing.T) {
 }
 
 func TestAttemptsPending(t *testing.T) {
+	t.Parallel()
 	cases := map[string]struct {
 		status *corev1.ContainerStatus
 		state  contract.ContainerStateKind
@@ -69,6 +73,7 @@ func TestAttemptsPending(t *testing.T) {
 	}
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			got := attemptsOf(t, newJob(taskName, jobUID, taskUID), newPod(podName, podUID, jobUID, 0, corev1.PodPending, tc.status))
 			if len(got) != 1 {
 				t.Fatalf("attempts = %+v", got)
@@ -84,6 +89,7 @@ func TestAttemptsPending(t *testing.T) {
 // TestAttemptsRetriedJob proves both pods of a retried Job are listed, the
 // failed one first, each by its own UID.
 func TestAttemptsRetriedJob(t *testing.T) {
+	t.Parallel()
 	got := attemptsOf(t,
 		newJob(taskName, jobUID, taskUID),
 		newPod(retryPodName, retryPodUID, jobUID, time.Minute, corev1.PodRunning, running()),
@@ -108,6 +114,7 @@ func TestAttemptsRetriedJob(t *testing.T) {
 // TestAttemptsRestarts proves only the current and previous instance are
 // readable and older ones are expired.
 func TestAttemptsRestarts(t *testing.T) {
+	t.Parallel()
 	status := running()
 	status.RestartCount = 3
 	status.LastTerminationState = terminatedState(137)
@@ -131,6 +138,7 @@ func TestAttemptsRestarts(t *testing.T) {
 // instance that exited is listed as terminated and readable, and the one
 // before it, whose log the kubelet no longer serves, as expired.
 func TestAttemptsBackOff(t *testing.T) {
+	t.Parallel()
 	const restarts, exitCode = 2, 137
 	got := attemptsOf(t, newJob(taskName, jobUID, taskUID), newPod(podName, podUID, jobUID, 0, corev1.PodRunning, crashLooping(restarts, exitCode)))
 	if len(got) != restarts+1 {
@@ -148,6 +156,7 @@ func TestAttemptsBackOff(t *testing.T) {
 }
 
 func TestAttemptsBounded(t *testing.T) {
+	t.Parallel()
 	status := running()
 	status.RestartCount = 3 * contract.MaxAttemptsPerRun
 	got := attemptsOf(t, newJob(taskName, jobUID, taskUID), newPod(podName, podUID, jobUID, 0, corev1.PodRunning, status))
@@ -162,6 +171,7 @@ func TestAttemptsBounded(t *testing.T) {
 // TestAttemptsNeverStarted proves a finished pod whose agent container never
 // ran, as when an init container failed, lists no attempt: there is no log.
 func TestAttemptsNeverStarted(t *testing.T) {
+	t.Parallel()
 	got := attemptsOf(t, newJob(taskName, jobUID, taskUID), newPod(podName, podUID, jobUID, 0, corev1.PodFailed, waiting("PodInitializing")))
 	if len(got) != 0 {
 		t.Errorf("attempts = %+v", got)
@@ -171,6 +181,7 @@ func TestAttemptsNeverStarted(t *testing.T) {
 // TestAttemptsOnlyAgentContainer proves user containers next to the agent
 // are never attempts, and a pod without the agent container has none.
 func TestAttemptsOnlyAgentContainer(t *testing.T) {
+	t.Parallel()
 	withExtra := newPod(podName, podUID, jobUID, 0, corev1.PodRunning, running())
 	withExtra.Spec.Containers = append(withExtra.Spec.Containers, corev1.Container{Name: "sidecar"})
 	withExtra.Status.ContainerStatuses = append(withExtra.Status.ContainerStatuses, corev1.ContainerStatus{Name: "sidecar"})

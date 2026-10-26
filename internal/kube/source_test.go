@@ -17,6 +17,7 @@ import (
 )
 
 func TestNewRejectsConfig(t *testing.T) {
+	t.Parallel()
 	c := newCluster(t, nil)
 	clients := Clients{Dynamic: c.dyn, Kube: c.kube, Logs: c.logs}
 	cases := map[string]struct {
@@ -30,6 +31,7 @@ func TestNewRejectsConfig(t *testing.T) {
 	}
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			if _, err := New(tc.cfg, tc.clients); err == nil {
 				t.Fatal("New accepted it")
 			}
@@ -41,12 +43,14 @@ func TestNewRejectsConfig(t *testing.T) {
 // not found without a call to the API, even when that namespace has the
 // Task.
 func TestRunOutsideAllowlist(t *testing.T) {
+	t.Parallel()
 	c := newCluster(t, []*unstructured.Unstructured{newTask(otherNS, taskName, taskUID, taskRunning, "claude-code")})
 	keys := map[string]contract.RunKey{
 		"other namespace": {Cluster: testCluster, Namespace: otherNS, TaskUID: taskUID},
 		"other cluster":   {Cluster: "elsewhere", Namespace: testNamespace, TaskUID: taskUID},
 		"invalid UID":     {Cluster: testCluster, Namespace: testNamespace, TaskUID: "Not-A-UID"},
 	}
+	// Serial: the check after the loop counts the calls of every subtest.
 	for name, key := range keys {
 		t.Run(name, func(t *testing.T) {
 			if _, err := c.src.Run(context.Background(), key); !errors.Is(err, ErrRunNotFound) {
@@ -62,6 +66,7 @@ func TestRunOutsideAllowlist(t *testing.T) {
 // TestEntryPointsCheckAllowlist proves a Run whose key a caller changed is
 // refused by every entry point before any call.
 func TestEntryPointsCheckAllowlist(t *testing.T) {
+	t.Parallel()
 	c := newCluster(t, []*unstructured.Unstructured{newTask(testNamespace, taskName, taskUID, taskRunning, "claude-code")})
 	run := c.run(t)
 	run.Key.Namespace = otherNS
@@ -83,6 +88,7 @@ func TestEntryPointsCheckAllowlist(t *testing.T) {
 }
 
 func TestRunFindsTaskByUID(t *testing.T) {
+	t.Parallel()
 	task := newTask(testNamespace, taskName, taskUID, taskSucceeded, "codex")
 	start, end := baseTime.Add(time.Second), baseTime.Add(time.Hour)
 	if err := unstructured.SetNestedField(task.Object, start.Format(time.RFC3339), "status", "startTime"); err != nil {
@@ -115,6 +121,7 @@ func TestRunFindsTaskByUID(t *testing.T) {
 // TestRunNameReuse proves a link to a Task whose name a later Task took
 // never opens the later one.
 func TestRunNameReuse(t *testing.T) {
+	t.Parallel()
 	c := newCluster(t, []*unstructured.Unstructured{newTask(testNamespace, taskName, taskUID, taskRunning, "claude-code")})
 	run := c.run(t)
 	tasks := c.dyn.Resource(TaskResource).Namespace(testNamespace)
@@ -135,6 +142,7 @@ func TestRunNameReuse(t *testing.T) {
 }
 
 func TestRunPaginates(t *testing.T) {
+	t.Parallel()
 	c := newCluster(t, nil)
 	const token = "page-2"
 	var continues []string
@@ -162,6 +170,7 @@ func TestRunPaginates(t *testing.T) {
 }
 
 func TestRunAPIErrors(t *testing.T) {
+	t.Parallel()
 	cases := map[string]struct {
 		err  error
 		want error
@@ -173,6 +182,7 @@ func TestRunAPIErrors(t *testing.T) {
 	}
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			c := newCluster(t, nil)
 			c.dyn.PrependReactor("list", "tasks", func(k8stesting.Action) (bool, runtime.Object, error) {
 				return true, nil, tc.err
@@ -186,6 +196,7 @@ func TestRunAPIErrors(t *testing.T) {
 }
 
 func TestRunCanceled(t *testing.T) {
+	t.Parallel()
 	c := newCluster(t, nil)
 	ctx, cancel := context.WithCancel(context.Background())
 	c.dyn.PrependReactor("list", "tasks", func(k8stesting.Action) (bool, runtime.Object, error) {

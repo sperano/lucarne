@@ -24,6 +24,7 @@ func readAll(t *testing.T, r io.Reader) ([]rawLine, error) {
 }
 
 func TestLineReaderSplits(t *testing.T) {
+	t.Parallel()
 	at := baseTime.Add(123456789 * time.Nanosecond)
 	stream := logLine(at, `{"type":"system"}`) + logLine(at, "") + logLine(at, "carriage\r") + "no prefix\n" + logLine(at, "last")
 	stream = strings.TrimSuffix(stream, "\n")
@@ -62,6 +63,7 @@ func TestLineReaderSplits(t *testing.T) {
 // TestLineReaderOversized proves a line longer than the limit is held only
 // to the limit, while its length and origin cover all of it.
 func TestLineReaderOversized(t *testing.T) {
+	t.Parallel()
 	text := strings.Repeat("x", contract.MaxLineBytes+readBufferBytes+1)
 	line := logLine(baseTime, text)
 	got, err := readAll(t, strings.NewReader(line+logLine(baseTime, "next")))
@@ -83,6 +85,7 @@ func TestLineReaderOversized(t *testing.T) {
 // TestLineReaderBrokenStream proves a stream that breaks mid-line returns
 // its error, not the cut line.
 func TestLineReaderBrokenStream(t *testing.T) {
+	t.Parallel()
 	broken := errors.New("connection reset")
 	stream := io.MultiReader(strings.NewReader(logLine(baseTime, "whole")+"2026-10-25T10:00:00Z cut"), errReader{broken})
 	got, err := readAll(t, stream)
@@ -92,6 +95,7 @@ func TestLineReaderBrokenStream(t *testing.T) {
 }
 
 func TestCutTimestamp(t *testing.T) {
+	t.Parallel()
 	cases := map[string]bool{
 		"2026-10-25T10:00:00Z text":           true,
 		"2026-10-25T10:00:00.5+02:00 text":    true,

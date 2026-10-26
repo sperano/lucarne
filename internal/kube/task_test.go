@@ -9,6 +9,7 @@ import (
 )
 
 func TestTaskRunner(t *testing.T) {
+	t.Parallel()
 	cases := map[string]struct {
 		worker, deprecated string
 		want               contract.RunnerKind
@@ -21,6 +22,7 @@ func TestTaskRunner(t *testing.T) {
 	}
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			obj := newTask(testNamespace, taskName, taskUID, taskRunning, tc.worker)
 			if err := unstructured.SetNestedField(obj.Object, tc.deprecated, "spec", "type"); err != nil {
 				t.Fatal(err)
@@ -37,6 +39,7 @@ func TestTaskRunner(t *testing.T) {
 }
 
 func TestTaskPhase(t *testing.T) {
+	t.Parallel()
 	cases := map[string]contract.RunPhase{
 		taskPending: contract.PhasePending, taskWaiting: contract.PhaseWaiting, taskRunning: contract.PhaseRunning,
 		taskSucceeded: contract.PhaseSucceeded, taskFailed: contract.PhaseFailed, "": contract.PhaseUnknown, "Paused": contract.PhaseUnknown,
@@ -55,6 +58,7 @@ func TestTaskPhase(t *testing.T) {
 // TestTaskJobName proves a Task whose status names no Job yet is looked up
 // under its own name, as Kelos names the Job.
 func TestTaskJobName(t *testing.T) {
+	t.Parallel()
 	obj := newTask(testNamespace, taskName, taskUID, taskPending, "codex")
 	unstructured.RemoveNestedField(obj.Object, "status", "jobName")
 	task, err := decodeTask(obj)

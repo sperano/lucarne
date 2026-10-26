@@ -24,6 +24,7 @@ func tailOf(t *testing.T, stream string) *tail {
 // TestTailKeepsLastSecond proves the tail holds the lines of the last line's
 // second only, which a read since that second returns.
 func TestTailKeepsLastSecond(t *testing.T) {
+	t.Parallel()
 	second := baseTime.Add(time.Second)
 	tl := tailOf(t, logLine(baseTime, "a")+logLine(second, "b")+logLine(second.Add(time.Millisecond), "c"))
 	if len(tl.sums) != 2 || !tl.since.Equal(second) || !tl.last.Equal(second.Add(time.Millisecond)) {
@@ -32,6 +33,7 @@ func TestTailKeepsLastSecond(t *testing.T) {
 }
 
 func TestTailBounded(t *testing.T) {
+	t.Parallel()
 	var tl tail
 	for _, l := range parsed(t, lines(baseTime, 0, maxOverlapLines+10)) {
 		l.time = &baseTime
@@ -58,6 +60,7 @@ func steps(t *testing.T, tl *tail, stream string) []overlapStep {
 }
 
 func TestResume(t *testing.T) {
+	t.Parallel()
 	at := baseTime.Add(500 * time.Millisecond)
 	// Two identical lines, the tail; the line before is in the second before.
 	tl := tailOf(t, logLine(baseTime.Add(-time.Millisecond), "before")+logLine(at, "same")+logLine(at, "same"))
@@ -75,6 +78,7 @@ func TestResume(t *testing.T) {
 	}
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			got := steps(t, tl, tc.stream)
 			if len(got) != len(tc.want) {
 				t.Fatalf("steps = %v, want %v", got, tc.want)

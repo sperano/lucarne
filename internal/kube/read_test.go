@@ -48,6 +48,7 @@ func (c *cluster) read(t *testing.T, run Run, key contract.AttemptKey, opts Read
 // numbers count blank lines, timestamps become LogTime, and the origin is
 // the first line as the API returned it.
 func TestReadSnapshotTerminated(t *testing.T) {
+	t.Parallel()
 	c, run := readCluster(t, newPod(podName, podUID, jobUID, 0, corev1.PodSucceeded, terminated(0)))
 	first := logLine(baseTime, `{"type":"system"}`)
 	c.logs.responses = []logResponse{{text: first + logLine(baseTime, "") + strings.TrimSuffix(logLine(baseTime, "last"), "\n")}}
@@ -75,6 +76,7 @@ func TestReadSnapshotTerminated(t *testing.T) {
 // TestReadSnapshotRunning reads a running container's log as it is: the
 // line it is still writing is left for the next read.
 func TestReadSnapshotRunning(t *testing.T) {
+	t.Parallel()
 	c, run := readCluster(t, newPod(podName, podUID, jobUID, 0, corev1.PodRunning, running()))
 	c.logs.responses = []logResponse{{text: logLine(baseTime, "one") + "2026-10-25T10:00:01Z half"}}
 	got, res := c.read(t, run, agentKey, ReadOptions{})
@@ -84,6 +86,7 @@ func TestReadSnapshotRunning(t *testing.T) {
 }
 
 func TestReadPending(t *testing.T) {
+	t.Parallel()
 	c, run := readCluster(t, newPod(podName, podUID, jobUID, 0, corev1.PodPending, waiting("PodInitializing")))
 	_, res := c.read(t, run, agentKey, ReadOptions{})
 	if res.End != EndPending || res.Coverage().State != contract.CoveragePending || len(c.logs.opened()) != 0 {
@@ -95,6 +98,7 @@ func TestReadPending(t *testing.T) {
 // the stream breaks and resumes without a gap or a repeated line, then the
 // container terminates and the rest of its log is read.
 func TestReadFollowWaitsAndResumes(t *testing.T) {
+	t.Parallel()
 	pending := newPod(podName, podUID, jobUID, 0, corev1.PodPending, waiting("ContainerCreating"))
 	started := newPod(podName, podUID, jobUID, 0, corev1.PodRunning, running())
 	done := newPod(podName, podUID, jobUID, 0, corev1.PodSucceeded, terminated(0))
@@ -127,6 +131,7 @@ func TestReadFollowWaitsAndResumes(t *testing.T) {
 // TestReadReconnectLosesLines proves a reconnect that cannot find the last
 // lines again reports a gap before the next line instead of guessing.
 func TestReadReconnectLosesLines(t *testing.T) {
+	t.Parallel()
 	c, run := readCluster(t)
 	started := newPod(podName, podUID, jobUID, 0, corev1.PodRunning, running())
 	c.podStates([]*corev1.Pod{started}, []*corev1.Pod{newPod(podName, podUID, jobUID, 0, corev1.PodSucceeded, terminated(0))})
@@ -144,6 +149,7 @@ func TestReadReconnectLosesLines(t *testing.T) {
 // TestReadPodDeletedWhileFollowing proves a pod deleted mid-read ends it as
 // expired, with a gap saying the rest is missing.
 func TestReadPodDeletedWhileFollowing(t *testing.T) {
+	t.Parallel()
 	c, run := readCluster(t)
 	c.podStates([]*corev1.Pod{newPod(podName, podUID, jobUID, 0, corev1.PodRunning, running())}, nil)
 	c.logs.responses = []logResponse{{text: lines(baseTime, 0, 2), err: errors.New("stream closed")}}
@@ -157,6 +163,7 @@ func TestReadPodDeletedWhileFollowing(t *testing.T) {
 // TestReadTaskReplaced proves a read checks the Task again: once its name
 // holds another Task, the attempt is expired and no log is opened.
 func TestReadTaskReplaced(t *testing.T) {
+	t.Parallel()
 	c, run := readCluster(t, newPod(podName, podUID, jobUID, 0, corev1.PodRunning, running()))
 	replaced := newTask(testNamespace, taskName, reusedUID, taskPending, "claude-code")
 	if _, err := c.dyn.Resource(TaskResource).Namespace(testNamespace).Update(context.Background(), replaced, metav1.UpdateOptions{}); err != nil {
@@ -172,6 +179,7 @@ func TestReadTaskReplaced(t *testing.T) {
 // TestReadForeignPod proves an attempt key naming a pod that is not the
 // run's, even in the same namespace, never opens its log.
 func TestReadForeignPod(t *testing.T) {
+	t.Parallel()
 	foreign := newPod(retryPodName, retryPodUID, reusedUID, 0, corev1.PodRunning, running())
 	c, run := readCluster(t, newPod(podName, podUID, jobUID, 0, corev1.PodRunning, running()), foreign)
 	key := contract.AttemptKey{PodUID: retryPodUID, Container: AgentContainer}
@@ -182,6 +190,7 @@ func TestReadForeignPod(t *testing.T) {
 }
 
 func TestReadAttemptNotFound(t *testing.T) {
+	t.Parallel()
 	status := running()
 	status.RestartCount = 1
 	c, run := readCluster(t, newPod(podName, podUID, jobUID, 0, corev1.PodRunning, status))
@@ -190,6 +199,7 @@ func TestReadAttemptNotFound(t *testing.T) {
 		"future restart":  {PodUID: podUID, Container: AgentContainer, Restart: 2},
 		"invalid pod UID": {PodUID: "Pod", Container: AgentContainer},
 	}
+	// Serial: the check after the loop counts the calls of every subtest.
 	for name, key := range keys {
 		t.Run(name, func(t *testing.T) {
 			_, err := c.src.ReadLog(context.Background(), run, key, ReadOptions{}, &sink{})
@@ -206,6 +216,7 @@ func TestReadAttemptNotFound(t *testing.T) {
 // TestReadRestarts proves the previous instance is read with Previous and
 // an older one is expired without a read.
 func TestReadRestarts(t *testing.T) {
+	t.Parallel()
 	status := running()
 	status.RestartCount = 2
 	status.LastTerminationState = terminatedState(1)
@@ -226,6 +237,7 @@ func TestReadRestarts(t *testing.T) {
 // that exited is read with Previous, which names it whatever the kubelet
 // restarts meanwhile, and the one before it is expired without a read.
 func TestReadBackOff(t *testing.T) {
+	t.Parallel()
 	const restarts = 2
 	c, run := readCluster(t, newPod(podName, podUID, jobUID, 0, corev1.PodRunning, crashLooping(restarts, 1)))
 	c.logs.responses = []logResponse{{text: lines(baseTime, 0, 1)}}
@@ -241,6 +253,7 @@ func TestReadBackOff(t *testing.T) {
 }
 
 func TestReadNeverStarted(t *testing.T) {
+	t.Parallel()
 	c, run := readCluster(t, newPod(podName, podUID, jobUID, 0, corev1.PodFailed, waiting("PodInitializing")))
 	_, res := c.read(t, run, agentKey, ReadOptions{Follow: true})
 	if res.End != EndExpired || res.Reason != ReasonNeverStarted {
@@ -249,6 +262,7 @@ func TestReadNeverStarted(t *testing.T) {
 }
 
 func TestReadUnavailable(t *testing.T) {
+	t.Parallel()
 	forbidden := apierrors.NewForbidden(schema.GroupResource{Resource: "pods/log"}, podName, errors.New("no"))
 	cases := map[string]struct {
 		err    error
@@ -260,6 +274,7 @@ func TestReadUnavailable(t *testing.T) {
 	}
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			c, run := readCluster(t, newPod(podName, podUID, jobUID, 0, corev1.PodRunning, running()))
 			c.logs.responses = []logResponse{{open: true, err: tc.err}}
 			_, res := c.read(t, run, agentKey, ReadOptions{Follow: true})
@@ -273,6 +288,7 @@ func TestReadUnavailable(t *testing.T) {
 // TestReadPodReplacedAtOpen proves a pod whose name holds another pod when
 // its log opened is checked again, and the stream it opened is not read.
 func TestReadPodReplacedAtOpen(t *testing.T) {
+	t.Parallel()
 	c, run := readCluster(t)
 	pod := newPod(podName, podUID, jobUID, 0, corev1.PodSucceeded, terminated(0))
 	impostor := newPod(podName, retryPodUID, jobUID, 0, corev1.PodRunning, running())
@@ -291,6 +307,7 @@ func TestReadPodReplacedAtOpen(t *testing.T) {
 }
 
 func TestReadOversizedLine(t *testing.T) {
+	t.Parallel()
 	c, run := readCluster(t, newPod(podName, podUID, jobUID, 0, corev1.PodSucceeded, terminated(0)))
 	long := strings.Repeat("x", contract.MaxLineBytes+1)
 	c.logs.responses = []logResponse{{text: logLine(baseTime, long) + logLine(baseTime, "short")}}
@@ -304,6 +321,7 @@ func TestReadOversizedLine(t *testing.T) {
 }
 
 func TestReadKnownOrigin(t *testing.T) {
+	t.Parallel()
 	c, run := readCluster(t, newPod(podName, podUID, jobUID, 0, corev1.PodSucceeded, terminated(0)))
 	c.logs.responses = []logResponse{{text: lines(baseTime, 0, 2)}}
 	_, first := c.read(t, run, agentKey, ReadOptions{})
@@ -320,6 +338,7 @@ func TestReadKnownOrigin(t *testing.T) {
 }
 
 func TestReadCanceled(t *testing.T) {
+	t.Parallel()
 	c, run := readCluster(t, newPod(podName, podUID, jobUID, 0, corev1.PodRunning, running()))
 	ctx, cancel := context.WithCancel(context.Background())
 	c.logs.responses = []logResponse{{text: lines(baseTime, 0, 1), err: context.Canceled}}
@@ -333,6 +352,7 @@ func TestReadCanceled(t *testing.T) {
 // TestReadSinkError proves the sink's error stops the read at the line
 // it refused.
 func TestReadSinkError(t *testing.T) {
+	t.Parallel()
 	c, run := readCluster(t, newPod(podName, podUID, jobUID, 0, corev1.PodSucceeded, terminated(0)))
 	c.logs.responses = []logResponse{{text: lines(baseTime, 0, 3)}}
 	full := errors.New("store full")
@@ -345,6 +365,7 @@ func TestReadSinkError(t *testing.T) {
 // TestReadInputLimit proves a log past contract.MaxAttemptLogBytes stops
 // with an input_limit gap after the last line that fits.
 func TestReadInputLimit(t *testing.T) {
+	t.Parallel()
 	if testing.Short() {
 		t.Skip("reads more than contract.MaxAttemptLogBytes")
 	}
@@ -364,6 +385,7 @@ func TestReadInputLimit(t *testing.T) {
 // TestReadNoResume proves a follow that broke after a line without a
 // timestamp says lines may be missing rather than resume blindly.
 func TestReadNoResume(t *testing.T) {
+	t.Parallel()
 	c, run := readCluster(t, newPod(podName, podUID, jobUID, 0, corev1.PodRunning, running()))
 	c.logs.responses = []logResponse{{text: "no prefix\n", err: errors.New("connection reset")}}
 	got, res := c.read(t, run, agentKey, ReadOptions{Follow: true})
@@ -376,6 +398,7 @@ func TestReadNoResume(t *testing.T) {
 // TestReadCheckFails proves a check of the chain that fails ends the read
 // as unavailable: at once when forbidden, after maxFailures otherwise.
 func TestReadCheckFails(t *testing.T) {
+	t.Parallel()
 	cases := map[string]struct {
 		err    error
 		lists  int
@@ -386,6 +409,7 @@ func TestReadCheckFails(t *testing.T) {
 	}
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			c, run := readCluster(t, newPod(podName, podUID, jobUID, 0, corev1.PodRunning, running()))
 			lists := 0
 			c.kube.PrependReactor("list", "pods", func(k8stesting.Action) (bool, runtime.Object, error) {
@@ -401,6 +425,7 @@ func TestReadCheckFails(t *testing.T) {
 }
 
 func TestWaitCanceled(t *testing.T) {
+	t.Parallel()
 	c, _ := readCluster(t)
 	c.src.retryDelay = time.Hour
 	ctx, cancel := context.WithCancel(context.Background())

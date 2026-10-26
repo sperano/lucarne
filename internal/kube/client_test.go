@@ -15,6 +15,7 @@ import (
 // TestPodLogsStream proves the production streamer only gets the pods/log
 // subresource, with the options it was given.
 func TestPodLogsStream(t *testing.T) {
+	t.Parallel()
 	kube := kubefake.NewClientset()
 	opts := &corev1.PodLogOptions{Container: AgentContainer, Timestamps: true}
 	body, err := PodLogs{Kube: kube}.Stream(context.Background(), testNamespace, podName, opts)
