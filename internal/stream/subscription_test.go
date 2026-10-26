@@ -219,3 +219,26 @@ func TestRetainedEventsAreBounded(t *testing.T) {
 		})
 	}
 }
+
+func TestStoppedRunEndsALateSubscription(t *testing.T) {
+	t.Parallel()
+	src, _ := live(t)
+	h := newHub(t, src)
+	snap := snapshotOf(t, h)
+	r := h.followed(streamtest.Key)
+	// The run is stopped between acquire and subscribe.
+	r.stop()
+	sub := r.subscribe(cursorOf(snap))
+	t.Cleanup(sub.Close)
+	select {
+	case <-sub.Done():
+	default:
+		t.Fatal("a subscription to a stopped run stays open")
+	}
+	if sub.Err() != nil {
+		t.Errorf("reset %s, want the stream ended without one", sub.Err().Data)
+	}
+	if n := r.subscribers(); n != 0 {
+		t.Errorf("%d subscribers, want none", n)
+	}
+}

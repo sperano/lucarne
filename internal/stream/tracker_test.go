@@ -42,6 +42,10 @@ func TestFinishedRunEndsItsStream(t *testing.T) {
 	if again := subscribe(t, h, sub.Replay[0].ID); !again.Finished {
 		t.Errorf("a cursor at the end resumed: %+v", again)
 	}
+	after := Cursor{Epoch: snap.Stream.Epoch, Seq: snap.Stream.LastSeq + 2}.String()
+	if again := subscribe(t, h, after); !again.Finished {
+		t.Errorf("a cursor after the end resumed: %+v", again)
+	}
 }
 
 func TestRetryKeepsTheStreamOpen(t *testing.T) {

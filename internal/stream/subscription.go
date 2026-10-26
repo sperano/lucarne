@@ -62,10 +62,11 @@ func (r *run) subscribe(text string) *Subscription {
 		return &Subscription{Reset: r.resetLocked(contract.ResetBadCursor)}
 	case cursor.Epoch != r.epoch:
 		return &Subscription{Reset: r.resetLocked(contract.ResetEpochChanged)}
+	case r.ended != nil && cursor.Seq >= r.ended.seq:
+		// Nothing follows the end, so a cursor after it is finished too.
+		return &Subscription{Finished: true}
 	case cursor.Seq > r.seq:
 		return &Subscription{Reset: r.resetLocked(contract.ResetBadCursor)}
-	case r.ended != nil && cursor.Seq >= r.ended.seq:
-		return &Subscription{Finished: true}
 	}
 	updates, ok := r.replay.after(cursor.Seq, r.seq)
 	if !ok {
@@ -78,8 +79,10 @@ func (r *run) subscribe(text string) *Subscription {
 		updates: make(chan *Update, r.cfg.Bounds.ClientQueue),
 		stop:    make(chan struct{}),
 	}
-	if r.ended != nil {
-		// The replay holds the end: nothing will follow it.
+	if r.ended != nil || r.ctx.Err() != nil {
+		// The replay holds the end, or the run is stopped: nothing will
+		// follow, and the client of a stopped run reconnects to another
+		// epoch.
 		close(s.stop)
 		return s
 	}
