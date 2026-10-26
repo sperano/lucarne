@@ -30,6 +30,10 @@ export default defineConfig({
   build: {
     outDir,
     emptyOutDir: true,
+    // dist/.vite/license.md: the licenses of the dependencies in the bundle,
+    // which the image ships under /licenses. The server serves only
+    // index.html and assets/, so not this file.
+    license: true,
     rolldownOptions: { input: resolve(import.meta.dirname, 'index.html') },
   },
   server: {

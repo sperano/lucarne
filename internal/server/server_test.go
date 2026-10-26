@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"testing/fstest"
 	"unicode/utf8"
@@ -57,6 +58,27 @@ func TestHealth(t *testing.T) {
 	res := get(t, newTestServer(builtAssets()), "/healthz")
 	if res.StatusCode != http.StatusOK || body(t, res) != "ok\n" {
 		t.Errorf("GET /healthz = %d", res.StatusCode)
+	}
+}
+
+func TestReadiness(t *testing.T) {
+	t.Parallel()
+	if res := get(t, newTestServer(builtAssets()), "/readyz"); res.StatusCode != http.StatusOK || body(t, res) != "ready\n" {
+		t.Errorf("GET /readyz = %d, want 200 by default", res.StatusCode)
+	}
+	var ready atomic.Bool
+	ready.Store(true)
+	h := New(builtAssets(), Options{Logger: slog.New(slog.DiscardHandler), Ready: ready.Load})
+	if res := get(t, h, "/readyz"); res.StatusCode != http.StatusOK {
+		t.Errorf("GET /readyz = %d while ready", res.StatusCode)
+	}
+	ready.Store(false)
+	res := get(t, h, "/readyz")
+	if res.StatusCode != http.StatusServiceUnavailable || res.Header.Get("Cache-Control") != "no-store" {
+		t.Errorf("GET /readyz = %d, Cache-Control %q while draining", res.StatusCode, res.Header.Get("Cache-Control"))
+	}
+	if res := get(t, h, "/healthz"); res.StatusCode != http.StatusOK {
+		t.Errorf("GET /healthz = %d while draining: the server is alive", res.StatusCode)
 	}
 }
 

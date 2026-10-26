@@ -52,6 +52,8 @@ type Config struct {
 	Cluster string
 	// Namespaces is the allowlist: no other namespace is ever read.
 	Namespaces []string
+	// RetryDelay is the wait before a follow retries; zero means 2s.
+	RetryDelay time.Duration
 }
 
 // Clients are the Kubernetes clients the source reads with: Dynamic for
@@ -88,7 +90,11 @@ func New(cfg Config, clients Clients) (*Source, error) {
 	if clients.Dynamic == nil || clients.Kube == nil || clients.Logs == nil {
 		return nil, errors.New("kube: a client is missing")
 	}
-	return &Source{cluster: cfg.Cluster, namespaces: namespaces, clients: clients, retryDelay: defaultRetryDelay}, nil
+	retryDelay := cfg.RetryDelay
+	if retryDelay <= 0 {
+		retryDelay = defaultRetryDelay
+	}
+	return &Source{cluster: cfg.Cluster, namespaces: namespaces, clients: clients, retryDelay: retryDelay}, nil
 }
 
 // zeroUID is a valid UID, used to validate a configured cluster and
