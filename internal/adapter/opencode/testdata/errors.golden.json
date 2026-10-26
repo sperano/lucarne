@@ -1,0 +1,67 @@
+[
+  {
+    "seq": 1,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0:e135ab1949e3a269:1:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0",
+    "kind": "lifecycle",
+    "source": {
+      "line": 1,
+      "part": 0,
+      "type": "step_start",
+      "runnerTime": "2026-10-25T08:00:00.1Z"
+    },
+    "lifecycle": {
+      "phase": "step_started",
+      "sessionId": "ses_01ExampleSession"
+    }
+  },
+  {
+    "seq": 2,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0:e135ab1949e3a269:2:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0",
+    "kind": "error",
+    "source": {
+      "line": 2,
+      "part": 0,
+      "type": "error",
+      "runnerTime": "2026-10-25T08:00:30Z"
+    },
+    "error": {
+      "message": "Overloaded",
+      "code": "APIError",
+      "status": 529
+    }
+  },
+  {
+    "seq": 3,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0:e135ab1949e3a269:3:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0",
+    "kind": "error",
+    "source": {
+      "line": 3,
+      "part": 0,
+      "type": "error",
+      "runnerTime": "2026-10-25T08:00:31Z"
+    },
+    "error": {
+      "message": "example: invalid credentials",
+      "code": "ProviderAuthError"
+    }
+  },
+  {
+    "seq": 4,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0:e135ab1949e3a269:4:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.opencode.0",
+    "kind": "error",
+    "source": {
+      "line": 4,
+      "part": 0,
+      "type": "error",
+      "runnerTime": "2026-10-25T08:00:32Z"
+    },
+    "error": {
+      "message": "example: unknown failure",
+      "code": "UnknownError"
+    }
+  }
+]

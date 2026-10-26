@@ -69,6 +69,8 @@ export const LIFECYCLE_PHASES = [
   'setup_completed',
   'setup_failed',
   'session_started',
+  'step_started',
+  'step_completed',
   'turn_started',
   'turn_completed',
   'turn_failed',

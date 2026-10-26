@@ -82,7 +82,7 @@ func TestErrorRetries(t *testing.T) {
 		{"Reconnecting... 0/5 (example)", 0, nil},
 		{"Reconnecting... waiting for network (example)", 0, nil},
 		{"Reconnecting... 2/5x", 0, nil},
-		{"Reconnecting... 999999/999999 (example)", maxRetryCount, ptr(maxRetryCount)},
+		{"Reconnecting... 999999/999999 (example)", adapter.MaxRetryCount, ptr(adapter.MaxRetryCount)},
 		{"Reconnecting... 1000000/5 (example)", 0, nil},
 		{"unexpected status 401 Unauthorized", 0, nil},
 	}

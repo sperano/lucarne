@@ -1,20 +1,13 @@
 package claude
 
 import (
-	"bytes"
-	"encoding/json"
 	"flag"
-	"os"
-	"path"
-	"path/filepath"
-	"regexp"
 	"strings"
 	"testing"
 
 	"github.com/sperano/lucarne/contract"
-	"github.com/sperano/lucarne/fixtures"
 	"github.com/sperano/lucarne/internal/adapter"
-	"github.com/sperano/lucarne/internal/privacy"
+	"github.com/sperano/lucarne/internal/adapter/adaptertest"
 )
 
 var update = flag.Bool("update", false, "rewrite the golden files from the adapter's output")
@@ -29,153 +22,23 @@ const runnerName = "claude-code"
 // events as a stream would and checks each against the schema.
 func normalize(t *testing.T, lines ...string) []contract.Event {
 	t.Helper()
-	var first []byte
-	if len(lines) > 0 {
-		first = []byte(lines[0])
-	}
-	n := adapter.New(testAttempt, contract.LogOrigin(first), New())
-	var events []contract.Event
-	for i, line := range lines {
-		events = append(events, n.Line(adapter.Line{Number: int64(i + 1), Text: []byte(line), Bytes: int64(len(line))})...)
-	}
-	events = append(events, n.End()...)
-	for i := range events {
-		events[i].Seq = int64(i + 1)
-	}
-	validate(t, events)
-	return events
+	return adaptertest.Normalize(t, testAttempt, New(), lines...)
 }
 
-// validate checks every event against the schema and that no two share
-// an ID.
-func validate(t *testing.T, events []contract.Event) {
-	t.Helper()
-	ids := map[string]bool{}
-	for _, ev := range events {
-		data, err := json.Marshal(ev)
-		if err != nil {
-			t.Fatalf("marshal %s: %v", ev.ID, err)
-		}
-		if err := contract.Validate(contract.DefEvent, data); err != nil {
-			t.Errorf("event %s: %v\n%s", ev.ID, err, data)
-		}
-		if ids[ev.ID] {
-			t.Errorf("event ID %s is not unique", ev.ID)
-		}
-		ids[ev.ID] = true
-	}
-}
-
-// only returns the single event of kind, failing otherwise.
 func only(t *testing.T, events []contract.Event, kind contract.EventKind) contract.Event {
 	t.Helper()
-	found := ofKind(events, kind)
-	if len(found) != 1 {
-		t.Fatalf("got %d %s events, want 1: %s", len(found), kind, dump(events))
-	}
-	return found[0]
+	return adaptertest.Only(t, events, kind)
 }
 
 func ofKind(events []contract.Event, kind contract.EventKind) []contract.Event {
-	var found []contract.Event
-	for _, ev := range events {
-		if ev.Kind == kind {
-			found = append(found, ev)
-		}
-	}
-	return found
+	return adaptertest.OfKind(events, kind)
 }
 
-func dump(events []contract.Event) string {
-	data, _ := json.MarshalIndent(events, "", "  ")
-	return string(data)
-}
-
-func claudeFixtures(t *testing.T) []fixtures.Fixture {
-	t.Helper()
-	m, err := fixtures.LoadManifest()
-	if err != nil {
-		t.Fatal(err)
-	}
-	var found []fixtures.Fixture
-	for _, f := range m.Fixtures {
-		if f.Runner == runnerName {
-			found = append(found, f)
-		}
-	}
-	if len(found) == 0 {
-		t.Fatal("the manifest lists no Claude Code fixture")
-	}
-	return found
-}
-
-func fixtureLines(t *testing.T, file string) []string {
-	t.Helper()
-	data, err := fixtures.Read(file)
-	if err != nil {
-		t.Fatal(err)
-	}
-	return strings.Split(strings.TrimSuffix(string(data), "\n"), "\n")
-}
+func dump(events []contract.Event) string { return adaptertest.Dump(events) }
 
 func TestFixturesMatchGolden(t *testing.T) {
 	t.Parallel()
-	for _, f := range claudeFixtures(t) {
-		t.Run(f.File, func(t *testing.T) {
-			t.Parallel()
-			lines := fixtureLines(t, f.File)
-			events := normalize(t, lines...)
-			checkEveryLineShown(t, lines, events)
-			got, err := json.MarshalIndent(events, "", "  ")
-			if err != nil {
-				t.Fatal(err)
-			}
-			got = append(got, '\n')
-			for _, finding := range privacy.Scan(string(got)) {
-				t.Errorf("golden output: %v", finding)
-			}
-			golden := filepath.Join("testdata", strings.TrimSuffix(path.Base(f.File), ".log")+".golden.json")
-			if *update {
-				if err := os.WriteFile(golden, got, 0o644); err != nil {
-					t.Fatal(err)
-				}
-			}
-			want, err := os.ReadFile(golden)
-			if err != nil {
-				t.Fatalf("%v (run go test -update to create it)", err)
-			}
-			if !bytes.Equal(got, want) {
-				t.Errorf("output differs from %s (go test -update rewrites it):\n%s", golden, got)
-			}
-		})
-	}
-}
-
-// outputsLine matches the lines of a Kelos outputs block after its start.
-var outputsLine = regexp.MustCompile(`^([a-z][a-z0-9-]*:( .*)?|---KELOS_OUTPUTS_END---)$`)
-
-// checkEveryLineShown fails when a line that is not blank produced no
-// event, unless it belongs to an outputs block shown as its start line's
-// event.
-func checkEveryLineShown(t *testing.T, lines []string, events []contract.Event) {
-	t.Helper()
-	shown := map[int64]contract.Event{}
-	for _, ev := range events {
-		shown[ev.Source.Line] = ev
-	}
-	inBlock := false
-	for i, line := range lines {
-		number := int64(i + 1)
-		ev, ok := shown[number]
-		switch {
-		case ok:
-			inBlock = ev.Kind == contract.KindLifecycle && ev.Lifecycle.Phase == contract.LifecycleKelosOutputs
-		case line == "":
-		case inBlock && outputsLine.MatchString(line):
-		default:
-			t.Errorf("line %d produced no event: %q", number, line)
-		}
-	}
+	adaptertest.MatchGolden(t, testAttempt, runnerName, func() adapter.Runner { return New() }, *update)
 }
 
 func TestLineTypesAndRawReasons(t *testing.T) {
@@ -264,22 +127,7 @@ func TestRunnerTimeIsTheLineTimestamp(t *testing.T) {
 }
 
 func FuzzLine(f *testing.F) {
-	m, err := fixtures.LoadManifest()
-	if err != nil {
-		f.Fatal(err)
-	}
-	for _, fx := range m.Fixtures {
-		if fx.Runner != runnerName {
-			continue
-		}
-		data, err := fixtures.Read(fx.File)
-		if err != nil {
-			f.Fatal(err)
-		}
-		for line := range strings.SplitSeq(string(data), "\n") {
-			f.Add(line)
-		}
-	}
+	adaptertest.FuzzSeeds(f, runnerName)
 	f.Fuzz(func(t *testing.T, line string) {
 		events := normalize(t, line, line)
 		if line != "" && len(events) == 0 {

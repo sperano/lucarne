@@ -203,6 +203,8 @@ const (
 	LifecycleSetupCompleted   LifecyclePhase = "setup_completed"
 	LifecycleSetupFailed      LifecyclePhase = "setup_failed"
 	LifecycleSessionStarted   LifecyclePhase = "session_started"
+	LifecycleStepStarted      LifecyclePhase = "step_started"
+	LifecycleStepCompleted    LifecyclePhase = "step_completed"
 	LifecycleTurnStarted      LifecyclePhase = "turn_started"
 	LifecycleTurnCompleted    LifecyclePhase = "turn_completed"
 	LifecycleTurnFailed       LifecyclePhase = "turn_failed"

@@ -119,7 +119,8 @@ supersedes the earlier.
 
 Lifecycle phases: `setup_started`, `setup_completed`, `setup_failed`
 (`exitCode`) for the Kelos setup markers on stderr; `session_started`,
-`turn_started`, `turn_completed`, `turn_failed`, `compacted`,
+`step_started`, `step_completed` (`stopReason`; one model call, as OpenCode
+bounds them), `turn_started`, `turn_completed`, `turn_failed`, `compacted`,
 `session_completed` (`subtype`, `isError`, `stopReason`) from the runner;
 `limit_hit` for the `---KELOS_LIMIT_HIT---` line; `kelos_outputs` for the
 `---KELOS_OUTPUTS_START---` block, one `outputs` entry per `key: value`
