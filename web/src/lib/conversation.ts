@@ -34,6 +34,8 @@ export interface EventItem {
 export type Item = ToolItem | EventItem;
 
 export interface Conversation {
+  /** The attempt's events in the order they came, each once: what the inspector lists. */
+  readonly events: readonly TranscriptEvent[];
   readonly items: readonly Item[];
   /** The index in items of the item that shows each event ID. */
   readonly itemOf: ReadonlyMap<string, number>;
@@ -53,6 +55,7 @@ export function buildConversation(
 
 /** Builds one attempt's conversation an event at a time. */
 export class ConversationBuilder {
+  private readonly events: TranscriptEvent[] = [];
   private readonly items: Item[] = [];
   private readonly itemOf = new Map<string, number>();
   private readonly calls = new Map<string, ToolItem>();
@@ -61,6 +64,7 @@ export class ConversationBuilder {
   /** Adds the next event of the attempt. */
   add(event: TranscriptEvent): void {
     this.current = undefined;
+    this.events.push(event);
     switch (event.kind) {
       case 'tool_call':
         this.addCall(event);
@@ -86,6 +90,7 @@ export class ConversationBuilder {
   /** The conversation so far; the same object until the next add. */
   view(): Conversation {
     this.current ??= {
+      events: this.events.slice(),
       items: this.items.slice(),
       itemOf: new Map(this.itemOf),
       calls: new Map(this.calls),

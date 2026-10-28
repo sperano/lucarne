@@ -90,6 +90,16 @@ describe('buildConversation', () => {
     expect(c.items).toHaveLength(2);
   });
 
+  it('keeps every event of the attempt in order, grouped or not', () => {
+    const events = [call('c1'), result('c1'), edit('c1'), result('c1')];
+    const c = buildConversation(
+      [...events, other({ kind: 'gap', gap: { reason: 'input_limit' } })],
+      ATTEMPT,
+    );
+    expect(c.events).toEqual(events);
+    expect(c.items).toHaveLength(2);
+  });
+
   it.each(FIXTURE_RUNS.map((f) => [`${f.runner}/${f.scenario}`, f] as const))(
     'shows every event of %s',
     (_name, fixture) => {

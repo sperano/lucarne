@@ -33,6 +33,7 @@
   --font-code: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --radius: 6px;
   --column: 64rem;
+  --wide: 120rem;
 
   color-scheme: light dark;
 }

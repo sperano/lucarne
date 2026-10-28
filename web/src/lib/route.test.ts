@@ -91,4 +91,16 @@ describe('runHref', () => {
     const url = new URL(href, 'https://lucarne.example.com');
     expect(parseRoute(url.pathname, url.search, '')).toMatchObject({ page: 'run', attempt });
   });
+
+  it('adds an event as the #event= fragment parseRoute reads back', () => {
+    const event = '7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0:e3b0c44298fc1c14:2:0';
+    const href = runHref(KEY, { view: 'inspector', event });
+    expect(href).toBe(`${RUN_PATH}?view=inspector#event=${event}`);
+    const url = new URL(href, 'https://lucarne.example.com');
+    expect(parseRoute(url.pathname, url.search, url.hash)).toMatchObject({
+      page: 'run',
+      view: 'inspector',
+      event,
+    });
+  });
 });

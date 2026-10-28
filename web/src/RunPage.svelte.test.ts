@@ -54,6 +54,8 @@ function show(
 }
 
 const alert = (root: HTMLElement) => root.querySelector('[role=alert]')?.textContent ?? '';
+const current = (root: HTMLElement) =>
+  root.querySelector('nav[aria-label=View] [aria-current=page]')?.textContent;
 const status = (root: HTMLElement) => root.querySelector('.stream')?.textContent ?? '';
 // The text of each message shown, without its role line.
 const messageTexts = (root: HTMLElement) =>
@@ -82,10 +84,61 @@ describe('RunPage loading', () => {
     await expect.poll(() => alert(root)).toContain('not known');
   });
 
-  it('does not build an inspector yet', () => {
-    const { root, server } = show([], { view: 'inspector' });
-    expect(root.querySelector('a')?.getAttribute('href')).toBe(runHref(FIXTURE_KEY));
-    expect(server.requests()).toBe(0);
+  it('opens the conversation by default and the inspector from its link', async () => {
+    const { snapshot } = findFixture('claude-code', 'session-basic');
+    const conversation = show([snapshot]);
+    await expect.poll(() => conversation.root.querySelector('.transcript')).not.toBeNull();
+    expect(current(conversation.root)).toBe('Conversation');
+    const inspector = show([snapshot], { view: 'inspector' });
+    await expect.poll(() => inspector.root.querySelector('[role=listbox]')).not.toBeNull();
+    expect(current(inspector.root)).toBe('Inspector');
+    expect(inspector.root.querySelectorAll('[role=option]')).toHaveLength(snapshot.events.length);
+  });
+});
+
+describe('RunPage view switch', () => {
+  const { snapshot } = findFixture('claude-code', 'tool-failures');
+  const failure = snapshot.events.find(
+    (e) => e.kind === 'tool_result' && e.toolResult.status === 'error',
+  );
+  if (!failure) throw new Error('no failed result');
+  const viewLink = (root: HTMLElement, name: string) => {
+    const link = [...root.querySelectorAll<HTMLAnchorElement>('nav[aria-label=View] a')].find(
+      (a) => a.textContent === name,
+    );
+    if (!link) throw new Error(`no ${name} link`);
+    return link;
+  };
+
+  it('keeps the run, its stream and the selected event across views', async () => {
+    const { root, streams, server } = show([runningSnapshot(snapshot, snapshot.events.length)], {
+      event: failure.id,
+    });
+    await expect.poll(() => root.querySelector('.targeted')?.textContent).toContain('error');
+    const inspector = viewLink(root, 'Inspector');
+    expect(inspector.getAttribute('href')).toBe(
+      `${runHref(FIXTURE_KEY, { view: 'inspector' })}#event=${failure.id}`,
+    );
+    await userEvent.click(inspector);
+    expect(location.search).toBe('?view=inspector');
+    expect(location.hash).toBe(`#event=${failure.id}`);
+    const selected = () => root.querySelector('[role=option][aria-selected=true]');
+    expect(selected()?.getAttribute('data-event')).toBe(failure.id);
+    expect(root.querySelector('[aria-label="Event detail"] .tool .status')?.textContent).toBe(
+      'error',
+    );
+
+    await userEvent.keyboard('{ArrowUp}');
+    const before = selected()?.getAttribute('data-event') ?? '';
+    expect(before).not.toBe(failure.id);
+    expect(location.hash).toBe(`#event=${before}`);
+    await userEvent.click(viewLink(root, 'Conversation'));
+    expect(location.search).toBe('');
+    expect(location.hash).toBe(`#event=${before}`);
+    await expect.poll(() => root.querySelector('.targeted')).not.toBeNull();
+    expect(root.querySelector('.targeted')?.id).toBe(`event=${before}`);
+    expect(server.requests()).toBe(1);
+    expect(streams.opened).toHaveLength(1);
   });
 });
 

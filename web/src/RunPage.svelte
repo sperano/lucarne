@@ -1,9 +1,11 @@
 <script lang="ts">
   import Conversation from './conversation/Conversation.svelte';
+  import Inspector from './inspector/Inspector.svelte';
   import type { RunKey } from './lib/contract';
   import { LiveRun, type LivePage, type LoadFailure, type OpenStream } from './lib/live';
   import { runHref, type View } from './lib/route';
   import { signIn, tabStorage, type Place } from './lib/signin';
+  import ViewSwitch from './ViewSwitch.svelte';
 
   let {
     key,
@@ -32,14 +34,15 @@
   const NOT_IMPLEMENTED = 501;
 
   let page: LivePage = $state.raw({ phase: 'loading' });
-  // Starts from the link; the attempt picker changes it and the address with it.
+  // Start from the link; the view switch, the attempt picker and the inspector's selection
+  // change them, and the address with them, without loading the run again.
+  let shownView: View = $derived(view);
   let shownAttempt: string | undefined = $derived(attempt);
   let shownEvent: string | undefined = $derived(event);
   // Whether the page offers to sign in rather than going on its own.
   let signInRefused = $state(false);
 
   $effect(() => {
-    if (view === 'inspector') return;
     const run = new LiveRun({
       key,
       fetcher,
@@ -63,7 +66,22 @@
   function selectAttempt(id: string): void {
     shownAttempt = id;
     shownEvent = undefined;
-    history.replaceState(null, '', runHref(key, { attempt: id, view }));
+    showAddress();
+  }
+
+  function selectEvent(id: string): void {
+    shownEvent = id;
+    showAddress();
+  }
+
+  function switchView(next: View): void {
+    shownView = next;
+    showAddress();
+  }
+
+  function showAddress(): void {
+    const href = runHref(key, { attempt: shownAttempt, view: shownView, event: shownEvent });
+    history.replaceState(null, '', href);
   }
 
   function failureText(failure: LoadFailure): string {
@@ -74,13 +92,14 @@
   }
 </script>
 
-{#if view === 'inspector'}
-  <p class="notice info" role="note">
-    The inspector is not built yet. <a href={runHref(key, { view: 'conversation' })}
-      >Open the conversation</a
-    >.
-  </p>
-{:else if page.phase === 'loading'}
+<ViewSwitch
+  {key}
+  view={shownView}
+  attempt={shownAttempt}
+  event={shownEvent}
+  onswitch={switchView}
+/>
+{#if page.phase === 'loading'}
   <p class="muted" aria-live="polite">Loading the run…</p>
 {:else if page.phase === 'failed'}
   <p class="notice error" role="alert">
@@ -102,6 +121,16 @@
       {failureText(page.failure)}{page.retryInMs === undefined ? '' : '. Trying again shortly.'}
     {/if}
   </p>
+{:else if shownView === 'inspector'}
+  <Inspector
+    view={page.view}
+    connection={page.connection}
+    attempt={shownAttempt}
+    event={shownEvent}
+    onselectattempt={selectAttempt}
+    onselectevent={selectEvent}
+    onsignin={() => startSignIn(true)}
+  />
 {:else}
   <Conversation
     view={page.view}

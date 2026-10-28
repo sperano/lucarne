@@ -54,4 +54,9 @@
   main {
     padding-bottom: 3rem;
   }
+  /* The inspector's three panes need the width of a desktop screen. */
+  .site:has(+ main :global(.inspector)),
+  main:has(:global(.inspector)) {
+    max-width: var(--wide);
+  }
 </style>

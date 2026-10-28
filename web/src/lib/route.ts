@@ -59,13 +59,17 @@ export function runLink(key: RunKey): string {
   return `/${RUNS_PREFIX}/${key.cluster}/${key.namespace}/${key.taskUID}`;
 }
 
-/** A run's link with an attempt and a view; the default view is left out. */
-export function runHref(key: RunKey, options: { attempt?: string; view?: View } = {}): string {
+/** A run's link with an attempt, a view and an event; the default view is left out. */
+export function runHref(
+  key: RunKey,
+  options: { attempt?: string | undefined; view?: View; event?: string | undefined } = {},
+): string {
   const query = new URLSearchParams();
   if (options.attempt !== undefined) query.set('attempt', options.attempt);
   if (options.view !== undefined && options.view !== DEFAULT_VIEW) query.set('view', options.view);
   const search = query.toString();
-  return search === '' ? runLink(key) : `${runLink(key)}?${search}`;
+  const fragment = options.event === undefined ? '' : `${EVENT_FRAGMENT_PREFIX}${options.event}`;
+  return `${runLink(key)}${search === '' ? '' : `?${search}`}${fragment}`;
 }
 
 /** The event ID of a `#event=` fragment, or null for any other fragment. */
