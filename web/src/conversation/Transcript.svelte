@@ -55,11 +55,11 @@
     if (target === undefined) return undefined;
     return conversation.items[conversation.itemOf.get(target.event) ?? -1]?.id;
   });
-  // Whether the attempt may still grow: its last item can be the model thinking.
+  // Whether the attempt may still grow: its last thinking batch is then under way.
   const growing = $derived(live && coverage === 'following');
   const lastId = $derived(conversation.items.at(-1)?.id);
   const visible: readonly Item[] = $derived.by(() => {
-    const items = shownItems(conversation.items, growing, targetId);
+    const items = shownItems(conversation.items, targetId);
     return filter === 'all' ? items : items.filter((i) => passes(i, filter));
   });
   const total = $derived(visible.length);

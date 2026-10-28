@@ -159,14 +159,12 @@ export function isThinkingItem(item: Item): boolean {
 }
 
 /**
- * The items a conversation shows: a batch of thinking progress only while the
- * model is still at it, as the last item of a live attempt, or when keep (a
- * link's, a search result's) names it. Everywhere else the reasoning or the
- * reply that followed says the rest.
+ * The items a conversation shows: a batch of thinking progress only as the
+ * last item, where it says the model is at work or was when the attempt
+ * stopped, or when keep (a link's, a search result's) names it. Everywhere
+ * else the reasoning or the reply that followed says the rest.
  */
-export function shownItems(items: readonly Item[], live: boolean, keep?: string): readonly Item[] {
+export function shownItems(items: readonly Item[], keep?: string): readonly Item[] {
   const last = items.length - 1;
-  return items.filter(
-    (item, i) => !isThinkingItem(item) || (live && i === last) || item.id === keep,
-  );
+  return items.filter((item, i) => !isThinkingItem(item) || i === last || item.id === keep);
 }

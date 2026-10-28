@@ -154,12 +154,13 @@ describe('thinking progress', () => {
     expect(c.events).toHaveLength(events.length);
   });
 
-  it('is shown only as the last item of an attempt still growing, or when kept', () => {
+  it('is shown only as the last item, or when kept', () => {
     const early = thinking();
     const c = buildConversation([early, say('reply'), thinking()], ATTEMPT);
     const [first, reply, last] = c.items;
-    expect(shownItems(c.items, true)).toEqual([reply, last]);
-    expect(shownItems(c.items, false)).toEqual([reply]);
-    expect(shownItems(c.items, false, early.id)).toEqual([first, reply]);
+    expect(shownItems(c.items)).toEqual([reply, last]);
+    expect(shownItems(c.items, early.id)).toEqual([first, reply, last]);
+    const ended = buildConversation([early, say('reply')], ATTEMPT);
+    expect(shownItems(ended.items)).toEqual([ended.items[1]]);
   });
 });

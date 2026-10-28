@@ -231,9 +231,12 @@ describe('Transcript of a model thinking', () => {
     expect(root.textContent).not.toContain('does not render');
   });
 
-  it('shows no batch once the attempt is read to its end', () => {
+  it('keeps the last batch as a static line once the attempt is read to its end', () => {
     const root = show('ended', false);
-    expect(root.querySelectorAll('.items > li')).toHaveLength(1);
-    expect(root.querySelector('.thinking')).toBeNull();
+    expect(root.querySelectorAll('.items > li')).toHaveLength(2);
+    const line = root.querySelectorAll('.thinking');
+    expect(line).toHaveLength(1);
+    expect(line[0]?.getAttribute('role')).toBeNull();
+    expect(line[0]?.querySelector('.dots')).toBeNull();
   });
 });
