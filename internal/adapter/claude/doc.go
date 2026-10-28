@@ -26,11 +26,12 @@
 //   - result: a session_completed lifecycle event, the session's usage
 //     (tokens, total_cost_usd as a decimal string, durations, turns), and an
 //     error per errors entry.
-//   - anything else is raw: rate_limit_event and stream_event (partial
-//     messages, which Kelos does not ask for) as unsupported, other types
-//     and system subtypes as unknown_type, a line that does not parse as
-//     malformed_json, and text as text. A content block the parser does not
-//     render is raw too, as its own event of the line.
+//   - anything else is raw: system/thinking_tokens progress,
+//     rate_limit_event and stream_event (partial messages, which Kelos does
+//     not ask for) as unsupported, other types and system subtypes as
+//     unknown_type, a line that does not parse as malformed_json, and text as
+//     text. A content block the parser does not render is raw too, as its own
+//     event of the line.
 //
 // Capability gaps of Claude Code 2.1.296 as Kelos runs it, and of this
 // adapter:
@@ -46,11 +47,12 @@
 //     run ended before has no result at all.
 //   - Messages and results inside a subagent are not marked as such: the
 //     contract has a parent only on tool calls.
-//   - Not rendered: rate limit status (rate_limit_event), the per-model usage
-//     (modelUsage), permission_denials, the result text (it repeats the last
-//     assistant message), retry waits without a response (no_response),
-//     redacted thinking, images and documents, and the edits of
-//     NotebookEdit or of tools other than Edit, MultiEdit and Write.
+//   - Not rendered: approximate current-block thinking token progress
+//     (thinking_tokens), rate limit status (rate_limit_event), the per-model
+//     usage (modelUsage), permission_denials, the result text (it repeats the
+//     last assistant message), retry waits without a response (no_response),
+//     redacted thinking, images and documents, and the edits of NotebookEdit
+//     or of tools other than Edit, MultiEdit and Write.
 //   - Times: a line's timestamp field, when present, is its runnerTime; the
 //     fixtures carry none, so which lines have one is unverified.
 package claude
