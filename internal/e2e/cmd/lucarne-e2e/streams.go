@@ -83,6 +83,13 @@ func (g *streamGate) wait(ctx context.Context) bool {
 	}
 }
 
+// count is how many streams are open: served, not held, not ended.
+func (g *streamGate) count() int {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	return len(g.open)
+}
+
 func (g *streamGate) add(cancel context.CancelFunc) uint64 {
 	g.mu.Lock()
 	defer g.mu.Unlock()

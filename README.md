@@ -4,18 +4,53 @@ Live transcripts for coding agents: a read-only viewer for the output of
 Kelos agent runs (Claude Code, Codex, OpenCode), as a conversation or, for
 the details, as an inspector.
 
-Status: the conversation is complete and packaged. The transcript contract,
+Status: both views are complete and packaged. The transcript contract,
 runner fixtures, the three runner adapters, the Kubernetes source, the
-snapshot/SSE server, the live conversation view, end-to-end tests and the
-container image are in place. The desktop inspector (`?view=inspector`: the
-run's context, its events in order with search and filters, the selected
-event's detail with its source line, related events and coverage evidence)
-is built on the same live run.
+snapshot/SSE server, the live conversation and inspector, end-to-end tests
+and the container image are in place.
 
 - Contract (identity, events, limits, deep links, API, SSE/replay):
   [`contract/README.md`](contract/README.md)
 - Fixtures and their provenance: [`fixtures/README.md`](fixtures/README.md)
 - Layout, gates and rules for contributors: [`AGENTS.md`](AGENTS.md)
+
+## Using it
+
+A run's link, `/runs/{cluster}/{namespace}/{taskUID}` (Gordon's
+announcements add `?attempt=` for the pod they start), opens the
+**conversation**. The **View** switch above it changes to the **inspector**
+and back in place: the same run, snapshot and live stream, with the attempt
+and the selected event (`#event=`) kept. `?view=inspector` opens the
+inspector directly; a middle-click on either view opens that place in a new
+tab. Desktop browsers only: there is no mobile layout.
+
+- **Conversation**: messages, reasoning the runner prints, tool calls with
+  their results, edits, errors and lifecycle lines, in order; search,
+  follow or pause on a live run, the attempt picker, and a link to any item.
+- **Inspector**, in three columns: the run's context (only facts the source
+  gave; the rest reads *Unknown*), the attempt's events as a list, and the
+  selected event's detail: rendered as in the conversation, its facts
+  (attempt, log line, times, exit code, what Lucarne cut), its related
+  events (the call, its results, edits, parent and sub-calls), why a result
+  is missing, and its log line as the runner wrote it, with copy buttons.
+  Filters by kind, by tool and to failures only; the search marks and steps
+  through the matches among the events listed. Keys in the list: ↑/↓, Page
+  Up/Down, Home/End, Enter to the detail, Escape back.
+
+Limits of the views:
+
+- Each renders a window of 100 items or rows, grown by 100 to at most 600;
+  the rest are a button, End or a search away.
+- A run holds at most 20 000 events and 32 MiB (the contract's
+  [Limits](contract/README.md#limits)); past them its oldest events are
+  dropped, and both views say how many. Facts the inspector would read from
+  a dropped event say they may be among them.
+- The inspector's row summaries are cut to 160 characters. Log lines are
+  kept in the server's memory as they are read, each up to 64 KiB, at most
+  16 MiB and 20 000 lines per run, oldest dropped; a dropped line or a gap
+  answers *not found*.
+- Copying needs a secure context (HTTPS); elsewhere the button says the
+  clipboard refused.
 
 ## Development
 
@@ -54,10 +89,13 @@ variable besides the Kubernetes client's (`KUBECONFIG` outside a cluster).
 | `-namespace` | none | a namespace whose runs may be read; repeat it for several. Without one, the run endpoints answer 501 |
 | `-drain-delay` | `0s` | after SIGTERM, how long `/readyz` answers 503 before the server stops taking connections |
 
-The bounds (runs followed at once, events and bytes per run, replay, slow
-clients) are fixed; the contract's [Limits](contract/README.md#limits) and
-`internal/stream` name them, and every snapshot publishes them. Logs go to
-stderr as JSON.
+The bounds (runs followed at once, events and bytes per run, replay, source
+lines, slow clients) are fixed; the contract's
+[Limits](contract/README.md#limits) and `internal/stream` name them, and
+every snapshot publishes them. At most 16 runs are followed at once, each
+holding up to 32 MiB of events (replay shares them) and 16 MiB of source
+lines: up to 768 MiB of transcript data before the runtime's own, so size
+the memory limit above it. Logs go to stderr as JSON.
 
 ### Endpoints and probes
 
@@ -153,8 +191,10 @@ transcript; [States](contract/README.md#states) defines them.
 browser suite included: `just e2e` runs Chromium against the real server,
 stream and Kubernetes source over a fake cluster
 (`internal/e2e/cmd/lucarne-e2e`), with every runner fixture, live,
-reconnecting, failed, retried, expired, hostile and oversized runs. `go test
-./internal/e2e/` checks the same paths over HTTP.
+reconnecting, failed, retried, expired, hostile and oversized runs in both
+views, and view switches that must load no second snapshot and leave the
+server one stream per page. `go test ./internal/e2e/` checks the same paths
+over HTTP.
 
 ## License
 
