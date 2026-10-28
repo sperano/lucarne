@@ -50,6 +50,13 @@
   const toolOptions = $derived(
     filter.tool === undefined || tools.includes(filter.tool) ? tools : [...tools, filter.tool],
   );
+  // So do kinds ticked on another attempt, with none of them here, so the filter can be cleared.
+  const kindOptions = $derived([
+    ...kinds,
+    ...filter.kinds
+      .filter((k) => !kinds.some(([present]) => present === k))
+      .map((k) => [k, 0] as const),
+  ]);
 
   function toggleKind(kind: EventKind, on: boolean): void {
     const rest = filter.kinds.filter((k) => k !== kind);
@@ -93,7 +100,7 @@
   </div>
   <fieldset class="row">
     <legend class="visually-hidden">Kinds of event listed</legend>
-    {#each kinds as [kind, n] (kind)}
+    {#each kindOptions as [kind, n] (kind)}
       <label class="kind">
         <input
           type="checkbox"

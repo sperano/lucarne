@@ -3,6 +3,7 @@ import { userEvent } from 'vitest/browser';
 import type { Coverage } from '../lib/contract';
 import { buildConversation } from '../lib/conversation';
 import { eventMaker, type EventBody } from '../dev/events';
+import { MAX_SUBCALLS } from '../lib/evidence';
 import { snapshotOf } from '../dev/fixtures';
 import { render } from '../render';
 import Correlation from './Correlation.svelte';
@@ -64,6 +65,18 @@ describe('Correlation', () => {
     );
     const ended = show([BASH], 0, { state: 'expired', reason: 'pod deleted' });
     expect(ended.root.textContent).toContain('the log is gone (pod deleted)');
+  });
+
+  it('counts the sub-calls past the ones listed', () => {
+    const EXTRA = 2;
+    const subcalls = Array.from({ length: MAX_SUBCALLS + EXTRA }, (_, i): EventBody => ({
+      kind: 'tool_call',
+      toolCall: { callId: `s${String(i)}`, parentCallId: 'c1', name: 'Read', input: {} },
+    }));
+    const { root } = show([BASH, ...subcalls], 0);
+    expect(root.querySelector('.note')?.textContent).toContain(
+      `And ${String(EXTRA)} more sub-calls, further down the event list.`,
+    );
   });
 
   it('shows nothing for an event without a call', () => {

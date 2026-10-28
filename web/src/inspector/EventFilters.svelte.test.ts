@@ -79,4 +79,15 @@ describe('EventFilters', () => {
     const { root } = show({ ...NO_FILTER, tool: 'Grep' });
     expect(root.querySelector('select')?.value).toBe('Grep');
   });
+
+  it('keeps offering a kind ticked on another attempt, with none here', async () => {
+    const { root, onfilter } = show({ ...NO_FILTER, kinds: ['edit'] });
+    const kinds = [...root.querySelectorAll('.kind')];
+    expect(kinds.map((k) => k.textContent.trim())).toEqual(['Message 3', 'Tool call 2', 'Edit 0']);
+    const edit = kinds[2]?.querySelector('input');
+    if (!edit) throw new Error('no edit kind');
+    expect(edit.checked).toBe(true);
+    await userEvent.click(edit);
+    expect(onfilter).toHaveBeenLastCalledWith(NO_FILTER);
+  });
 });

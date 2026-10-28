@@ -50,7 +50,7 @@
     </ol>
     {#if correlation.moreSubcalls > 0}
       <p class="note">
-        And {formatCount(correlation.moreSubcalls)} more sub-calls: filter the list by tool to see them.
+        And {formatCount(correlation.moreSubcalls)} more sub-calls, further down the event list.
       </p>
     {/if}
     {#if evidence !== undefined}
