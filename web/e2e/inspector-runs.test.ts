@@ -7,7 +7,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { Snapshot } from '../src/lib/contract';
 import { formatCount } from '../src/lib/format';
 import { END_REASON_LABELS, RUN_PHASE_LABELS } from '../src/lib/labels';
-import { WINDOW_MAX } from '../src/lib/window';
+import { WINDOW_MAX, WINDOW_STEP } from '../src/lib/window';
 import {
   claudeInit,
   claudeText,
@@ -86,7 +86,8 @@ describe('the inspector over fixture runs', () => {
       const watched = await open(browser, `${r.link}?${INSPECTOR_QUERY}`);
       const { page } = watched;
       await visible(options(page));
-      expect(await options(page).count()).toBe(Math.min(held.length, WINDOW_MAX));
+      // A finished attempt opens on its first window of rows.
+      expect(await options(page).count()).toBe(Math.min(held.length, WINDOW_STEP));
       const label = RUN_PHASE_LABELS[snap.run.phase];
       await visible(
         streamStatus(page).filter({
