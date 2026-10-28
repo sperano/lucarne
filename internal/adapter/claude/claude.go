@@ -28,10 +28,14 @@ const (
 	subtypeInit            = "init"
 	subtypeAPIRetry        = "api_retry"
 	subtypeCompactBoundary = "compact_boundary"
+	subtypeThinkingTokens  = "thinking_tokens"
 )
 
-// knownSubtypes are the system subtypes the parser renders.
-var knownSubtypes = map[string]bool{subtypeInit: true, subtypeAPIRetry: true, subtypeCompactBoundary: true}
+// renderedSubtypes are the system subtypes the parser renders.
+var renderedSubtypes = map[string]bool{subtypeInit: true, subtypeAPIRetry: true, subtypeCompactBoundary: true}
+
+// unsupportedSubtypes are system subtypes the parser knows and does not render.
+var unsupportedSubtypes = map[string]bool{subtypeThinkingTokens: true}
 
 // unsupportedTypes are line types the parser knows and does not render.
 var unsupportedTypes = map[string]bool{typeRateLimit: true, typeStreamEvent: true}
@@ -88,7 +92,7 @@ func (p *Parser) render(h head, text []byte, out *adapter.Emitter) bool {
 func rawReason(h head) contract.RawReason {
 	switch h.Type {
 	case typeSystem:
-		if !knownSubtypes[h.Subtype] {
+		if !renderedSubtypes[h.Subtype] && !unsupportedSubtypes[h.Subtype] {
 			return contract.RawUnknownType
 		}
 		return contract.RawUnsupported
@@ -131,7 +135,7 @@ type systemLine struct {
 // subtype is left raw (hooks, tasks, status, and those still to come).
 func renderSystem(subtype string, text []byte, out *adapter.Emitter) bool {
 	var s systemLine
-	if !knownSubtypes[subtype] || json.Unmarshal(text, &s) != nil {
+	if !renderedSubtypes[subtype] || json.Unmarshal(text, &s) != nil {
 		return false
 	}
 	switch subtype {

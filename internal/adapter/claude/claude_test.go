@@ -55,6 +55,7 @@ func TestLineTypesAndRawReasons(t *testing.T) {
 		{"no type", `{"example":1}`, contract.RawUnknownType},
 		{"type not a string", `{"type":7}`, contract.RawUnknownType},
 		{"unknown system subtype", `{"type":"system","subtype":"hook_started"}`, contract.RawUnknownType},
+		{"thinking token progress", `{"type":"system","subtype":"thinking_tokens","estimated_tokens":1550,"estimated_tokens_delta":200,"session_id":"session-example","uuid":"message-example"}`, contract.RawUnsupported},
 		{"rate limit", `{"type":"rate_limit_event","rate_limit_info":{"status":"allowed"}}`, contract.RawUnsupported},
 		{"partial message", `{"type":"stream_event","event":{"type":"message_start"}}`, contract.RawUnsupported},
 		{"assistant without message", `{"type":"assistant"}`, contract.RawUnsupported},
