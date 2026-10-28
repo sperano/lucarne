@@ -1,0 +1,17 @@
+{
+  "seq": 4,
+  "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0:a41b8ce4913d276f:4:0",
+  "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0",
+  "kind": "lifecycle",
+  "source": {
+    "line": 4,
+    "part": 0,
+    "type": "rate_limit_event"
+  },
+  "lifecycle": {
+    "phase": "rate_limit_status",
+    "sessionId": "session-example",
+    "subtype": "allowed_warning",
+    "detail": "{\"status\":\"allowed_warning\",\"resetsAt\":1793172600,\"rateLimitType\":\"five_hour\",\"utilization\":0.91}"
+  }
+}
