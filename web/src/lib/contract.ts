@@ -47,6 +47,8 @@ export const ERROR_CODES = [
   'not_found',
   'method_not_allowed',
   'unavailable',
+  'invalid_event_id',
+  'source_not_found',
 ] as const;
 export type ErrorCode = (typeof ERROR_CODES)[number];
 
@@ -199,6 +201,8 @@ export interface Limits {
   readonly maxAttemptsPerRun: number;
   readonly maxReplayUpdates: number;
   readonly maxClientQueue: number;
+  readonly maxSourceBytes: number;
+  readonly maxRunSourceBytes: number;
 }
 
 export interface Source {
@@ -363,6 +367,18 @@ export interface ErrorResponse {
   readonly error: { readonly code: ErrorCode; readonly message: string };
 }
 
+/** The log line an event came from, as the runner wrote it. */
+export interface SourceLine {
+  readonly schema: typeof SCHEMA_VERSION;
+  readonly attempt: string;
+  readonly origin: string;
+  readonly line: number;
+  /** The line without its timestamp prefix, cut to maxSourceBytes. */
+  readonly text: string;
+  /** The whole line's length in bytes: more than text holds when it was cut. */
+  readonly bytes: number;
+}
+
 export interface ContractInfo {
   readonly schema: typeof SCHEMA_VERSION;
   readonly limits: Limits;
@@ -379,5 +395,6 @@ export interface Documents {
   Live: Live;
   ErrorResponse: ErrorResponse;
   ContractInfo: ContractInfo;
+  SourceLine: SourceLine;
 }
 export type DocumentName = keyof Documents;

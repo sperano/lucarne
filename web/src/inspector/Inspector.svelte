@@ -1,10 +1,23 @@
 <script lang="ts">
+  import { untrack } from 'svelte';
   import SelectionNotices from '../conversation/SelectionNotices.svelte';
   import StreamStatus from '../conversation/StreamStatus.svelte';
+  import {
+    filterEvents,
+    filtering,
+    kindCounts,
+    NO_FILTER,
+    searchEvents,
+    stepMatch,
+    toolNames,
+    type EventFilter,
+  } from '../lib/filters';
   import type { Connection } from '../lib/live';
   import type { RunView } from '../lib/runstore';
   import { attemptOfEvent, selectAttempt, type Selection } from '../lib/selection';
+  import { SourceCache, type LoadSource } from '../lib/sources';
   import EventDetail from './EventDetail.svelte';
+  import EventFilters from './EventFilters.svelte';
   import EventList from './EventList.svelte';
   import RunContext from './RunContext.svelte';
 
@@ -16,6 +29,7 @@
     onselectattempt,
     onselectevent,
     onsignin = () => {},
+    loadSource,
   }: {
     view: RunView;
     /** How the live stream stands; absent for a run shown as loaded, with no stream. */
@@ -27,7 +41,16 @@
     onselectattempt: (attemptId: string) => void;
     onselectevent: (eventId: string) => void;
     onsignin?: () => void;
+    /** Loads the source line of one of the run's events; absent where there is no server to ask. */
+    loadSource?: LoadSource | undefined;
   } = $props();
+
+  // One cache for the page: the run, and so the lines, do not change under it.
+  const sources = untrack(() => (loadSource ? new SourceCache(loadSource) : undefined));
+  let query = $state('');
+  let filter: EventFilter = $state.raw(NO_FILTER);
+  // Once the reader changed a filter, the list it rebuilds leaves the focus where the reader is.
+  let refiltered = $state(false);
 
   const live = $derived(
     connection !== undefined && connection.state !== 'ended' && connection.state !== 'stopped',
@@ -63,8 +86,38 @@
       ? conversation.events.find((e) => e.id === event)
       : undefined,
   );
+  const listed = $derived(conversation ? filterEvents(conversation, filter) : []);
+  const matches = $derived(searchEvents(listed, query));
+  const matchOrder = $derived(listed.filter((e) => matches.has(e.id)).map((e) => e.id));
+  const listedIndex = $derived.by(() => {
+    if (shownEvent === undefined) return undefined;
+    const i = listed.indexOf(shownEvent);
+    return i === -1 ? undefined : i;
+  });
+  const current = $derived.by(() => {
+    if (shownEvent === undefined) return undefined;
+    const i = matchOrder.indexOf(shownEvent.id);
+    return i === -1 ? undefined : i;
+  });
+  const hidden = $derived(shownEvent !== undefined && listedIndex === undefined);
   let detail: HTMLElement | undefined = $state();
   let list: HTMLElement | undefined = $state();
+
+  function changeFilter(next: EventFilter): void {
+    filter = next;
+    refiltered = true;
+  }
+
+  function resetFilters(): void {
+    query = '';
+    changeFilter(NO_FILTER);
+  }
+
+  function step(direction: 1 | -1): void {
+    const i = stepMatch(listed, matches, listedIndex, direction);
+    const next = i === undefined ? undefined : listed[i];
+    if (next) onselectevent(next.id);
+  }
 
   function showNewer(): void {
     if (latest !== undefined) onselectattempt(latest);
@@ -111,15 +164,45 @@
       found={shownEvent !== undefined}
     />
     {#if conversation && selected}
-      {#key selected.id}
+      <EventFilters
+        bind:query
+        {filter}
+        kinds={kindCounts(conversation.events)}
+        tools={toolNames(conversation)}
+        listed={listed.length}
+        total={conversation.events.length}
+        matches={matches.size}
+        {current}
+        onfilter={changeFilter}
+        onstep={step}
+        onreset={resetFilters}
+      />
+      {#if hidden}
+        <p class="notice info" role="note">
+          The selected event is not among the events the filters list.
+          <button
+            type="button"
+            onclick={() => {
+              changeFilter(NO_FILTER);
+            }}>List every event</button
+          >
+        </p>
+      {/if}
+      {#key `${selected.id} ${JSON.stringify(filter)}`}
         <EventList
           {conversation}
+          events={listed}
+          {matches}
           coverage={selected.coverage.state}
           selected={shownEvent?.id}
+          focusOnMount={!refiltered}
           onselect={onselectevent}
           onopen={() => detail?.focus()}
         />
       {/key}
+      {#if filtering(filter) && listed.length === 0}
+        <p class="muted">No event of this attempt passes the filters.</p>
+      {/if}
     {/if}
   </section>
   <section class="pane detail" aria-label="Event detail" tabindex="-1" bind:this={detail}>
@@ -127,8 +210,13 @@
       <EventDetail
         {conversation}
         event={shownEvent}
-        coverage={selected.coverage.state}
+        attempt={selected}
+        stream={view.stream}
         limits={view.limits}
+        runKey={view.run.key}
+        {sources}
+        onselect={onselectevent}
+        {onsignin}
       />
     {:else if conversation && selected}
       <p class="muted">

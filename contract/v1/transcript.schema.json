@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/sperano/lucarne/contract/v1/transcript.schema.json",
   "title": "Lucarne transcript and API contract, version 1",
-  "description": "Validate a document against one of the $defs: Snapshot, Event, AttemptUpdate, RunUpdate, Reset, End, ErrorResponse, ContractInfo. contract/README.md is the prose specification.",
+  "description": "Validate a document against one of the $defs: Snapshot, Event, AttemptUpdate, RunUpdate, Reset, End, ErrorResponse, ContractInfo, SourceLine. contract/README.md is the prose specification.",
   "$defs": {
     "SchemaVersion": { "const": "lucarne.transcript/v1" },
     "Label": { "type": "string", "minLength": 1, "maxLength": 256 },
@@ -11,6 +11,7 @@
     "ToolOutputText": { "type": "string", "maxLength": 32768 },
     "DiffText": { "type": "string", "maxLength": 65536 },
     "RawText": { "type": "string", "maxLength": 8192 },
+    "SourceText": { "type": "string", "maxLength": 65536 },
     "Path": { "type": "string", "minLength": 1, "maxLength": 4096 },
     "Count": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
     "Seq": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
@@ -32,6 +33,11 @@
       "description": "<podUID>.<container>.<restart>",
       "type": "string",
       "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\\.[a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?\\.(0|[1-9][0-9]{0,9})$"
+    },
+    "Origin": {
+      "description": "The first 8 bytes of the SHA-256 of the first line of a log read, in lowercase hex.",
+      "type": "string",
+      "pattern": "^[0-9a-f]{16}$"
     },
     "EventID": {
       "description": "<attemptID>:<origin>:<line>:<part>, or <attemptID>:<origin>:<line>:gap.<part> for a gap event. <origin> names the first line of the log read the line ordinals count from.",
@@ -155,7 +161,9 @@
         "maxRunBytes",
         "maxAttemptsPerRun",
         "maxReplayUpdates",
-        "maxClientQueue"
+        "maxClientQueue",
+        "maxSourceBytes",
+        "maxRunSourceBytes"
       ],
       "properties": {
         "maxLineBytes": { "$ref": "#/$defs/Count" },
@@ -171,7 +179,9 @@
         "maxRunBytes": { "$ref": "#/$defs/Count" },
         "maxAttemptsPerRun": { "$ref": "#/$defs/Count" },
         "maxReplayUpdates": { "$ref": "#/$defs/Count" },
-        "maxClientQueue": { "$ref": "#/$defs/Count" }
+        "maxClientQueue": { "$ref": "#/$defs/Count" },
+        "maxSourceBytes": { "$ref": "#/$defs/Count" },
+        "maxRunSourceBytes": { "$ref": "#/$defs/Count" }
       },
       "additionalProperties": false
     },
@@ -533,7 +543,9 @@
                 "internal",
                 "not_found",
                 "method_not_allowed",
-                "unavailable"
+                "unavailable",
+                "invalid_event_id",
+                "source_not_found"
               ]
             },
             "message": { "$ref": "#/$defs/Label" }
@@ -549,6 +561,20 @@
       "properties": {
         "schema": { "$ref": "#/$defs/SchemaVersion" },
         "limits": { "$ref": "#/$defs/Limits" }
+      },
+      "additionalProperties": false
+    },
+    "SourceLine": {
+      "description": "The log line an event came from, as the runner wrote it: text is cut to maxSourceBytes, bytes is the whole line's length.",
+      "type": "object",
+      "required": ["schema", "attempt", "origin", "line", "text", "bytes"],
+      "properties": {
+        "schema": { "$ref": "#/$defs/SchemaVersion" },
+        "attempt": { "$ref": "#/$defs/AttemptID" },
+        "origin": { "$ref": "#/$defs/Origin" },
+        "line": { "$ref": "#/$defs/Line" },
+        "text": { "$ref": "#/$defs/SourceText" },
+        "bytes": { "$ref": "#/$defs/Count" }
       },
       "additionalProperties": false
     }

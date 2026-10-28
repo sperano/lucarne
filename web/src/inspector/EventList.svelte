@@ -1,7 +1,7 @@
 <script lang="ts">
   import { tick, untrack } from 'svelte';
   import { whenVisible } from '../conversation/visible';
-  import type { CoverageState } from '../lib/contract';
+  import type { CoverageState, TranscriptEvent } from '../lib/contract';
   import type { Conversation } from '../lib/conversation';
   import { formatCount } from '../lib/format';
   import { keepEnd, moveSelection, reveal, rowOf } from '../lib/inspector';
@@ -16,15 +16,24 @@
 
   let {
     conversation,
+    events,
+    matches = new Set(),
     coverage,
     selected,
+    focusOnMount = true,
     onselect,
     onopen = () => {},
   }: {
     conversation: Conversation;
+    /** The events listed, in order: the attempt's, or those the filters let through. */
+    events: readonly TranscriptEvent[];
+    /** The IDs of the events that match the search. */
+    matches?: ReadonlySet<string>;
     coverage: CoverageState;
     /** The ID of the event selected; it may not be in the list. */
     selected: string | undefined;
+    /** Whether a linked event's row takes the focus once shown, as after a view switch. */
+    focusOnMount?: boolean;
     onselect: (eventId: string) => void;
     /** Enter on the list: the reader goes to the selected event's detail. */
     onopen?: () => void;
@@ -33,7 +42,6 @@
   /** The prefix of a row's element ID, which aria-activedescendant names. */
   const ROW_ID_PREFIX = 'inspect-';
 
-  const events = $derived(conversation.events);
   const total = $derived(events.length);
   const positionOf = $derived(new Map(events.map((e, i) => [e.id, i])));
   const selectedIndex = $derived(selected === undefined ? undefined : positionOf.get(selected));
@@ -69,11 +77,28 @@
   });
 
   // A linked event: bring its row into view once rendered, the keys ready to move from it.
+  // The event selected last, by the list or by its first render: one selected elsewhere is revealed.
+  let revealed = untrack(() => selected);
   $effect(() => {
     const linked = untrack(() => selected);
     if (linked === undefined || untrack(() => selectedIndex) === undefined) return;
-    list?.focus({ preventScroll: true });
+    if (untrack(() => focusOnMount)) list?.focus({ preventScroll: true });
     void showRow(linked, 'center');
+  });
+
+  // An event selected elsewhere (a search result, a related event): its row is brought into view.
+  $effect(() => {
+    const id = selected;
+    const index = selectedIndex;
+    if (id === revealed) return;
+    revealed = id;
+    if (index === undefined) return;
+    range = reveal(
+      untrack(() => range),
+      index,
+      total,
+    );
+    void showRow(id, 'center');
   });
 
   const active = $derived(
@@ -90,6 +115,7 @@
     const event = events[index];
     if (event === undefined) return;
     range = reveal(range, index, total);
+    revealed = event.id;
     onselect(event.id);
     void showRow(event.id, block);
   }
@@ -157,6 +183,7 @@
         role="option"
         aria-selected={event.id === selected}
         class:failed={row.failed}
+        class:match={matches.has(event.id)}
         data-event={event.id}
       >
         <span class="line" title="Log line"
@@ -166,6 +193,7 @@
         <span class="kind">{row.kind}</span>
         <span class="summary">{row.summary}</span>
         {#if row.status}<span class="status {row.status.tone}">{row.status.label}</span>{/if}
+        {#if matches.has(event.id)}<span class="visually-hidden">, matches the search</span>{/if}
       </li>
     {/each}
   </ol>
@@ -217,6 +245,15 @@
   }
   .failed {
     box-shadow: inset 3px 0 0 var(--error);
+  }
+  .match {
+    background: var(--warn-bg);
+    color: var(--warn-text);
+  }
+  .match .line,
+  .match .time,
+  .match .status {
+    color: inherit;
   }
   .line,
   .time {

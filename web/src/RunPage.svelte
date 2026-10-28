@@ -1,6 +1,7 @@
 <script lang="ts">
   import Conversation from './conversation/Conversation.svelte';
   import Inspector from './inspector/Inspector.svelte';
+  import { loadSource, type SourceLoad } from './lib/api';
   import type { RunKey } from './lib/contract';
   import { LiveRun, type LivePage, type LoadFailure, type OpenStream } from './lib/live';
   import { runHref, type View } from './lib/route';
@@ -69,6 +70,10 @@
     showAddress();
   }
 
+  function sourceOf(eventId: string, signal?: AbortSignal): Promise<SourceLoad> {
+    return loadSource(key, eventId, fetcher, signal);
+  }
+
   function selectEvent(id: string): void {
     shownEvent = id;
     showAddress();
@@ -130,6 +135,7 @@
     onselectattempt={selectAttempt}
     onselectevent={selectEvent}
     onsignin={() => startSignIn(true)}
+    loadSource={sourceOf}
   />
 {:else}
   <Conversation

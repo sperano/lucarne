@@ -101,6 +101,13 @@ const (
 	// API did not answer or refused, or the server follows as many runs as
 	// it can.
 	ErrorUnavailable ErrorCode = "unavailable"
+	// ErrorInvalidEventID is a source path whose event ID is not in
+	// canonical form.
+	ErrorInvalidEventID ErrorCode = "invalid_event_id"
+	// ErrorSourceNotFound is an event ID whose line the run does not hold:
+	// a gap, which no line produced, a line dropped past
+	// MaxRunSourceBytes, or one of another run or read.
+	ErrorSourceNotFound ErrorCode = "source_not_found"
 )
 
 // ErrorResponse is the body of every API error.
@@ -112,6 +119,22 @@ type ErrorResponse struct {
 type ErrorBody struct {
 	Code    ErrorCode `json:"code"`
 	Message string    `json:"message"`
+}
+
+// SourceLine is GET /api/v1/runs/{cluster}/{namespace}/{taskUID}/source/{eventID}:
+// the log line an event came from, as the runner wrote it, for the
+// inspector to show next to what the adapter made of it.
+type SourceLine struct {
+	Schema  string `json:"schema"`
+	Attempt string `json:"attempt"`
+	Origin  string `json:"origin"`
+	Line    int64  `json:"line"`
+	// Text is the line without its timestamp prefix, cut to
+	// MaxSourceBytes at a UTF-8 boundary.
+	Text string `json:"text"`
+	// Bytes is the length of the whole line: more than Text holds when it
+	// was cut.
+	Bytes int64 `json:"bytes"`
 }
 
 // ContractInfo is GET /api/v1/contract.

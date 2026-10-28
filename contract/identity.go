@@ -16,6 +16,7 @@ import (
 var (
 	dnsLabelPattern = schemaPattern("DNSLabel")
 	uidPattern      = schemaPattern("UID")
+	eventIDPattern  = schemaPattern("EventID")
 )
 
 // Separators of the attempt and event identifiers. Neither can occur in a
@@ -70,6 +71,10 @@ func (k RunKey) SnapshotPath() string { return APIPrefix + "/runs/" + k.path() }
 
 // EventsPath is the API path of this run's SSE stream.
 func (k RunKey) EventsPath() string { return k.SnapshotPath() + "/events" }
+
+// SourcePath is the API path of the source line of one of this run's
+// events.
+func (k RunKey) SourcePath(eventID string) string { return k.SnapshotPath() + "/source/" + eventID }
 
 // AttemptKey identifies one container instance of a run: a pod, one of its
 // containers, and that container's restart count when it ran.
@@ -135,6 +140,37 @@ func EventID(attemptID, origin string, line int64, part int) string {
 // the next line, lines read + 1.
 func GapEventID(attemptID, origin string, line int64, part int) string {
 	return eventPrefix(attemptID, origin, line) + gapPartPrefix + strconv.Itoa(part)
+}
+
+// EventRef is what an event ID names: a line of one read of an attempt's
+// log, and which of the events found at that line it is.
+type EventRef struct {
+	Attempt string
+	Origin  string
+	Line    int64
+	Part    int
+	// Gap is a gap event's ID: it names the line a gap was found before,
+	// not a line the gap came from.
+	Gap bool
+}
+
+// ParseEventID is the inverse of EventID and GapEventID.
+func ParseEventID(id string) (EventRef, error) {
+	if !eventIDPattern.MatchString(id) {
+		return EventRef{}, fmt.Errorf("%w: event %q", ErrInvalidKey, id)
+	}
+	// The pattern holds exactly four parts, numbers in canonical form.
+	parts := strings.Split(id, eventSeparator)
+	line, err := parseCanonicalNonNegative(parts[2])
+	if err != nil {
+		return EventRef{}, fmt.Errorf("%w: event %q line: %w", ErrInvalidKey, id, err)
+	}
+	partText, gap := strings.CutPrefix(parts[3], gapPartPrefix)
+	part, err := parseCanonicalNonNegative(partText)
+	if err != nil {
+		return EventRef{}, fmt.Errorf("%w: event %q part: %w", ErrInvalidKey, id, err)
+	}
+	return EventRef{Attempt: parts[0], Origin: parts[1], Line: line, Part: int(part), Gap: gap}, nil
 }
 
 // eventPrefix is the part of an event ID before the part number.

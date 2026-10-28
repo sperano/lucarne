@@ -8,16 +8,19 @@ import { RunStore } from '../lib/runstore';
 import { WINDOW_MAX, WINDOW_STEP } from '../lib/window';
 import { ATTEMPT_ID, eventMaker, type EventBody } from '../dev/events';
 import { FIXTURE_RUNS, findFixture, snapshotOf } from '../dev/fixtures';
+import { fixtureLines, fixtureSource, linesSource } from '../dev/sources';
+import type { LoadSource } from '../lib/sources';
 import { render } from '../render';
 import Inspector from './Inspector.svelte';
 
 /** Renders snapshot in the inspector; selecting an event selects it, as the page does. */
 function show(
   snapshot: Snapshot,
-  link: { attempt?: string; event?: string; connection?: Connection } = {},
+  link: { attempt?: string; event?: string; connection?: Connection; loadSource?: LoadSource } = {},
 ) {
   const props = $state({
     view: new RunStore(snapshot).view(),
+    loadSource: link.loadSource,
     connection: link.connection,
     attempt: link.attempt,
     event: link.event,
@@ -291,5 +294,163 @@ describe('Inspector states', () => {
     offer?.click();
     flushSync();
     expect(props.attempt).toBe(second);
+  });
+});
+
+describe('Inspector diagnostics', () => {
+  const said = (el: Element | null | undefined) => el?.textContent.replace(/\s+/g, ' ') ?? '';
+  const kindBox = (root: HTMLElement, label: string) => {
+    const box = [...root.querySelectorAll('.kind')].find((k) => k.textContent.includes(label));
+    const input = box?.querySelector('input');
+    if (!input) throw new Error(`no kind ${label}`);
+    return input;
+  };
+  const searchField = (root: HTMLElement) => {
+    const field = root.querySelector('input[type=search]');
+    if (!(field instanceof HTMLInputElement)) throw new Error('no search field');
+    return field;
+  };
+  const sourceCode = (root: HTMLElement) =>
+    detail(root)?.querySelector('[aria-label="Source line"] pre')?.textContent ?? '';
+  const message = (text: string): EventBody => ({
+    kind: 'message',
+    message: { role: 'assistant', type: 'text', text },
+  });
+  const BASH: EventBody = { kind: 'tool_call', toolCall: { callId: 'c1', name: 'Bash' } };
+
+  it('shows the source line of unknown records and malformed input', async () => {
+    const { snapshot } = findFixture('claude-code', 'malformed-lines');
+    const lines = fixtureLines('claude-code', 'malformed-lines');
+    const { root } = show(snapshot, {
+      loadSource: fixtureSource('claude-code', 'malformed-lines'),
+    });
+    await userEvent.click(kindBox(root, 'Raw line'));
+    const raws = snapshot.events.filter((e) => e.kind === 'raw');
+    expect(rows(root)).toHaveLength(raws.length);
+    for (const reason of ['malformed_json', 'unknown_type'] as const) {
+      const raw = raws.find((e) => e.raw.reason === reason);
+      const row = rows(root).find((r) => r.dataset.event === raw?.id);
+      if (!raw || !row) throw new Error(`no ${reason} row`);
+      await userEvent.click(row);
+      const written = lines[raw.source.line - 1] ?? '';
+      await expect
+        .poll(() => sourceCode(root).replace(/\s+/g, ''))
+        .toBe(written.replace(/\s+/g, ''));
+    }
+  });
+
+  it('steps through the matches of a search, two identical lines being two', async () => {
+    const snapshot = snapshotWith([message('same text'), BASH, message('same text')]);
+    const { root, props } = show(snapshot);
+    await userEvent.type(searchField(root), 'SAME');
+    expect(rows(root).filter((r) => r.classList.contains('match'))).toHaveLength(2);
+    await userEvent.keyboard('{Enter}');
+    expect(props.event).toBe(snapshot.events[0]?.id);
+    await userEvent.keyboard('{Enter}');
+    expect(props.event).toBe(snapshot.events[2]?.id);
+    expect(root.querySelector('.filters')?.textContent).toContain('2 of 2');
+    expect(document.activeElement).toBe(searchField(root));
+  });
+
+  it('keeps the selection through filter changes, and says when the filters hide it', async () => {
+    const snapshot = snapshotWith([message('one'), BASH, message('two')]);
+    const call = snapshot.events[1]?.id ?? '';
+    const { root, props } = show(snapshot, { event: call });
+    await userEvent.click(kindBox(root, 'Message'));
+    expect(rows(root).map((r) => r.dataset.event)).toEqual([
+      snapshot.events[0]?.id,
+      snapshot.events[2]?.id,
+    ]);
+    expect(props.event).toBe(call);
+    expect(said(root.querySelector('.events'))).toContain(
+      'The selected event is not among the events the filters list',
+    );
+    expect(said(detail(root))).toContain('Bash');
+    const all = [...root.querySelectorAll('button')].find(
+      (b) => b.textContent === 'List every event',
+    );
+    if (!all) throw new Error('no button to list every event');
+    await userEvent.click(all);
+    expect(selectedRow(root)?.dataset.event).toBe(call);
+    expect(kindBox(root, 'Message').checked).toBe(false);
+  });
+
+  it('follows the attempt shown, its events and its source lines', async () => {
+    const second = '9e8d7c6b-5a4f-4e3d-8c2b-1a0f9e8d7c6b.claude-code.0';
+    const firstEvents = [message('first attempt')].map(eventMaker());
+    const secondEvents = [message('second attempt'), BASH].map(eventMaker(second));
+    const base = snapshotWith([]);
+    const [first] = base.attempts;
+    if (!first) throw new Error('no attempt');
+    const snapshot: Snapshot = {
+      ...base,
+      attempts: [
+        first,
+        { ...first, id: second, key: { ...first.key, podUID: second.split('.')[0] ?? '' } },
+      ],
+      events: [
+        ...firstEvents,
+        ...secondEvents.map((e, i) => ({ ...e, seq: firstEvents.length + i + 1 })),
+      ],
+    };
+    const source = linesSource(['{"type":"assistant"}', '{"type":"tool_use"}']);
+    const { root, props } = show(snapshot, { attempt: second, loadSource: source });
+    expect(rows(root).map((r) => r.dataset.event)).toEqual(secondEvents.map((e) => e.id));
+    await userEvent.click(rows(root)[0] ?? listbox(root));
+    await expect.poll(() => sourceCode(root)).toContain('"assistant"');
+    expect(source.asked.every((id) => id.startsWith(second))).toBe(true);
+    props.attempt = first.id;
+    flushSync();
+    expect(rows(root).map((r) => r.dataset.event)).toEqual(firstEvents.map((e) => e.id));
+  });
+
+  it('keeps the selection and the filters as live events arrive', async () => {
+    const make = eventMaker();
+    const snapshot = snapshotWith([], {
+      coverage: { state: 'following', lines: 0, gaps: 0, truncatedLines: 0 },
+    });
+    const events = [message('needle one'), BASH].map(make);
+    const store = new RunStore({ ...snapshot, events, stream: { ...snapshot.stream, lastSeq: 2 } });
+    const { root, props } = show(snapshot);
+    props.view = store.view();
+    flushSync();
+    await userEvent.click(kindBox(root, 'Message'));
+    await userEvent.type(searchField(root), 'needle');
+    await userEvent.click(rows(root)[0] ?? listbox(root));
+    for (const body of [message('needle two'), BASH, message('needle three')]) {
+      const event = make(body);
+      store.apply({ type: 'transcript', event: { ...event, seq: event.seq }, size: 1 });
+      props.view = store.view();
+      flushSync();
+    }
+    expect(props.event).toBe(events[0]?.id);
+    expect(selectedRow(root)?.dataset.event).toBe(events[0]?.id);
+    expect(rows(root).map((r) => r.textContent)).toEqual([
+      expect.stringContaining('needle one'),
+      expect.stringContaining('needle two'),
+      expect.stringContaining('needle three'),
+    ]);
+    expect(root.querySelector('.filters')?.textContent).toContain('1 of 3');
+  });
+
+  it('keeps the selection, the filters and the line shown across a reload of the run', async () => {
+    const snapshot = snapshotWith([message('kept'), BASH]);
+    const source = linesSource(['{"type":"assistant"}', '{"type":"tool_use"}']);
+    const { root, props } = show(snapshot, { loadSource: source });
+    await userEvent.click(kindBox(root, 'Message'));
+    await userEvent.click(rows(root)[0] ?? listbox(root));
+    await expect.poll(() => sourceCode(root)).toContain('"assistant"');
+    const asked = source.asked.length;
+    props.view = new RunStore({
+      ...snapshot,
+      stream: { ...snapshot.stream, epoch: 'after-reset' },
+    }).view();
+    flushSync();
+    expect(props.event).toBe(snapshot.events[0]?.id);
+    expect(selectedRow(root)?.dataset.event).toBe(snapshot.events[0]?.id);
+    expect(kindBox(root, 'Message').checked).toBe(true);
+    expect(rows(root)).toHaveLength(1);
+    expect(sourceCode(root)).toContain('"assistant"');
+    expect(source.asked).toHaveLength(asked);
   });
 });

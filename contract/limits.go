@@ -37,6 +37,14 @@ const (
 	MaxOutputs = 64
 	// MaxTruncatedFields bounds an event's "truncated" list.
 	MaxTruncatedFields = 8
+	// MaxSourceBytes bounds the text of a SourceLine: the start of a log
+	// line, as the runner wrote it, that the inspector shows next to its
+	// events.
+	MaxSourceBytes = 64 << 10
+	// MaxRunSourceBytes bounds the source lines a run retains; the oldest
+	// are dropped first, and a request for one of them is answered
+	// "source_not_found".
+	MaxRunSourceBytes = 16 << 20
 )
 
 // Limits is the set of limits a server enforces, published in every
@@ -56,6 +64,8 @@ type Limits struct {
 	MaxAttemptsPerRun  int64 `json:"maxAttemptsPerRun"`
 	MaxReplayUpdates   int64 `json:"maxReplayUpdates"`
 	MaxClientQueue     int64 `json:"maxClientQueue"`
+	MaxSourceBytes     int64 `json:"maxSourceBytes"`
+	MaxRunSourceBytes  int64 `json:"maxRunSourceBytes"`
 }
 
 // DefaultLimits returns the limits of this contract version.
@@ -75,5 +85,7 @@ func DefaultLimits() Limits {
 		MaxAttemptsPerRun:  MaxAttemptsPerRun,
 		MaxReplayUpdates:   MaxReplayUpdates,
 		MaxClientQueue:     MaxClientQueue,
+		MaxSourceBytes:     MaxSourceBytes,
+		MaxRunSourceBytes:  MaxRunSourceBytes,
 	}
 }

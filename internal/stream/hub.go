@@ -25,7 +25,8 @@ const (
 	// waits for the logs of its terminated attempts to be read.
 	DefaultSettleTimeout = 3 * time.Second
 	// DefaultMaxRuns is how many runs a hub follows at once. A run holds
-	// up to contract.MaxRunBytes of events, and as much of replay.
+	// up to contract.MaxRunBytes of events, as much of replay, and
+	// contract.MaxRunSourceBytes of source lines.
 	DefaultMaxRuns = 16
 )
 
@@ -45,6 +46,7 @@ type Bounds struct {
 	RunBytes      int64
 	ReplayUpdates int
 	ClientQueue   int
+	SourceBytes   int64
 }
 
 func (b Bounds) withDefaults() Bounds {
@@ -52,6 +54,7 @@ func (b Bounds) withDefaults() Bounds {
 	b.RunBytes = cmpOr(b.RunBytes, contract.MaxRunBytes)
 	b.ReplayUpdates = cmpOr(b.ReplayUpdates, contract.MaxReplayUpdates)
 	b.ClientQueue = cmpOr(b.ClientQueue, contract.MaxClientQueue)
+	b.SourceBytes = cmpOr(b.SourceBytes, contract.MaxRunSourceBytes)
 	return b
 }
 
@@ -60,6 +63,7 @@ func (b Bounds) limits() contract.Limits {
 	l := contract.DefaultLimits()
 	l.MaxEventsPerRun, l.MaxRunBytes = int64(b.EventsPerRun), b.RunBytes
 	l.MaxReplayUpdates, l.MaxClientQueue = int64(b.ReplayUpdates), int64(b.ClientQueue)
+	l.MaxRunSourceBytes = b.SourceBytes
 	return l
 }
 

@@ -79,7 +79,7 @@ function isFailure(status: string | undefined): boolean {
   return status === 'error' || status === 'declined';
 }
 
-type Text = string | undefined;
+export type Text = string | undefined;
 
 function toolTexts(item: Extract<Item, { kind: 'tool' }>): Text[] {
   const call = item.call.toolCall;
@@ -92,12 +92,19 @@ function toolTexts(item: Extract<Item, { kind: 'tool' }>): Text[] {
   ];
 }
 
-function eventTexts(event: TranscriptEvent): Text[] {
+/** The texts an event shows, expanded: what a search looks in. */
+export function eventTexts(event: TranscriptEvent): Text[] {
   switch (event.kind) {
     case 'message':
       return [event.message.text];
-    case 'tool_call':
-      return [event.toolCall.name, event.toolCall.inputText];
+    case 'tool_call': {
+      const call = event.toolCall;
+      return [
+        call.name,
+        call.title,
+        call.input === undefined ? call.inputText : JSON.stringify(call.input),
+      ];
+    }
     case 'tool_result':
       return [event.toolResult.output];
     case 'edit':

@@ -8,8 +8,9 @@ Status: the conversation is complete and packaged. The transcript contract,
 runner fixtures, the three runner adapters, the Kubernetes source, the
 snapshot/SSE server, the live conversation view, end-to-end tests and the
 container image are in place. The desktop inspector (`?view=inspector`: the
-run's context, its events in order, the selected event's detail) is built on
-the same live run; its filters and diagnostic navigation are not yet.
+run's context, its events in order with search and filters, the selected
+event's detail with its source line, related events and coverage evidence)
+is built on the same live run.
 
 - Contract (identity, events, limits, deep links, API, SSE/replay):
   [`contract/README.md`](contract/README.md)
@@ -64,7 +65,7 @@ stderr as JSON.
 | --- | --- |
 | `GET /healthz` | `ok` while the process serves: the liveness probe |
 | `GET /readyz` | `ready`, or 503 from SIGTERM on: the readiness probe. It calls no source, so a Kubernetes API that does not answer leaves the UI reachable |
-| `GET /api/v1/...` | the [HTTP API](contract/README.md#http-api): the contract, run snapshots and their SSE streams |
+| `GET /api/v1/...` | the [HTTP API](contract/README.md#http-api): the contract, run snapshots, their SSE streams and their events' source lines |
 | `GET /`, `/runs/{cluster}/{namespace}/{taskUID}` | the UI and its [deep links](contract/README.md#deep-links) |
 
 On SIGTERM Lucarne turns unready, waits `-drain-delay`, closes the open
@@ -107,7 +108,8 @@ namespace only: `get` and `list` on `tasks.kelos.dev`, `get` on
   reasoning the runner prints, tool inputs and outputs (file contents,
   command output, anything a command echoed, secrets included), Kelos
   outputs (branch, pull request, cost, tokens). Lucarne shows it as the
-  source wrote it, within the limits.
+  source wrote it, within the limits; the inspector also shows each event's
+  log line as written, which can hold fields no adapter renders.
 - **What it never reads**: the Task's spec (its prompt is dropped when the
   Task is decoded), init and other containers, pods that the Task's Job does
   not control, namespaces outside the allowlist, Secrets. Cluster

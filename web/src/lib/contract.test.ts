@@ -47,6 +47,7 @@ import {
   type RunUpdate,
   type Snapshot,
   type Source,
+  type SourceLine,
   type Stream,
   type ToolCall,
   type ToolResult,
@@ -72,6 +73,7 @@ const DOCUMENT_NAMES: Record<DocumentName, true> = {
   Live: true,
   ErrorResponse: true,
   ContractInfo: true,
+  SourceLine: true,
 };
 
 function isDocumentName(name: string): name is DocumentName {
@@ -170,6 +172,8 @@ const objects: Record<string, Record<string, boolean>> = {
     maxAttemptsPerRun: true,
     maxReplayUpdates: true,
     maxClientQueue: true,
+    maxSourceBytes: true,
+    maxRunSourceBytes: true,
   } satisfies RequiredKeys<Limits>,
   Source: {
     line: true,
@@ -258,6 +262,14 @@ const objects: Record<string, Record<string, boolean>> = {
   End: { seq: true, reason: true } satisfies RequiredKeys<End>,
   Live: { lastSeq: true } satisfies RequiredKeys<Live>,
   ContractInfo: { schema: true, limits: true } satisfies RequiredKeys<ContractInfo>,
+  SourceLine: {
+    schema: true,
+    attempt: true,
+    origin: true,
+    line: true,
+    text: true,
+    bytes: true,
+  } satisfies RequiredKeys<SourceLine>,
 };
 
 describe('TypeScript types match the schema', () => {

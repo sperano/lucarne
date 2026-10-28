@@ -46,6 +46,7 @@ type run struct {
 	settling  int
 	retained  retained
 	replay    replay
+	sources   sources
 	subs      map[*Subscription]struct{}
 	// idle is when the last subscriber left, zero while one is subscribed.
 	idle time.Time
@@ -60,7 +61,7 @@ func newRun(h *Hub, src kube.Run, listed []contract.Attempt) *run {
 		changed: make(chan struct{}, 1), settled: make(chan struct{}),
 		src: src, subs: map[*Subscription]struct{}{}, idle: time.Now(), forgotten: map[string]bool{},
 	}
-	r.retained.bounds, r.replay.bounds = h.cfg.Bounds, h.cfg.Bounds
+	r.retained.bounds, r.replay.bounds, r.sources.bounds = h.cfg.Bounds, h.cfg.Bounds, h.cfg.Bounds
 	for _, l := range listed {
 		a := newAttempt(l)
 		// The initial attempts are the snapshot's state at seq 0.

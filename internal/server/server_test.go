@@ -23,6 +23,9 @@ const (
 
 var runKey1 = contract.RunKey{Cluster: "example", Namespace: "agents", TaskUID: "3f8e2a4c-1b2d-4e5f-8a9b-0c1d2e3f4a5b"}
 
+// sourceEventID is an event ID in canonical form.
+const sourceEventID = "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0:635a06eb36cc2997:2:0"
+
 func builtAssets() fstest.MapFS {
 	return fstest.MapFS{
 		"index.html":           {Data: []byte(testIndex)},
@@ -109,6 +112,8 @@ func TestRunEndpointsValidateTheKey(t *testing.T) {
 	checkAPIErrors(t, []apiErrorCase{
 		{http.MethodGet, runKey1.SnapshotPath(), http.StatusNotImplemented, contract.ErrorNotImplemented},
 		{http.MethodGet, runKey1.EventsPath(), http.StatusNotImplemented, contract.ErrorNotImplemented},
+		{http.MethodGet, runKey1.SourcePath(sourceEventID), http.StatusNotImplemented, contract.ErrorNotImplemented},
+		{http.MethodGet, runKey1.SourcePath(sourceEventID) + "/", http.StatusBadRequest, contract.ErrorInvalidRunKey},
 		{http.MethodGet, "/api/v1/runs/example/agents/example-claude-42", http.StatusBadRequest, contract.ErrorInvalidRunKey},
 		{http.MethodGet, "/api/v1/runs/Example/agents/" + runKey1.TaskUID + "/events", http.StatusBadRequest, contract.ErrorInvalidRunKey},
 		{http.MethodGet, "/api/v1/runs/example/agents/" + encodedTaskUID, http.StatusBadRequest, contract.ErrorInvalidRunKey},

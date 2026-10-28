@@ -31,13 +31,14 @@ const (
 	DefLive          = "Live"
 	DefErrorResponse = "ErrorResponse"
 	DefContractInfo  = "ContractInfo"
+	DefSourceLine    = "SourceLine"
 )
 
 // Documents lists the definitions a whole wire document is validated
 // against.
 var Documents = []string{
 	DefSnapshot, DefEvent, DefAttemptUpdate, DefRunUpdate,
-	DefReset, DefEnd, DefLive, DefErrorResponse, DefContractInfo,
+	DefReset, DefEnd, DefLive, DefErrorResponse, DefContractInfo, DefSourceLine,
 }
 
 // compiled maps each of Documents to its compiled schema. It is compiled

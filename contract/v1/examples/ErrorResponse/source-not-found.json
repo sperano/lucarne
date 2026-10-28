@@ -1,0 +1,6 @@
+{
+  "error": {
+    "code": "source_not_found",
+    "message": "the run holds no source line for this event: a gap, or a line no longer held"
+  }
+}

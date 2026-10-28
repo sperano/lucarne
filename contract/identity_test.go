@@ -174,3 +174,38 @@ func TestTimestampRejectsOffsets(t *testing.T) {
 		t.Errorf("a UTC time was rejected: %v", err)
 	}
 }
+
+func TestParseEventIDRoundTrip(t *testing.T) {
+	t.Parallel()
+	attempt := exampleAttempt.ID()
+	const origin = "635a06eb36cc2997"
+	for _, want := range []EventRef{
+		{Attempt: attempt, Origin: origin, Line: 42, Part: 1},
+		{Attempt: attempt, Origin: origin, Line: 120, Part: 0, Gap: true},
+	} {
+		id := EventID(want.Attempt, want.Origin, want.Line, want.Part)
+		if want.Gap {
+			id = GapEventID(want.Attempt, want.Origin, want.Line, want.Part)
+		}
+		if got, err := ParseEventID(id); err != nil || got != want {
+			t.Errorf("ParseEventID(%q) = %+v, %v, want %+v", id, got, err, want)
+		}
+	}
+}
+
+func TestParseEventIDRejectsNonCanonical(t *testing.T) {
+	t.Parallel()
+	attempt := exampleAttempt.ID()
+	for _, id := range []string{
+		attempt + ":635a06eb36cc2997:042:0",
+		attempt + ":635a06eb36cc2997:0:0",
+		attempt + ":635A06EB36CC2997:42:0",
+		attempt + ":635a06eb36cc2997:42",
+		attempt + ":635a06eb36cc2997:42:gap0",
+		"635a06eb36cc2997:42:0",
+	} {
+		if _, err := ParseEventID(id); !errors.Is(err, ErrInvalidKey) {
+			t.Errorf("ParseEventID(%q) err = %v, want ErrInvalidKey", id, err)
+		}
+	}
+}
