@@ -7,7 +7,7 @@ Instructions for anyone, human or agent, changing this repository.
 Lucarne is a read-only viewer for the transcripts of Kelos coding agents: it
 reads a run's pod logs (Claude stream-json, Codex `exec --json`, OpenCode
 `run --format json`), normalizes them into one event stream and renders
-them live in the browser, first as a conversation, later as an inspector.
+them live in the browser, as a conversation (the default) or an inspector.
 
 Lucarne observes; it never takes part. It does not start, steer or stop
 agents, and nothing in the agent pipeline waits on it.
@@ -16,7 +16,8 @@ Status: the conversation is complete and packaged. The contract, the
 fixtures, the server, the Claude Code, Codex and OpenCode adapters, the
 Kubernetes log source, the snapshot/SSE endpoints that wire them together,
 the live conversation view, the end-to-end suites and the container image
-exist; the inspector does not yet. Started without `-namespace`, the
+exist. The inspector's layout exists; its filters, source JSON and
+diagnostic navigation do not yet. Started without `-namespace`, the
 server reads no cluster and its run endpoints answer 501.
 
 ## What lives here, and what does not
@@ -44,7 +45,7 @@ expect. One executable, no database.
 | `internal/server/` | HTTP: `/healthz`, `/readyz`, `/api/v1/...` (the snapshot and the SSE stream over `internal/stream`), the embedded UI and its deep links, security headers. |
 | `internal/e2e/` | End-to-end tests over HTTP: the real source, stream and server over `scenario/`, the fake cluster of every runner fixture plus hostile, oversized, long, foreign-pod, private-namespace and live runs. `cmd/lucarne-e2e/` serves the same with the embedded UI and a `/_e2e/` control API for the browser suite; the image never holds it. |
 | `internal/privacy/` | The scan that keeps private data out of fixtures and examples. |
-| `web/` | The UI (Vite, Svelte 5, TypeScript). `web/src/lib/contract.ts` mirrors the contract; `web/embed.go` embeds `web/dist`. `web/src/conversation/` is the conversation view, over the pure modules of `web/src/lib/` (its model, the Markdown parser, safe links, item windows, search, and `live.ts`, which follows a run's snapshot and SSE stream into the bounded `runstore.ts`; `signin.ts` keeps the complete address across a proxy's sign-in); log content is only ever rendered as text, never with `{@html}`. `web/src/dev/` wraps the adapters' golden files in fabricated snapshots, and fakes the snapshot endpoint and `EventSource`, for the tests and for `npm run dev`'s `/fixtures.html` preview, which the build leaves out. `web/e2e/` is the browser suite (`npm run test:e2e`, its own Vitest config): Playwright's Chromium against `lucarne-e2e`, which its global setup builds. |
+| `web/` | The UI (Vite, Svelte 5, TypeScript). `web/src/lib/contract.ts` mirrors the contract; `web/embed.go` embeds `web/dist`. `web/src/conversation/` is the conversation view and `web/src/inspector/` the inspector (run context, the attempt's events as a keyboard-driven listbox, the selected event's detail through the conversation's own item components; `lib/inspector.ts` is its model); `RunPage.svelte` follows the run once and `ViewSwitch.svelte` switches between them in place, keeping attempt and `#event=`. Both are over the pure modules of `web/src/lib/` (the conversation model, the Markdown parser, safe links, item windows, search, and `live.ts`, which follows a run's snapshot and SSE stream into the bounded `runstore.ts`; `signin.ts` keeps the complete address across a proxy's sign-in); log content is only ever rendered as text, never with `{@html}`. `web/src/dev/` wraps the adapters' golden files in fabricated snapshots, and fakes the snapshot endpoint and `EventSource`, for the tests and for `npm run dev`'s `/fixtures.html` preview, which the build leaves out. `web/e2e/` is the browser suite (`npm run test:e2e`, its own Vitest config): Playwright's Chromium against `lucarne-e2e`, which its global setup builds. |
 | `scripts/smoke.sh` | Starts a built binary and checks the probes, the UI, an asset, a deep link, the contract endpoint and the 501 of a server without a source. |
 
 A contract change touches the schema, the Go types, `web/src/lib/contract.ts`

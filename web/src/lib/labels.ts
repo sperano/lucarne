@@ -6,6 +6,7 @@ import type {
   EndReason,
   CoverageState,
   EditChange,
+  EventKind,
   GapReason,
   LifecyclePhase,
   RawReason,
@@ -45,6 +46,18 @@ export const COVERAGE_LABELS: Record<CoverageState, string> = {
   ended: 'Log read to the end',
   unavailable: 'Log unavailable',
   expired: 'Log expired',
+};
+
+export const EVENT_KIND_LABELS: Record<EventKind, string> = {
+  message: 'Message',
+  tool_call: 'Tool call',
+  tool_result: 'Tool result',
+  edit: 'Edit',
+  usage: 'Usage',
+  error: 'Error',
+  lifecycle: 'Lifecycle',
+  raw: 'Raw line',
+  gap: 'Gap',
 };
 
 export const STATUS_LABELS: Record<ToolResultStatus, string> = {

@@ -1,30 +1,13 @@
 <script lang="ts">
   import type { EventOf } from '../lib/conversation';
-  import { formatCount, formatDuration } from '../lib/format';
   import { USAGE_SCOPE_LABELS } from '../lib/labels';
+  import { usageParts } from '../lib/usage';
 
   let { event }: { event: EventOf<'usage'> } = $props();
 
   const u = $derived(event.usage);
   // Only the counters the runner reported, as it named them.
-  const parts = $derived(
-    [
-      count(u.inputTokens, 'input tokens'),
-      count(u.outputTokens, 'output tokens'),
-      count(u.reasoningTokens, 'reasoning tokens'),
-      count(u.cacheReadTokens, 'cache read'),
-      count(u.cacheWriteTokens, 'cache write'),
-      count(u.totalTokens, 'total tokens'),
-      u.costUSD === undefined ? '' : `$${u.costUSD}`,
-      u.durationMs === undefined ? '' : formatDuration(u.durationMs),
-      u.apiDurationMs === undefined ? '' : `API ${formatDuration(u.apiDurationMs)}`,
-      u.turns === undefined ? '' : count(u.turns, u.turns === 1 ? 'turn' : 'turns'),
-    ].filter((part) => part !== ''),
-  );
-
-  function count(n: number | undefined, unit: string): string {
-    return n === undefined ? '' : `${formatCount(n)} ${unit}`;
-  }
+  const parts = $derived(usageParts(u));
 </script>
 
 <p class="usage">

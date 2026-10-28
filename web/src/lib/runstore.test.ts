@@ -96,6 +96,7 @@ describe('RunStore', () => {
     const shown = texts(store);
     expect(shown).toHaveLength(kept);
     expect(shown.at(-1)).toBe('over');
+    expect(store.view().conversationOf(ATTEMPT_ID).events).toHaveLength(kept);
     expect(store.view().stream.droppedEvents).toBe(maxEventsPerRun + 1 - kept);
   });
 

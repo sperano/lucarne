@@ -1,13 +1,15 @@
 # lucarne
 
 Live transcripts for coding agents: a read-only viewer for the output of
-Kelos agent runs (Claude Code, Codex, OpenCode), first as a conversation,
-later as an inspector.
+Kelos agent runs (Claude Code, Codex, OpenCode), as a conversation or, for
+the details, as an inspector.
 
 Status: the conversation is complete and packaged. The transcript contract,
 runner fixtures, the three runner adapters, the Kubernetes source, the
 snapshot/SSE server, the live conversation view, end-to-end tests and the
-container image are in place; the inspector is not built yet.
+container image are in place. The desktop inspector (`?view=inspector`: the
+run's context, its events in order, the selected event's detail) is built on
+the same live run; its filters and diagnostic navigation are not yet.
 
 - Contract (identity, events, limits, deep links, API, SSE/replay):
   [`contract/README.md`](contract/README.md)

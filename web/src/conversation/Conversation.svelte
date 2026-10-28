@@ -7,6 +7,7 @@
   import type { Target } from '../lib/window';
   import Finder from './Finder.svelte';
   import RunHeader from './RunHeader.svelte';
+  import SelectionNotices from './SelectionNotices.svelte';
   import StreamStatus from './StreamStatus.svelte';
   import Transcript from './Transcript.svelte';
 
@@ -133,37 +134,14 @@
       >
     </p>
   {/if}
-  {#if selection.missing !== undefined}
-    <p class="notice error" role="alert">
-      This run has no attempt <code>{selection.missing}</code>: the link names a pod this run does
-      not have, or no longer lists. Choose one of its attempts above.
-    </p>
-  {:else if !selected && finished}
-    <p class="notice info" role="note">
-      This run lists no attempt: its pod is gone, deleted or removed with its log, or was never
-      created.
-    </p>
-  {:else if !selected}
-    <p class="notice info" role="note">
-      This run has no attempt yet: its pod has not been created{live
-        ? '; it is shown here once it starts'
-        : ''}.
-    </p>
-  {/if}
-  {#if event !== undefined && selected !== undefined && linked === undefined}
-    <p class="notice warning" role="alert">
-      {#if !eventHere}
-        The linked event <code>{event}</code> belongs to another attempt than the one shown.
-      {:else if live}
-        The linked event <code>{event}</code> is not in this transcript yet: it is shown if it arrives.
-        The log may have been read again since the link was made, or the run dropped the event to stay
-        within its bounds.
-      {:else}
-        The linked event <code>{event}</code> is not in this transcript: the log was read again since
-        the link was made, or the run dropped the event to stay within its bounds.
-      {/if}
-    </p>
-  {/if}
+  <SelectionNotices
+    {selection}
+    {finished}
+    {live}
+    {event}
+    {eventHere}
+    found={linked !== undefined}
+  />
   {#if conversation && selected}
     <Finder
       bind:query

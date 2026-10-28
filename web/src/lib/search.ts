@@ -54,7 +54,11 @@ export function textOf(item: Item): string {
 
 function failed(item: Item): boolean {
   if (item.kind === 'tool') return isFailure(item.result?.toolResult.status);
-  const event = item.event;
+  return failedEvent(item.event);
+}
+
+/** Whether event reports a failure: a runner error, a failed or declined result, a failed phase. */
+export function failedEvent(event: TranscriptEvent): boolean {
   switch (event.kind) {
     case 'error':
       return true;
