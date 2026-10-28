@@ -1,7 +1,7 @@
 /*
  * Lucarne's palette and the styles the views share. Every text colour is
  * paired with the backgrounds it is used on in theme.test.ts, which checks
- * the WCAG AA contrast ratios; add a pair there when you add a colour.
+ * both palettes for WCAG AA contrast; add a pair there when you add a colour.
  */
 :root {
   --bg: #ffffff;
@@ -34,7 +34,36 @@
   --radius: 6px;
   --column: 64rem;
 
-  color-scheme: light;
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --border: #30363d;
+    --text: #e6edf3;
+    --text-muted: #8b949e;
+    --link: #58a6ff;
+    --focus: #58a6ff;
+    --ok: #3fb950;
+    --error: #f85149;
+    --error-bg: #3d1117;
+    --error-text: #ff7b72;
+    --warn-bg: #3b2e00;
+    --warn-text: #e3b341;
+    --warn-border: #9e6a03;
+    --info-bg: #121d2f;
+    --info-text: #79c0ff;
+    --user-bg: #1f2d3d;
+    --code-bg: #161b22;
+    --diff-add-bg: #12261e;
+    --diff-add-text: #56d364;
+    --diff-del-bg: #33151b;
+    --diff-del-text: #ff7b72;
+    --diff-hunk-bg: #1b2a41;
+    --diff-hunk-text: #79c0ff;
+  }
 }
 
 body {

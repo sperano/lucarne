@@ -7,9 +7,15 @@ const TEXT_CONTRAST = 4.5;
 const NON_TEXT_CONTRAST = 3;
 
 const css = readFileSync(new URL('./theme.css', import.meta.url), 'utf8');
-const palette = new Map(
-  [...css.matchAll(/--([a-z-]+):\s*(#[0-9a-f]{6});/g)].map((m) => [m[1] ?? '', m[2] ?? '']),
+const rootBlock = requiredBlock(css.match(/:root\s*{([^}]*)}/), 'light');
+const darkBlock = requiredBlock(
+  css.match(/@media\s*\(prefers-color-scheme:\s*dark\)\s*{\s*:root\s*{([^}]*)}/),
+  'dark',
 );
+const palettes = [
+  ['light', palette(rootBlock)],
+  ['dark', palette(darkBlock)],
+] as const;
 
 // Every text colour on every background it is used on.
 const TEXT_PAIRS: readonly (readonly [string, string])[] = [
@@ -62,19 +68,50 @@ function contrast(a: string, b: string): number {
   return ((hi ?? 0) + FLARE) / ((lo ?? 0) + FLARE);
 }
 
-function colour(name: string): string {
+function requiredBlock(match: RegExpMatchArray | null, name: string): string {
+  const block = match?.[1];
+  if (block === undefined) throw new Error(`theme.css has no ${name} palette`);
+  return block;
+}
+
+function palette(block: string): ReadonlyMap<string, string> {
+  return new Map(
+    [...block.matchAll(/--([a-z-]+):\s*(#[0-9a-f]{6});/g)].map((match) => [
+      match[1] ?? '',
+      match[2] ?? '',
+    ]),
+  );
+}
+
+function colour(palette: ReadonlyMap<string, string>, name: string): string {
   const value = palette.get(name);
   if (value === undefined) throw new Error(`theme.css has no --${name}`);
   return value;
 }
 
-describe('theme contrast', () => {
+describe.each(palettes)('%s theme contrast', (_name, palette) => {
   it.each(TEXT_PAIRS)('--%s on --%s meets AA for text', (fg, bg) => {
-    expect(contrast(colour(fg), colour(bg))).toBeGreaterThanOrEqual(TEXT_CONTRAST);
+    expect(contrast(colour(palette, fg), colour(palette, bg))).toBeGreaterThanOrEqual(
+      TEXT_CONTRAST,
+    );
   });
 
   it.each(FOCUS_PAIRS)('--%s on --%s meets non-text contrast', (fg, bg) => {
-    expect(contrast(colour(fg), colour(bg))).toBeGreaterThanOrEqual(NON_TEXT_CONTRAST);
+    expect(contrast(colour(palette, fg), colour(palette, bg))).toBeGreaterThanOrEqual(
+      NON_TEXT_CONTRAST,
+    );
+  });
+});
+
+describe('theme palettes', () => {
+  it('lets the system choose light or dark controls', () => {
+    expect(rootBlock).toMatch(/color-scheme:\s*light dark;/);
+  });
+
+  it('defines the same colours in both palettes', () => {
+    const [, light] = palettes[0];
+    const [, dark] = palettes[1];
+    expect([...dark.keys()].sort()).toEqual([...light.keys()].sort());
   });
 
   it('computes the reference ratio', () => {
