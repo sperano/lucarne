@@ -380,6 +380,8 @@
     "maxRunBytes": 33554432,
     "maxAttemptsPerRun": 16,
     "maxReplayUpdates": 5000,
-    "maxClientQueue": 1024
+    "maxClientQueue": 1024,
+    "maxSourceBytes": 65536,
+    "maxRunSourceBytes": 16777216
   }
 }

@@ -182,6 +182,8 @@ Named in [`limits.go`](limits.go), published in every snapshot and by
 | `maxAttemptsPerRun` | 16 | attempts listed |
 | `maxReplayUpdates` | 5 000 | updates replayable to a reconnecting client |
 | `maxClientQueue` | 1 024 | updates queued for one slow client |
+| `maxSourceBytes` | 64 KiB | the text of one source line served (below) |
+| `maxRunSourceBytes` | 16 MiB | source lines a run retains; the oldest go first |
 
 Text is cut at a UTF-8 boundary. Lifecycle `outputs` holds at most 64
 entries and `truncated` at most 8 names.
@@ -215,6 +217,7 @@ except the stream.
 | `/api/v1/contract` | `ContractInfo`: schema version and limits |
 | `/api/v1/runs/{cluster}/{namespace}/{taskUID}` | `Snapshot` |
 | `/api/v1/runs/{cluster}/{namespace}/{taskUID}/events` | `text/event-stream` (below) |
+| `/api/v1/runs/{cluster}/{namespace}/{taskUID}/source/{eventID}` | `SourceLine`: the log line the event came from (below) |
 | `/healthz` (not versioned) | `ok` |
 
 Errors are an `ErrorResponse` `{"error": {"code", "message"}}`: 400
@@ -224,9 +227,11 @@ endpoint at this path), 405 `method_not_allowed` (any method but `GET` or
 `HEAD`), 501 `not_implemented` (a server started without a cluster to
 read), 503 `unavailable` (the Kubernetes API did not answer or refused the
 server, the server follows as many runs as it can, or it is shutting down),
-500 `internal`. Every path under `/api/v1/runs/` that is not one of the two
-run paths above, a trailing slash included, is an `invalid_run_key`, and so
-is a run key with a percent-encoded character, as for deep links. An error
+500 `internal`; and for a source line, 400 `invalid_event_id` (not an event
+ID in canonical form) and 404 `source_not_found` (below). Every path under
+`/api/v1/runs/` that is not one of the run paths above, a trailing slash
+included, is an `invalid_run_key`, and so is a run key with a
+percent-encoded character, as for deep links. An error
 message is one of the server's own: an error of the source, which can name
 hosts or credentials, is logged and never sent.
 
@@ -237,6 +242,20 @@ opened after it always delivers the `end` of a run that has one. The first
 snapshot of a run the server was not following waits, a few seconds at most,
 for the logs of its terminated attempts to be read, so a finished run opens
 whole.
+
+A **source line** is what the inspector shows next to an event's
+normalized content: the line of the attempt's log the event came from, as
+the runner wrote it (`text`, without the timestamp prefix, cut to
+`maxSourceBytes` at a UTF-8 boundary; `bytes`, the whole line's length), with
+the `attempt`, `origin` and `line` the event ID names. Every event a line
+produced has that line; a gap has none. The server holds the lines of the
+runs it follows, beside their events and as long as them, bounded by
+`maxRunSourceBytes` and `maxEventsPerRun`, the oldest dropped first; it keeps
+nothing else and reads nothing again to answer. It answers 404
+`source_not_found` for a gap, a line dropped, a line of a run evicted and
+read again under another origin, or an event of another run: the run is
+resolved and authorized exactly as for its snapshot, and only the lines it
+read for that run are looked in.
 
 ## SSE stream and replay
 

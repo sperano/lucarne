@@ -12,12 +12,14 @@ import (
 // Messages of the run endpoints' errors. They are fixed: an error of the
 // source can name hosts or credentials, so it is only logged.
 const (
-	noSourceMessage    = "this server reads no cluster: start it with -cluster and -namespace"
-	runNotFoundMessage = "no such run, or it expired"
-	busyMessage        = "the server follows as many runs as it can: try again later"
-	closedMessage      = "the server is shutting down"
-	forbiddenMessage   = "the Kubernetes API refused to let the server read this run"
-	unavailableMessage = "the Kubernetes API did not answer"
+	noSourceMessage     = "this server reads no cluster: start it with -cluster and -namespace"
+	runNotFoundMessage  = "no such run, or it expired"
+	busyMessage         = "the server follows as many runs as it can: try again later"
+	closedMessage       = "the server is shutting down"
+	forbiddenMessage    = "the Kubernetes API refused to let the server read this run"
+	unavailableMessage  = "the Kubernetes API did not answer"
+	invalidEventMessage = "not an event ID in canonical form"
+	noSourceLineMessage = "the run holds no source line for this event: a gap, or a line no longer held"
 )
 
 // snapshot answers GET /api/v1/runs/{cluster}/{namespace}/{taskUID}.
@@ -27,6 +29,30 @@ func (s *server) snapshot(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	body, err := s.runs.Snapshot(r.Context(), key)
+	if err != nil {
+		s.runError(w, r, key, err)
+		return
+	}
+	s.writeEncoded(w, http.StatusOK, append(body, '\n'))
+}
+
+// source answers GET /api/v1/runs/{cluster}/{namespace}/{taskUID}/source/{eventID},
+// the log line the event came from.
+func (s *server) source(w http.ResponseWriter, r *http.Request) {
+	key, ok := s.servedRunKey(w, r)
+	if !ok {
+		return
+	}
+	ref, err := contract.ParseEventID(r.PathValue("eventID"))
+	if err != nil {
+		s.writeError(w, http.StatusBadRequest, contract.ErrorInvalidEventID, invalidEventMessage)
+		return
+	}
+	body, err := s.runs.Source(r.Context(), key, ref)
+	if errors.Is(err, stream.ErrSourceNotFound) {
+		s.writeError(w, http.StatusNotFound, contract.ErrorSourceNotFound, noSourceLineMessage)
+		return
+	}
 	if err != nil {
 		s.runError(w, r, key, err)
 		return

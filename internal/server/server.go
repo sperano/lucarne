@@ -34,7 +34,7 @@ const (
 
 	notBuiltMessage = "frontend not built: run `npm run build` in web/\n"
 
-	notARunPathMessage = "not a run path: want runs/{cluster}/{namespace}/{taskUID}, optionally followed by /events"
+	notARunPathMessage = "not a run path: want runs/{cluster}/{namespace}/{taskUID}, optionally followed by /events or /source/{eventID}"
 
 	// allowedMethods is the Allow header of a 405: every endpoint is GET.
 	allowedMethods = "GET, HEAD"
@@ -107,6 +107,7 @@ func New(assets fs.FS, opts Options) http.Handler {
 	mux.HandleFunc("GET "+contract.ContractPath, s.contractInfo)
 	mux.HandleFunc("GET "+contract.APIPrefix+"/runs/{cluster}/{namespace}/{taskUID}", s.snapshot)
 	mux.HandleFunc("GET "+contract.APIPrefix+"/runs/{cluster}/{namespace}/{taskUID}/events", s.events)
+	mux.HandleFunc("GET "+contract.APIPrefix+"/runs/{cluster}/{namespace}/{taskUID}/source/{eventID}", s.source)
 	mux.HandleFunc("GET "+contract.APIPrefix+"/runs/", s.notARunPath)
 	mux.HandleFunc(contract.APIPrefix, s.apiNotFound)
 	mux.HandleFunc(contract.APIPrefix+"/", s.apiNotFound)

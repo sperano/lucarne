@@ -9,7 +9,8 @@
 // attempts, one per attempt reads its log through the runner's adapter.
 // Every change is an update with the run's next seq, encoded once and kept
 // in a bounded replay buffer; transcript events are also retained, bounded,
-// for snapshots. All of it happens under the run's lock, so a snapshot
+// for snapshots, and so are the log lines they came from, for the
+// inspector's source view (sources.go). All of it happens under the run's lock, so a snapshot
 // reflects exactly the updates up to its lastSeq and a subscription from
 // that cursor gets exactly the later ones: neither misses nor repeats an
 // update. The history is named by a random epoch: a server restart, or a

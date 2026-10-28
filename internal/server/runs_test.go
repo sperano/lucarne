@@ -342,7 +342,8 @@ func TestRunErrorsNameNoSecret(t *testing.T) {
 			src := streamtest.NewSource(contract.PhaseRunning, contract.RunnerUnknown)
 			src.SetRunError(tt.err)
 			srv := liveServer(t, src)
-			for _, path := range []string{tt.key.SnapshotPath(), tt.key.EventsPath()} {
+			anEvent := contract.EventID(attempt.ID, streamtest.Origin("errors"), 1, 0)
+			for _, path := range []string{tt.key.SnapshotPath(), tt.key.EventsPath(), tt.key.SourcePath(anEvent)} {
 				res := get(t, srv.Config.Handler, path)
 				data := body(t, res)
 				if res.StatusCode != tt.status || !strings.Contains(data, `"code":"`+string(tt.code)+`"`) {

@@ -71,7 +71,7 @@ func TestGoTypesMatchSchemaObjects(t *testing.T) {
 		"Retry": Retry{}, "ErrorInfo": ErrorInfo{}, "Output": Output{}, "Lifecycle": Lifecycle{},
 		"Raw": Raw{}, "Gap": Gap{}, "Event": Event{}, "Snapshot": Snapshot{},
 		"AttemptUpdate": AttemptUpdate{}, "RunUpdate": RunUpdate{}, "Reset": Reset{}, "End": End{}, "Live": Live{},
-		"ErrorResponse": ErrorResponse{}, "ContractInfo": ContractInfo{},
+		"ErrorResponse": ErrorResponse{}, "ContractInfo": ContractInfo{}, "SourceLine": SourceLine{},
 	}
 	for name, value := range types {
 		t.Run(name, func(t *testing.T) {
@@ -174,7 +174,7 @@ func apiEnumCases(defs map[string]map[string]any) []enumCase {
 		{"end reasons", property(defs, "End", "reason"), toStrings([]EndReason{
 			EndRunFinished, EndRunDeleted})},
 		{"error codes", asMap(asMap(property(defs, "ErrorResponse", "error")["properties"])["code"]),
-			toStrings([]ErrorCode{ErrorInvalidRunKey, ErrorRunNotFound, ErrorNotImplemented, ErrorInternal, ErrorNotFound, ErrorMethodNotAllowed, ErrorUnavailable})},
+			toStrings([]ErrorCode{ErrorInvalidRunKey, ErrorRunNotFound, ErrorNotImplemented, ErrorInternal, ErrorNotFound, ErrorMethodNotAllowed, ErrorUnavailable, ErrorInvalidEventID, ErrorSourceNotFound})},
 	}
 }
 
@@ -209,7 +209,7 @@ func TestSchemaBoundsMatchLimits(t *testing.T) {
 	maxLength := map[string]int{
 		"Label": MaxLabelBytes, "Text": MaxTextBytes, "ToolInputText": MaxToolInputBytes,
 		"ToolOutputText": MaxToolOutputBytes, "DiffText": MaxDiffBytes, "RawText": MaxRawBytes,
-		"Path": MaxPathBytes,
+		"Path": MaxPathBytes, "SourceText": MaxSourceBytes,
 	}
 	for def, limit := range maxLength {
 		if got := defs[def]["maxLength"]; got != float64(limit) {

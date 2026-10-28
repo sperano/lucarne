@@ -58,6 +58,9 @@ func (s *logSink) Line(origin string, line adapter.Line) error {
 	if lost {
 		s.gapLocked(contract.Gap{Reason: contract.GapReadInterrupted, Detail: DetailNotLinedUp}, number)
 	}
+	if number != 0 && line.Bytes > 0 {
+		s.r.sources.add(s.a.key.ID(), s.origin, line)
+	}
 	for _, ev := range events {
 		s.r.publishEventLocked(ev)
 	}

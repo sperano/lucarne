@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import snapshot from '../../../contract/v1/examples/Snapshot/claude-session.json';
 import notFound from '../../../contract/v1/examples/ErrorResponse/run-not-found.json';
-import { loadSnapshot, snapshotPath } from './api';
+import sourceNotFound from '../../../contract/v1/examples/ErrorResponse/source-not-found.json';
+import sourceLine from '../../../contract/v1/examples/SourceLine/assistant-line.json';
+import { loadSnapshot, loadSource, snapshotPath, sourcePath } from './api';
 
 const KEY = snapshot.run.key;
 const OK = 200;
@@ -60,5 +62,44 @@ describe('loadSnapshot', () => {
     expect(snapshotPath(KEY)).toBe(
       '/api/v1/runs/example/agents/3f8e2a4c-1b2d-4e5f-8a9b-0c1d2e3f4a5b',
     );
+  });
+});
+
+describe('loadSource', () => {
+  const EVENT = snapshot.events[0]?.id ?? '';
+  const answeringSource =
+    (status: number, body: unknown): typeof fetch =>
+    (input) => {
+      expect(input).toBe(sourcePath(KEY, EVENT));
+      return Promise.resolve(new Response(JSON.stringify(body), { status }));
+    };
+
+  it('builds the API path of an event source line', () => {
+    expect(sourcePath(KEY, EVENT)).toBe(`${snapshotPath(KEY)}/source/${EVENT}`);
+  });
+
+  it('returns a source line of the contract version', async () => {
+    expect(await loadSource(KEY, EVENT, answeringSource(OK, sourceLine))).toEqual({
+      ok: true,
+      line: sourceLine,
+    });
+    expect(await loadSource(KEY, EVENT, answeringSource(OK, { text: '{}' }))).toMatchObject({
+      ok: false,
+      status: OK,
+    });
+  });
+
+  it('returns the error of a line the run does not hold', async () => {
+    expect(await loadSource(KEY, EVENT, answeringSource(NOT_FOUND, sourceNotFound))).toEqual({
+      ok: false,
+      status: NOT_FOUND,
+      code: 'source_not_found',
+      message: sourceNotFound.error.message,
+    });
+  });
+
+  it('asks to sign in again on a redirect', async () => {
+    const redirected = () => Promise.resolve({ type: 'opaqueredirect', status: 0 } as Response);
+    expect(await loadSource(KEY, EVENT, redirected)).toMatchObject({ ok: false, signIn: true });
   });
 });

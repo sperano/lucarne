@@ -159,6 +159,7 @@ func newDocument(t *testing.T, def string) any {
 		DefLive:          &Live{},
 		DefErrorResponse: &ErrorResponse{},
 		DefContractInfo:  &ContractInfo{},
+		DefSourceLine:    &SourceLine{},
 	}
 	doc, ok := documents[def]
 	if !ok {
