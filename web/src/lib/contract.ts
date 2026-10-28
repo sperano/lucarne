@@ -77,6 +77,7 @@ export const LIFECYCLE_PHASES = [
   'turn_failed',
   'compacted',
   'session_completed',
+  'rate_limit_status',
   'limit_hit',
   'kelos_outputs',
 ] as const;

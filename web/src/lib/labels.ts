@@ -93,6 +93,7 @@ export const LIFECYCLE_LABELS: Record<LifecyclePhase, string> = {
   turn_failed: 'Turn failed',
   compacted: 'Context compacted',
   session_completed: 'Session completed',
+  rate_limit_status: 'Rate limit status',
   limit_hit: 'Usage limit hit',
   kelos_outputs: 'Kelos outputs',
 };

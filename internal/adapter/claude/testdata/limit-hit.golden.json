@@ -20,16 +20,17 @@
     "seq": 2,
     "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0:36d596781bc86f41:2:0",
     "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0",
-    "kind": "raw",
+    "kind": "lifecycle",
     "source": {
       "line": 2,
       "part": 0,
       "type": "rate_limit_event"
     },
-    "raw": {
-      "reason": "unsupported",
-      "text": "{\"type\":\"rate_limit_event\",\"rate_limit_info\":{\"status\":\"rejected\",\"unifiedRateLimitFallbackAvailable\":false,\"resetsAt\":1792936800,\"rateLimitType\":\"five_hour\"},\"uuid\":\"00000000-0000-4000-8000-00000000001c\",\"session_id\":\"0b1c2d3e-4f50-4617-8293-a4b5c6d7e8f9\"}",
-      "bytes": 257
+    "lifecycle": {
+      "phase": "rate_limit_status",
+      "sessionId": "0b1c2d3e-4f50-4617-8293-a4b5c6d7e8f9",
+      "subtype": "rejected",
+      "detail": "{\"status\":\"rejected\",\"unifiedRateLimitFallbackAvailable\":false,\"resetsAt\":1792936800,\"rateLimitType\":\"five_hour\"}"
     }
   },
   {

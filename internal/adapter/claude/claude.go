@@ -14,8 +14,7 @@ const (
 	typeAssistant = "assistant"
 	typeUser      = "user"
 	typeResult    = "result"
-	// typeRateLimit reports the account's rate limit status; there is no
-	// event kind for it.
+	// typeRateLimit reports the account's rate limit status.
 	typeRateLimit = "rate_limit_event"
 	// typeStreamEvent is a partial message, printed only with
 	// --include-partial-messages, which Kelos does not pass; the complete
@@ -38,7 +37,7 @@ var renderedSubtypes = map[string]bool{subtypeInit: true, subtypeAPIRetry: true,
 var unsupportedSubtypes = map[string]bool{subtypeThinkingTokens: true}
 
 // unsupportedTypes are line types the parser knows and does not render.
-var unsupportedTypes = map[string]bool{typeRateLimit: true, typeStreamEvent: true}
+var unsupportedTypes = map[string]bool{typeStreamEvent: true}
 
 // Parser normalizes Claude Code stream-json lines. It is an adapter.Runner;
 // it keeps only the tool calls still waiting for their result.
@@ -82,6 +81,8 @@ func (p *Parser) render(h head, text []byte, out *adapter.Emitter) bool {
 		return p.renderUser(text, out)
 	case typeResult:
 		return renderResult(text, out)
+	case typeRateLimit:
+		return renderRateLimit(text, out)
 	}
 	return false
 }
@@ -96,7 +97,7 @@ func rawReason(h head) contract.RawReason {
 			return contract.RawUnknownType
 		}
 		return contract.RawUnsupported
-	case typeAssistant, typeUser, typeResult:
+	case typeAssistant, typeUser, typeResult, typeRateLimit:
 		return contract.RawUnsupported
 	}
 	if unsupportedTypes[h.Type] {
