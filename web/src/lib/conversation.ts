@@ -154,7 +154,7 @@ function isThinking(event: TranscriptEvent): boolean {
 }
 
 /** Whether item is a batch of the runner's thinking progress. */
-export function isThinkingItem(item: Item): boolean {
+function isThinkingItem(item: Item): boolean {
   return item.kind === 'event' && isThinking(item.event);
 }
 
