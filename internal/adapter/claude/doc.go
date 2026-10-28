@@ -12,6 +12,8 @@
 //     response came) and the announced retry.
 //   - system/compact_boundary: a compacted lifecycle event whose detail is
 //     compact_metadata as written.
+//   - system/thinking_tokens: a thinking lifecycle event (session), one per
+//     progress line while a thinking block streams.
 //   - rate_limit_event: a rate_limit_status lifecycle event whose subtype is
 //     the status, whose sessionId is the source session and whose detail is
 //     rate_limit_info as written.
@@ -29,9 +31,8 @@
 //   - result: a session_completed lifecycle event, the session's usage
 //     (tokens, total_cost_usd as a decimal string, durations, turns), and an
 //     error per errors entry.
-//   - anything else is raw: system/thinking_tokens progress and stream_event
-//     (partial messages, which Kelos does not ask for) as unsupported, other
-//     types and system subtypes as
+//   - anything else is raw: stream_event (partial messages, which Kelos does
+//     not ask for) as unsupported, other types and system subtypes as
 //     unknown_type, a line that does not parse as malformed_json, and text as
 //     text. A content block the parser does not render is raw too, as its own
 //     event of the line.
@@ -50,10 +51,9 @@
 //     run ended before has no result at all.
 //   - Messages and results inside a subagent are not marked as such: the
 //     contract has a parent only on tool calls.
-//   - Not rendered: approximate current-block thinking token progress
+//   - Not rendered: the estimated token count of thinking progress
 //     (thinking_tokens), the per-model usage (modelUsage), permission_denials,
-//     the result text (it repeats the
-//     last assistant message), retry waits without a response (no_response),
+//     the result text (it repeats the last assistant message), retry waits without a response (no_response),
 //     redacted thinking, images and documents, and the edits of NotebookEdit
 //     or of tools other than Edit, MultiEdit and Write.
 //   - Times: a line's timestamp field, when present, is its runnerTime; the

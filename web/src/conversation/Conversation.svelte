@@ -1,5 +1,6 @@
 <script lang="ts">
   import { formatCount } from '../lib/format';
+  import { shownItems } from '../lib/conversation';
   import type { Connection } from '../lib/live';
   import type { RunView } from '../lib/runstore';
   import { passes, search, type ItemFilter } from '../lib/search';
@@ -74,8 +75,12 @@
   let filter: ItemFilter = $state('all');
   let current: string | undefined = $state();
   let request: Target | undefined = $state();
+  // Whether the attempt shown may still grow: its last item can be the model thinking.
+  const growing = $derived(live && selected?.coverage.state === 'following');
   const items = $derived(
-    conversation ? conversation.items.filter((i) => filter === 'all' || passes(i, filter)) : [],
+    conversation
+      ? shownItems(conversation.items, growing).filter((i) => filter === 'all' || passes(i, filter))
+      : [],
   );
   const matches = $derived(search(items, query));
   const matchSet = $derived(new Set(matches));

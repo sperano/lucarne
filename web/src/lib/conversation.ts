@@ -1,8 +1,9 @@
 // The conversation view's model: one attempt's events in order, a tool call
-// grouped with its result and the edits it made, everything else one item
-// per event. Nothing is dropped: an event that cannot be grouped (a result
-// or an edit whose call is not in the transcript, a second result for one
-// call) stays an item of its own.
+// grouped with its result and the edits it made, a batch of thinking
+// progress one item, everything else one item per event. Nothing is
+// dropped: an event that cannot be grouped (a result or an edit whose call
+// is not in the transcript, a second result for one call) stays an item of
+// its own.
 //
 // Items are immutable: an event that joins a tool item replaces it with a
 // new one, so a live view can add events one at a time and the components
@@ -82,6 +83,9 @@ export class ConversationBuilder {
         else this.push({ kind: 'event', id: event.id, event });
         return;
       }
+      case 'lifecycle':
+        this.addLifecycle(event);
+        return;
       default:
         this.push({ kind: 'event', id: event.id, event });
     }
@@ -118,6 +122,18 @@ export class ConversationBuilder {
     this.push(created);
   }
 
+  /** A thinking event right after another joins its item, which then shows the latest. */
+  private addLifecycle(event: EventOf<'lifecycle'>): void {
+    const index = this.items.length - 1;
+    const last = this.items[index];
+    if (isThinking(event) && last?.kind === 'event' && isThinking(last.event)) {
+      this.items[index] = { ...last, event };
+      this.itemOf.set(event.id, index);
+      return;
+    }
+    this.push({ kind: 'event', id: event.id, event });
+  }
+
   private push(item: Item): void {
     this.itemOf.set(item.id, this.items.length);
     this.items.push(item);
@@ -131,4 +147,26 @@ export class ConversationBuilder {
     this.calls.set(next.call.toolCall.callId, next);
     this.itemOf.set(id, index);
   }
+}
+
+function isThinking(event: TranscriptEvent): boolean {
+  return event.kind === 'lifecycle' && event.lifecycle.phase === 'thinking';
+}
+
+/** Whether item is a batch of the runner's thinking progress. */
+export function isThinkingItem(item: Item): boolean {
+  return item.kind === 'event' && isThinking(item.event);
+}
+
+/**
+ * The items a conversation shows: a batch of thinking progress only while the
+ * model is still at it, as the last item of a live attempt, or when keep (a
+ * link's, a search result's) names it. Everywhere else the reasoning or the
+ * reply that followed says the rest.
+ */
+export function shownItems(items: readonly Item[], live: boolean, keep?: string): readonly Item[] {
+  const last = items.length - 1;
+  return items.filter(
+    (item, i) => !isThinkingItem(item) || (live && i === last) || item.id === keep,
+  );
 }

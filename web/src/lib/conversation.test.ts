@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { eventMaker } from '../dev/events';
 import { FIXTURE_RUNS } from '../dev/fixtures';
-import { ConversationBuilder, buildConversation } from './conversation';
+import { ConversationBuilder, buildConversation, shownItems } from './conversation';
 
 const ATTEMPT = '7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.codex.0';
 const OTHER = '9e8d7c6b-5a4f-4e3d-8c2b-1a0f9e8d7c6b.codex.0';
@@ -18,6 +18,11 @@ const edit = (callId?: string) =>
     kind: 'edit',
     edit: { path: '/workspace/repo/a.go', change: 'update', ...(callId ? { callId } : {}) },
   });
+
+const thinking = () =>
+  ev({ kind: 'lifecycle', lifecycle: { phase: 'thinking', sessionId: 'session-example' } });
+const say = (text: string) =>
+  ev({ kind: 'message', message: { role: 'assistant', type: 'text', text } });
 
 describe('buildConversation', () => {
   it('groups a call with its result and edits, keeping the call position', () => {
@@ -129,5 +134,32 @@ describe('ConversationBuilder', () => {
     const [tool] = before.items;
     expect(tool?.kind === 'tool' && tool.result).toBeUndefined();
     expect(after.calls.get('c9')).toBe(after.items[0]);
+  });
+});
+
+describe('thinking progress', () => {
+  it('makes one item of a batch, showing its latest event', () => {
+    const batch = [thinking(), thinking(), thinking()];
+    const events = [say('before'), ...batch, say('after'), thinking()];
+    const c = buildConversation(events, ATTEMPT);
+    expect(c.items.map((i) => i.id)).toEqual([
+      events[0]?.id,
+      batch[0]?.id,
+      events[4]?.id,
+      events[5]?.id,
+    ]);
+    const item = c.items[1];
+    expect(item?.kind === 'event' && item.event.id).toBe(batch[2]?.id);
+    for (const e of batch) expect(c.itemOf.get(e.id)).toBe(1);
+    expect(c.events).toHaveLength(events.length);
+  });
+
+  it('is shown only as the last item of an attempt still growing, or when kept', () => {
+    const early = thinking();
+    const c = buildConversation([early, say('reply'), thinking()], ATTEMPT);
+    const [first, reply, last] = c.items;
+    expect(shownItems(c.items, true)).toEqual([reply, last]);
+    expect(shownItems(c.items, false)).toEqual([reply]);
+    expect(shownItems(c.items, false, early.id)).toEqual([first, reply]);
   });
 });

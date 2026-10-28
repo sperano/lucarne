@@ -78,6 +78,7 @@ export const LIFECYCLE_PHASES = [
   'turn_completed',
   'turn_failed',
   'compacted',
+  'thinking',
   'session_completed',
   'rate_limit_status',
   'limit_hit',

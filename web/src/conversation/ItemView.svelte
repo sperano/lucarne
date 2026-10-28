@@ -9,6 +9,7 @@
   import MessageView from './MessageView.svelte';
   import OrphanResult from './OrphanResult.svelte';
   import RawLine from './RawLine.svelte';
+  import ThinkingLine from './ThinkingLine.svelte';
   import ToolCard from './ToolCard.svelte';
   import UsageLine from './UsageLine.svelte';
 
@@ -18,6 +19,7 @@
     coverage,
     limits,
     targeted,
+    ongoing = false,
   }: {
     item: Item;
     conversation: Conversation;
@@ -25,6 +27,8 @@
     limits: Limits;
     /** Whether the page's #event= link, or the search result shown, points into this item: it opens. */
     targeted: boolean;
+    /** Whether the item is the end of an attempt still being read: thinking shows as under way. */
+    ongoing?: boolean;
   } = $props();
 
   function parentName(parentCallId: string | undefined): string | undefined {
@@ -55,6 +59,8 @@
   <UsageLine event={item.event} />
 {:else if item.event.kind === 'error'}
   <ErrorNotice event={item.event} {limits} />
+{:else if item.event.kind === 'lifecycle' && item.event.lifecycle.phase === 'thinking'}
+  <ThinkingLine {ongoing} />
 {:else if item.event.kind === 'lifecycle'}
   <LifecycleLine event={item.event} {limits} />
 {:else if item.event.kind === 'raw'}

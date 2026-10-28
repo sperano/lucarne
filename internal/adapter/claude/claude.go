@@ -31,10 +31,9 @@ const (
 )
 
 // renderedSubtypes are the system subtypes the parser renders.
-var renderedSubtypes = map[string]bool{subtypeInit: true, subtypeAPIRetry: true, subtypeCompactBoundary: true}
-
-// unsupportedSubtypes are system subtypes the parser knows and does not render.
-var unsupportedSubtypes = map[string]bool{subtypeThinkingTokens: true}
+var renderedSubtypes = map[string]bool{
+	subtypeInit: true, subtypeAPIRetry: true, subtypeCompactBoundary: true, subtypeThinkingTokens: true,
+}
 
 // unsupportedTypes are line types the parser knows and does not render.
 var unsupportedTypes = map[string]bool{typeStreamEvent: true}
@@ -93,7 +92,7 @@ func (p *Parser) render(h head, text []byte, out *adapter.Emitter) bool {
 func rawReason(h head) contract.RawReason {
 	switch h.Type {
 	case typeSystem:
-		if !renderedSubtypes[h.Subtype] && !unsupportedSubtypes[h.Subtype] {
+		if !renderedSubtypes[h.Subtype] {
 			return contract.RawUnknownType
 		}
 		return contract.RawUnsupported
@@ -132,8 +131,9 @@ type systemLine struct {
 	CompactMetadata json.RawMessage `json:"compact_metadata"`
 }
 
-// renderSystem renders init, api_retry and compact_boundary; any other
-// subtype is left raw (hooks, tasks, status, and those still to come).
+// renderSystem renders init, api_retry, compact_boundary and thinking_tokens;
+// any other subtype is left raw (hooks, tasks, status, and those still to
+// come).
 func renderSystem(subtype string, text []byte, out *adapter.Emitter) bool {
 	var s systemLine
 	if !renderedSubtypes[subtype] || json.Unmarshal(text, &s) != nil {
@@ -144,6 +144,8 @@ func renderSystem(subtype string, text []byte, out *adapter.Emitter) bool {
 		out.Emit(sessionStarted(s))
 	case subtypeAPIRetry:
 		out.Emit(apiRetry(s))
+	case subtypeThinkingTokens:
+		out.Emit(thinking(s))
 	default:
 		out.Emit(compacted(s.CompactMetadata))
 	}
@@ -156,6 +158,16 @@ func sessionStarted(s systemLine) contract.Event {
 	ev.Lifecycle.SessionID = cut.Text("sessionId", s.SessionID, contract.MaxLabelBytes)
 	ev.Lifecycle.Model = cut.Text("model", s.Model, contract.MaxLabelBytes)
 	ev.Lifecycle.RunnerVersion = cut.Text("runnerVersion", s.Version, contract.MaxLabelBytes)
+	ev.Truncated = cut.Fields()
+	return ev
+}
+
+// thinking marks the model thinking: the CLI prints thinking_tokens lines
+// while a thinking block streams, its estimated tokens left in the source.
+func thinking(s systemLine) contract.Event {
+	var cut adapter.Truncation
+	ev := lifecycle(contract.LifecycleThinking)
+	ev.Lifecycle.SessionID = cut.Text("sessionId", s.SessionID, contract.MaxLabelBytes)
 	ev.Truncated = cut.Fields()
 	return ev
 }
