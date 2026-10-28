@@ -14,21 +14,27 @@ import {
   snapshot,
   write,
 } from './control';
-import { close, eventually, launch, open, streamStatus, visible } from './harness';
+import {
+  close,
+  eventDetail,
+  eventList,
+  eventRow,
+  eventually,
+  INSPECTOR_QUERY,
+  launch,
+  open,
+  streamStatus,
+  visible,
+} from './harness';
 
-const INSPECTOR_QUERY = 'view=inspector';
 const LIVE_TEXT = 'Live: new events appear as the log is read.';
 const RECONNECTING_TEXT = 'The live stream broke: reconnecting from the last event received.';
 
-const events = (page: Page): Locator =>
-  page.getByRole('listbox', { name: 'Events of this attempt' });
-const options = (page: Page): Locator => events(page).getByRole('option');
-const row = (page: Page, id: string): Locator => events(page).locator(`[data-event="${id}"]`);
-const detail = (page: Page): Locator => page.getByRole('region', { name: 'Event detail' });
+const options = (page: Page): Locator => eventList(page).getByRole('option');
 const filters = (page: Page): Locator =>
   page.getByRole('search', { name: 'Search and filter the events' });
 const sourceText = (page: Page): Locator =>
-  detail(page).getByRole('region', { name: 'Source line' }).locator('pre');
+  eventDetail(page).getByRole('region', { name: 'Source line' }).locator('pre');
 const kind = (page: Page, label: string): Locator =>
   filters(page).locator('.kind').filter({ hasText: label }).getByRole('checkbox');
 
@@ -56,8 +62,8 @@ describe('the inspector’s diagnostics', () => {
     for (const reason of ['malformed_json', 'unknown_type'] as const) {
       const raw = raws.find((e) => e.raw.reason === reason);
       if (!raw) throw new Error(`no ${reason} event`);
-      await row(page, raw.id).click();
-      const formatted = detail(page).getByLabel('Formatted');
+      await eventRow(page, raw.id).click();
+      const formatted = eventDetail(page).getByLabel('Formatted');
       await visible(sourceText(page));
       if (await formatted.isVisible()) await formatted.uncheck();
       // The line as the runner wrote it: the raw event holds the same text, uncut.
@@ -80,7 +86,7 @@ describe('the inspector’s diagnostics', () => {
     await eventually(() => options(page).count()).toBe(ofAttempt(first.id).length);
     const firstEvent = ofAttempt(first.id).at(-1);
     if (!firstEvent) throw new Error('the first attempt has no event');
-    await row(page, firstEvent.id).click();
+    await eventRow(page, firstEvent.id).click();
     await visible(sourceText(page));
 
     await page.getByRole('combobox', { name: /^Attempt/ }).selectOption(second.id);
@@ -110,7 +116,7 @@ describe('the inspector’s diagnostics', () => {
     // A line written twice is two events, both listed and both matched.
     await write(r, [claudeText(2, 'not a match'), repeated, repeated]);
     await eventually(() => options(page).count()).toBe(4);
-    await eventually(() => events(page).locator('.match').count()).toBe(3);
+    await eventually(() => eventList(page).locator('.match').count()).toBe(3);
 
     await cutStreams();
     await visible(streamStatus(page).filter({ hasText: RECONNECTING_TEXT }));
@@ -120,7 +126,7 @@ describe('the inspector’s diagnostics', () => {
     await eventually(() => options(page).count()).toBe(5);
     await visible(options(page).filter({ hasText: 'needle after the outage' }));
 
-    expect(await events(page).locator('[aria-selected=true]').getAttribute('data-event')).toBe(
+    expect(await eventList(page).locator('[aria-selected=true]').getAttribute('data-event')).toBe(
       selected,
     );
     expect(new URL(page.url()).hash).toBe(`#event=${selected ?? ''}`);

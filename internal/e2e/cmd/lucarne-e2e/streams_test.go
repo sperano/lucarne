@@ -75,3 +75,33 @@ func TestStreamGatePassesOtherRequests(t *testing.T) {
 		t.Fatal("a snapshot request was held while the streams are cut")
 	}
 }
+
+func TestStreamGateCountsTheStreamsItServes(t *testing.T) {
+	gate := newStreamGate()
+	started := make(chan struct{}, 1)
+	h := gate.wrap(blockingStream(started))
+	if n := gate.count(); n != 0 {
+		t.Fatalf("count = %d before any stream, want 0", n)
+	}
+	served := serveAsync(h, "/api/v1/runs/example/agents/x"+eventsSuffix)
+	receive(t, started, "the stream to start")
+	if n := gate.count(); n != 1 {
+		t.Fatalf("count = %d while a stream is served, want 1", n)
+	}
+	gate.cut()
+	receive(t, served, "the cut to end the stream")
+	gate.restore()
+	if n := gate.count(); n != 0 {
+		t.Fatalf("count = %d once the stream ended, want 0", n)
+	}
+}
+
+func TestStreamGateDoesNotCountOtherRequests(t *testing.T) {
+	gate := newStreamGate()
+	var during int
+	h := gate.wrap(http.HandlerFunc(func(http.ResponseWriter, *http.Request) { during = gate.count() }))
+	h.ServeHTTP(httptest.NewRecorder(), httptest.NewRequest(http.MethodGet, "/api/v1/runs/example/agents/x", nil))
+	if during != 0 {
+		t.Fatalf("count = %d during a snapshot request, want 0", during)
+	}
+}

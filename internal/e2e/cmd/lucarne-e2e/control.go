@@ -43,6 +43,7 @@ type writeRequest struct {
 //	POST /_e2e/runs/{name}/delete       delete its Task, as its TTL does
 //	POST /_e2e/streams/cut              end the browser's SSE streams, hold reconnects
 //	POST /_e2e/streams/restore          let the held reconnects through
+//	GET  /_e2e/streams                  {"open": N}, the SSE streams being served
 type control struct {
 	world *scenario.World
 	gate  *streamGate
@@ -55,6 +56,7 @@ func newControl(world *scenario.World, gate *streamGate) *control {
 func (c *control) register(mux *http.ServeMux) {
 	mux.HandleFunc("GET "+controlPrefix+"/runs", c.list)
 	mux.HandleFunc("POST "+controlPrefix+"/live", c.live)
+	mux.HandleFunc("GET "+controlPrefix+"/streams", c.streams)
 	mux.HandleFunc("POST "+controlPrefix+"/streams/cut", c.gated(c.gate.cut))
 	mux.HandleFunc("POST "+controlPrefix+"/streams/restore", c.gated(c.gate.restore))
 	mux.HandleFunc("POST "+controlPrefix+"/runs/{name...}", c.act)
@@ -75,6 +77,15 @@ func (c *control) live(w http.ResponseWriter, _ *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, info(r))
+}
+
+// streamCount is how the control API reports the open streams.
+type streamCount struct {
+	Open int `json:"open"`
+}
+
+func (c *control) streams(w http.ResponseWriter, _ *http.Request) {
+	writeJSON(w, http.StatusOK, streamCount{Open: c.gate.count()})
 }
 
 // gated answers a request by running change on the stream gate.

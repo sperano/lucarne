@@ -99,6 +99,21 @@ export const cutStreams = (): Promise<void> => post('/streams/cut');
 /** Lets the held reconnects through. */
 export const restoreStreams = (): Promise<void> => post('/streams/restore');
 
+/** How many SSE streams the server serves now, every page's together. */
+export async function servedStreams(): Promise<number> {
+  const path = '/streams';
+  const body: unknown = await (await call(path)).json();
+  if (
+    typeof body !== 'object' ||
+    body === null ||
+    !('open' in body) ||
+    typeof body.open !== 'number'
+  ) {
+    throw new Error(`${path}: not a stream count: ${JSON.stringify(body)}`);
+  }
+  return body.open;
+}
+
 /** Fetches a path of the server: an API answer, not through a browser. */
 export function get(path: string): Promise<Response> {
   return fetch(`${baseURL()}${path}`);

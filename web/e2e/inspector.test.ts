@@ -2,22 +2,28 @@
 // failing tools expand from the event list, the keyboard moves through it,
 // a live run's events arrive in it, and switching back to the conversation
 // keeps the run and the selected event.
-import type { Browser, Locator, Page } from 'playwright';
+import type { Browser } from 'playwright';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { Snapshot } from '../src/lib/contract';
 import { claudeInit, claudeTexts, live, run, snapshot, write } from './control';
-import { close, eventually, launch, open, streamStatus, transcript, visible } from './harness';
+import {
+  close,
+  eventDetail,
+  eventList,
+  eventRow,
+  eventually,
+  INSPECTOR_QUERY,
+  launch,
+  open,
+  streamStatus,
+  transcript,
+  visible,
+} from './harness';
 
 const RUNNERS = ['claude-code', 'codex', 'opencode'] as const;
-const INSPECTOR_QUERY = 'view=inspector';
 const LIVE_TEXT = 'Live: new events appear as the log is read.';
 /** Messages a test writes to the live run. */
 const LIVE_MESSAGES = 5;
-
-const events = (page: Page): Locator =>
-  page.getByRole('listbox', { name: 'Events of this attempt' });
-const row = (page: Page, id: string): Locator => events(page).locator(`[data-event="${id}"]`);
-const detail = (page: Page): Locator => page.getByRole('region', { name: 'Event detail' });
 
 /** The first call of snap whose result failed, and that result. */
 function failedCall(snap: Snapshot) {
@@ -47,12 +53,14 @@ describe('the inspector', () => {
     const { call, result } = failedCall(snap);
     const watched = await open(browser, `${r.link}?${INSPECTOR_QUERY}`);
     const { page } = watched;
-    await visible(row(page, call.id));
-    expect(await events(page).getByRole('option').count()).toBe(snap.events.length);
+    await visible(eventRow(page, call.id));
+    expect(await eventList(page).getByRole('option').count()).toBe(snap.events.length);
 
-    await row(page, call.id).click();
-    await eventually(() => row(page, call.id).getAttribute('aria-selected')).toBe('true');
-    const card = detail(page).getByRole('article', { name: `Tool call ${call.toolCall.name}` });
+    await eventRow(page, call.id).click();
+    await eventually(() => eventRow(page, call.id).getAttribute('aria-selected')).toBe('true');
+    const card = eventDetail(page).getByRole('article', {
+      name: `Tool call ${call.toolCall.name}`,
+    });
     await visible(card.locator('.status').filter({ hasText: 'error' }));
     const output = result.toolResult.output?.split('\n')[0];
     if (output !== undefined) await visible(card.getByText(output, { exact: false }));
@@ -67,13 +75,15 @@ describe('the inspector', () => {
     const { page } = watched;
     const [first, second] = snap.events;
     if (!first || !second) throw new Error('too few events');
-    await visible(row(page, first.id));
-    await events(page).focus();
+    await visible(eventRow(page, first.id));
+    await eventList(page).focus();
     await page.keyboard.press('ArrowDown');
     await page.keyboard.press('ArrowDown');
-    await eventually(() => row(page, second.id).getAttribute('aria-selected')).toBe('true');
+    await eventually(() => eventRow(page, second.id).getAttribute('aria-selected')).toBe('true');
     await page.keyboard.press('Enter');
-    await eventually(() => detail(page).evaluate((e) => e === document.activeElement)).toBe(true);
+    await eventually(() => eventDetail(page).evaluate((e) => e === document.activeElement)).toBe(
+      true,
+    );
 
     await page
       .getByRole('navigation', { name: 'View' })
@@ -91,14 +101,16 @@ describe('the inspector', () => {
     const watched = await open(browser, `${r.link}?${INSPECTOR_QUERY}`);
     const { page } = watched;
     await visible(streamStatus(page).filter({ hasText: LIVE_TEXT }));
-    const before = await events(page).getByRole('option').count();
+    const before = await eventList(page).getByRole('option').count();
     await write(
       r,
       claudeTexts(1, LIVE_MESSAGES, (n) => `Inspected step ${String(n)}`),
     );
-    await eventually(() => events(page).getByRole('option').count()).toBe(before + LIVE_MESSAGES);
+    await eventually(() => eventList(page).getByRole('option').count()).toBe(
+      before + LIVE_MESSAGES,
+    );
     await visible(
-      events(page)
+      eventList(page)
         .getByRole('option')
         .filter({ hasText: `Inspected step ${String(LIVE_MESSAGES)}` }),
     );

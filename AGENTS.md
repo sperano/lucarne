@@ -12,12 +12,12 @@ them live in the browser, as a conversation (the default) or an inspector.
 Lucarne observes; it never takes part. It does not start, steer or stop
 agents, and nothing in the agent pipeline waits on it.
 
-Status: the conversation is complete and packaged. The contract, the
-fixtures, the server, the Claude Code, Codex and OpenCode adapters, the
-Kubernetes log source, the snapshot/SSE endpoints that wire them together,
-the live conversation view, the end-to-end suites and the container image
-exist, and so does the inspector, with its filters, source lines and
-diagnostic navigation. Started without `-namespace`, the server reads no
+Status: both views are complete and packaged. The contract, the fixtures,
+the server, the Claude Code, Codex and OpenCode adapters, the Kubernetes
+log source, the snapshot/SSE endpoints that wire them together, the live
+conversation and the inspector (filters, source lines, diagnostic
+navigation), the end-to-end suites over both views and the container image
+exist. Started without `-namespace`, the server reads no
 cluster and its run endpoints answer 501.
 
 ## What lives here, and what does not

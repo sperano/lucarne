@@ -38,6 +38,8 @@ export interface Watched {
   readonly response: Response | null;
   /** Console errors and uncaught exceptions. */
   readonly errors: string[];
+  /** The paths of the page's requests to the server, in order. */
+  readonly requests: string[];
   /** Requests to another origin than the server's. */
   readonly offOrigin: string[];
   readonly dialogs: string[];
@@ -66,6 +68,7 @@ export async function open(browser: Browser, path: string): Promise<Watched> {
   await context.addInitScript(recordStreams);
   const page = await context.newPage();
   const errors: string[] = [];
+  const requests: string[] = [];
   const offOrigin: string[] = [];
   const dialogs: string[] = [];
   const origin = new URL(baseURL()).origin;
@@ -74,14 +77,16 @@ export async function open(browser: Browser, path: string): Promise<Watched> {
   });
   page.on('pageerror', (err) => errors.push(`uncaught: ${err.message}`));
   page.on('request', (request) => {
-    if (new URL(request.url()).origin !== origin) offOrigin.push(request.url());
+    const url = new URL(request.url());
+    if (url.origin === origin) requests.push(url.pathname);
+    else offOrigin.push(request.url());
   });
   page.on('dialog', (dialog) => {
     dialogs.push(`${dialog.type()}: ${dialog.message()}`);
     void dialog.dismiss();
   });
   const response = await page.goto(`${baseURL()}${path}`);
-  return { page, response, errors, offOrigin, dialogs };
+  return { page, response, errors, requests, offOrigin, dialogs };
 }
 
 /**
@@ -159,4 +164,32 @@ export function inViewport(locator: Locator): Promise<boolean> {
     const box = element.getBoundingClientRect();
     return box.bottom > 0 && box.top < window.innerHeight && box.height > 0;
   });
+}
+
+/** The query that opens a run in the inspector. */
+export const INSPECTOR_QUERY = 'view=inspector';
+
+/** The inspector's list of the attempt's events. */
+export function eventList(page: Page): Locator {
+  return page.getByRole('listbox', { name: 'Events of this attempt' });
+}
+
+/** The inspector's row of the event id. */
+export function eventRow(page: Page, id: string): Locator {
+  return eventList(page).locator(`[data-event="${id}"]`);
+}
+
+/** The inspector's detail of the selected event. */
+export function eventDetail(page: Page): Locator {
+  return page.getByRole('region', { name: 'Event detail' });
+}
+
+/** The link of the view switch to the view called name. */
+export function viewLink(page: Page, name: 'Conversation' | 'Inspector'): Locator {
+  return page.getByRole('navigation', { name: 'View' }).getByRole('link', { name });
+}
+
+/** Whether locator's first element has the focus. */
+export function focused(locator: Locator): Promise<boolean> {
+  return locator.first().evaluate((element) => element === document.activeElement);
 }
