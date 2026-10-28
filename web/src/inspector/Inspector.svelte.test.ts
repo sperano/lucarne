@@ -194,6 +194,20 @@ describe('Inspector states', () => {
     );
   });
 
+  it('ties an unknown fact to the events dropped, which may have held it', () => {
+    const DROPPED = 1_234;
+    const snapshot = snapshotWith([{ kind: 'raw', raw: { reason: 'text', text: 'hi', bytes: 2 } }]);
+    const { root } = show({ ...snapshot, stream: { ...snapshot.stream, droppedEvents: DROPPED } });
+    const f = facts(root);
+    const hedged = 'Unknown in the events held (its event may be among the 1,234 dropped)';
+    expect(f.Model).toBe(hedged);
+    expect(f.Session).toBe(hedged);
+    expect(f.Created, 'a fact not read from events').toBe('Unknown');
+    expect(root.querySelector('.context')?.textContent).toContain(
+      'the events held report no session total (its event may be among the 1,234 dropped)',
+    );
+  });
+
   it('keeps truncation, gaps and an expired log in view', async () => {
     const { root } = show(
       snapshotWith(

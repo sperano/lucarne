@@ -12,6 +12,8 @@
   } from '../lib/labels';
   import { usageParts } from '../lib/usage';
 
+  const UNKNOWN = 'Unknown';
+
   let {
     run,
     attempts,
@@ -44,6 +46,26 @@
     return `${CONTAINER_STATE_LABELS[c.state]}${exit}${reason}`;
   });
   const usage = $derived(facts.usage ? usageParts(facts.usage) : undefined);
+  // A fact read from the events held may be in an event dropped to keep the run bounded.
+  const dropped = $derived(
+    stream.droppedEvents > 0
+      ? `its event may be among the ${formatCount(stream.droppedEvents)} dropped`
+      : undefined,
+  );
+  const eventUnknown = $derived(
+    dropped === undefined ? UNKNOWN : `${UNKNOWN} in the events held (${dropped})`,
+  );
+  const usageUnknown = $derived.by(() => {
+    const held =
+      dropped === undefined
+        ? `${UNKNOWN}: the log reports no session total`
+        : `${UNKNOWN}: the events held report no session total (${dropped})`;
+    const partial =
+      facts.partialUsages > 0
+        ? `, only ${formatCount(facts.partialUsages)} usage events of smaller scopes (see the list)`
+        : '';
+    return `${held}${partial}.`;
+  });
   const runTimes: readonly { label: string; time: Time | undefined }[] = $derived([
     { label: 'Created', time: run.created },
     { label: 'Started', time: run.started },
@@ -51,10 +73,10 @@
   ]);
 </script>
 
-{#snippet fact(label: string, value: string | undefined)}
+{#snippet fact(label: string, value: string | undefined, unknown: string = UNKNOWN)}
   <dt>{label}</dt>
   {#if value === undefined}
-    <dd class="unknown">Unknown</dd>
+    <dd class="unknown">{unknown}</dd>
   {:else}
     <dd>{value}</dd>
   {/if}
@@ -81,8 +103,6 @@
       <code>{run.key.cluster}/{run.key.namespace}</code><br />UID <code>{run.key.taskUID}</code>
     </dd>
     {@render fact('Runner', runner)}
-    {@render fact('Model', facts.model)}
-    {@render fact('Session', facts.sessionId)}
     {#each runTimes as t (t.label)}{@render time(t.label, t.time)}{/each}
   </dl>
 
@@ -93,6 +113,8 @@
       <dd><code>{selected.podName}</code></dd>
       <dt>Container</dt>
       <dd><code>{selected.key.container}</code>, restart {selected.key.restart}</dd>
+      {@render fact('Model', facts.model, eventUnknown)}
+      {@render fact('Session', facts.sessionId, eventUnknown)}
       {@render fact('State', container)}
       {@render time('Started', selected.container.startedAt)}
       {@render time('Finished', selected.container.finishedAt)}
@@ -108,11 +130,7 @@
 
     <h3>Usage</h3>
     {#if usage === undefined}
-      <p class="unknown">
-        Unknown: the log reports no session total{facts.partialUsages > 0
-          ? `, only ${formatCount(facts.partialUsages)} usage events of smaller scopes (see the list)`
-          : ''}.
-      </p>
+      <p class="unknown">{usageUnknown}</p>
     {:else if usage.length === 0}
       <p class="unknown">The session total reports no counter.</p>
     {:else}
