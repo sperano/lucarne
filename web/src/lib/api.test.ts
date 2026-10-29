@@ -3,7 +3,8 @@ import snapshot from '../../../contract/v1/examples/Snapshot/claude-session.json
 import notFound from '../../../contract/v1/examples/ErrorResponse/run-not-found.json';
 import sourceNotFound from '../../../contract/v1/examples/ErrorResponse/source-not-found.json';
 import sourceLine from '../../../contract/v1/examples/SourceLine/assistant-line.json';
-import { loadSnapshot, loadSource, snapshotPath, sourcePath } from './api';
+import runList from '../../../contract/v1/examples/RunList/two-namespaces.json';
+import { loadRuns, loadSnapshot, loadSource, RUNS_PATH, snapshotPath, sourcePath } from './api';
 
 const KEY = snapshot.run.key;
 const OK = 200;
@@ -101,5 +102,30 @@ describe('loadSource', () => {
   it('asks to sign in again on a redirect', async () => {
     const redirected = () => Promise.resolve({ type: 'opaqueredirect', status: 0 } as Response);
     expect(await loadSource(KEY, EVENT, redirected)).toMatchObject({ ok: false, signIn: true });
+  });
+});
+
+describe('loadRuns', () => {
+  const at =
+    (status: number, body: unknown): typeof fetch =>
+    (input) => {
+      expect(input).toBe(RUNS_PATH);
+      return Promise.resolve(new Response(JSON.stringify(body), { status }));
+    };
+
+  it('returns a run list of the contract version', async () => {
+    expect(await loadRuns(at(OK, runList))).toEqual({ ok: true, list: runList });
+  });
+
+  it('refuses another document', async () => {
+    expect(await loadRuns(at(OK, { runs: [] }))).toMatchObject({ ok: false, status: OK });
+  });
+
+  it('returns the error of an ErrorResponse', async () => {
+    expect(await loadRuns(at(NOT_FOUND, notFound))).toMatchObject({
+      ok: false,
+      status: NOT_FOUND,
+      code: notFound.error.code,
+    });
   });
 });

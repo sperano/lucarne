@@ -70,6 +70,9 @@ type Options struct {
 	// Runs serves run snapshots and streams; without it the run endpoints
 	// answer 501.
 	Runs *stream.Hub
+	// Catalog lists the runs the UI can search; without it the run list
+	// answers 501.
+	Catalog RunLister
 	// Heartbeat is how long a stream may be idle before a keepalive
 	// comment; zero means DefaultHeartbeat.
 	Heartbeat time.Duration
@@ -100,11 +103,12 @@ func New(assets fs.FS, opts Options) http.Handler {
 	if ready == nil {
 		ready = func() bool { return true }
 	}
-	s := &server{assets: assets, index: index, logger: logger, runs: opts.Runs, heartbeat: heartbeat, ready: ready}
+	s := &server{assets: assets, index: index, logger: logger, runs: opts.Runs, catalog: opts.Catalog, heartbeat: heartbeat, ready: ready}
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", s.health)
 	mux.HandleFunc("GET /readyz", s.readiness)
 	mux.HandleFunc("GET "+contract.ContractPath, s.contractInfo)
+	mux.HandleFunc("GET "+contract.RunsPath, s.runList)
 	mux.HandleFunc("GET "+contract.APIPrefix+"/runs/{cluster}/{namespace}/{taskUID}", s.snapshot)
 	mux.HandleFunc("GET "+contract.APIPrefix+"/runs/{cluster}/{namespace}/{taskUID}/events", s.events)
 	mux.HandleFunc("GET "+contract.APIPrefix+"/runs/{cluster}/{namespace}/{taskUID}/source/{eventID}", s.source)
@@ -123,6 +127,7 @@ type server struct {
 	index     []byte
 	logger    *slog.Logger
 	runs      *stream.Hub
+	catalog   RunLister
 	heartbeat time.Duration
 	ready     func() bool
 }

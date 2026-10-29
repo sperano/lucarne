@@ -16,6 +16,14 @@ and the container image are in place.
 
 ## Using it
 
+The home page, `/`, lists the runs of the allowlisted namespaces, newest
+first, and searches them as you type: every word must appear in a run's
+Task name, namespace, Task UID, phase or runner (`?q=` keeps the search in
+the address). Enter opens the first match, ↓/↑ move between them, and the
+**Lucarne** title of every page leads back to it. It shows the first 100
+matches; the server lists at most the 1 000 newest runs, and says how many
+older ones it left out.
+
 A run's link, `/runs/{cluster}/{namespace}/{taskUID}` (Gordon's
 announcements add `?attempt=` for the pod they start), opens the
 **conversation**. The **View** switch above it changes to the **inspector**
@@ -103,8 +111,8 @@ the memory limit above it. Logs go to stderr as JSON.
 | --- | --- |
 | `GET /healthz` | `ok` while the process serves: the liveness probe |
 | `GET /readyz` | `ready`, or 503 from SIGTERM on: the readiness probe. It calls no source, so a Kubernetes API that does not answer leaves the UI reachable |
-| `GET /api/v1/...` | the [HTTP API](contract/README.md#http-api): the contract, run snapshots, their SSE streams and their events' source lines |
-| `GET /`, `/runs/{cluster}/{namespace}/{taskUID}` | the UI and its [deep links](contract/README.md#deep-links) |
+| `GET /api/v1/...` | the [HTTP API](contract/README.md#http-api): the contract, the run list, run snapshots, their SSE streams and their events' source lines |
+| `GET /`, `/runs/{cluster}/{namespace}/{taskUID}` | the UI: the run search and the [deep links](contract/README.md#deep-links) |
 
 On SIGTERM Lucarne turns unready, waits `-drain-delay`, closes the open
 streams and shuts down within 10 seconds. Each browser reconnects; the next

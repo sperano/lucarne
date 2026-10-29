@@ -43,6 +43,7 @@ import {
   type Retry,
   type Run,
   type RunKey,
+  type RunList,
   type Runner,
   type RunUpdate,
   type Snapshot,
@@ -74,6 +75,7 @@ const DOCUMENT_NAMES: Record<DocumentName, true> = {
   ErrorResponse: true,
   ContractInfo: true,
   SourceLine: true,
+  RunList: true,
 };
 
 function isDocumentName(name: string): name is DocumentName {
@@ -174,6 +176,7 @@ const objects: Record<string, Record<string, boolean>> = {
     maxClientQueue: true,
     maxSourceBytes: true,
     maxRunSourceBytes: true,
+    maxListedRuns: true,
   } satisfies RequiredKeys<Limits>,
   Source: {
     line: true,
@@ -270,6 +273,7 @@ const objects: Record<string, Record<string, boolean>> = {
     text: true,
     bytes: true,
   } satisfies RequiredKeys<SourceLine>,
+  RunList: { schema: true, runs: true, omittedRuns: true } satisfies RequiredKeys<RunList>,
 };
 
 describe('TypeScript types match the schema', () => {

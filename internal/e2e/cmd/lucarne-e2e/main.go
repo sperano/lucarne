@@ -66,7 +66,7 @@ func serve(ctx context.Context, listen string, logger *slog.Logger) error {
 	mux := http.NewServeMux()
 	gate := newStreamGate()
 	newControl(world, gate).register(mux)
-	mux.Handle("/", gate.wrap(server.New(web.Dist(), server.Options{Runs: hub, Logger: logger, Heartbeat: heartbeat})))
+	mux.Handle("/", gate.wrap(server.New(web.Dist(), server.Options{Runs: hub, Catalog: src, Logger: logger, Heartbeat: heartbeat})))
 	listener, err := net.Listen("tcp", listen)
 	if err != nil {
 		return err

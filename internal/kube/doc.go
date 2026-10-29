@@ -15,6 +15,13 @@
 // whole chain is checked again, and the pod's UID once more after the
 // stream is open, so a read never reaches another Task's pod.
 //
+// # Run list
+//
+// ListRuns lists every allowlisted namespace's Tasks, page by page, as the
+// contract's runs, newest first and bounded to contract.MaxListedRuns, for
+// the UI to search; the older ones are only counted. It reads what Run
+// reads of a Task, nothing more: the prompt is dropped when it is decoded.
+//
 // # Attempts
 //
 // An attempt is one instance of the pod's agent container (kelos-agent),

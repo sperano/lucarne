@@ -204,6 +204,7 @@ export interface Limits {
   readonly maxClientQueue: number;
   readonly maxSourceBytes: number;
   readonly maxRunSourceBytes: number;
+  readonly maxListedRuns: number;
 }
 
 export interface Source {
@@ -380,6 +381,14 @@ export interface SourceLine {
   readonly bytes: number;
 }
 
+/** The runs of the allowlisted namespaces, newest first, at most maxListedRuns. */
+export interface RunList {
+  readonly schema: typeof SCHEMA_VERSION;
+  readonly runs: readonly Run[];
+  /** The older runs left out past maxListedRuns. */
+  readonly omittedRuns: number;
+}
+
 export interface ContractInfo {
   readonly schema: typeof SCHEMA_VERSION;
   readonly limits: Limits;
@@ -397,5 +406,6 @@ export interface Documents {
   ErrorResponse: ErrorResponse;
   ContractInfo: ContractInfo;
   SourceLine: SourceLine;
+  RunList: RunList;
 }
 export type DocumentName = keyof Documents;

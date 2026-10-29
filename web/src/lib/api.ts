@@ -1,4 +1,4 @@
-// Loading a run's snapshot and its events' source lines. The server and the
+// Loading the run list, a run's snapshot and its events' source lines. The server and the
 // UI ship in one binary and agree on the contract, which the server
 // validates; the UI checks only the schema version, as it cannot run the
 // schema validator (see validate.ts). An answer that is a redirect, or a
@@ -8,6 +8,7 @@ import {
   SCHEMA_VERSION,
   type ErrorResponse,
   type RunKey,
+  type RunList,
   type Snapshot,
   type SourceLine,
 } from './contract';
@@ -24,17 +25,31 @@ export interface ApiFailure {
 
 export type SnapshotLoad = { readonly ok: true; readonly snapshot: Snapshot } | ApiFailure;
 export type SourceLoad = { readonly ok: true; readonly line: SourceLine } | ApiFailure;
+export type RunListLoad = { readonly ok: true; readonly list: RunList } | ApiFailure;
 
 const UNAUTHORIZED = 401;
 
+/** The API path of the run list. */
+export const RUNS_PATH = `${API_PREFIX}/runs`;
+
 /** The API path of a run's snapshot. */
 export function snapshotPath(key: RunKey): string {
-  return `${API_PREFIX}/runs/${key.cluster}/${key.namespace}/${key.taskUID}`;
+  return `${RUNS_PATH}/${key.cluster}/${key.namespace}/${key.taskUID}`;
 }
 
 /** The API path of the source line of a run's event. */
 export function sourcePath(key: RunKey, eventId: string): string {
   return `${snapshotPath(key)}/source/${eventId}`;
+}
+
+/** Loads the runs the server can read; a network failure rejects, as fetch does. */
+export async function loadRuns(
+  fetcher: typeof fetch = fetch,
+  signal?: AbortSignal,
+): Promise<RunListLoad> {
+  const answer = await load(RUNS_PATH, fetcher, signal);
+  if (!answer.ok) return answer;
+  return isRunList(answer.body) ? { ok: true, list: answer.body } : notA('run list', answer.status);
 }
 
 /** Loads the snapshot of key; a network failure rejects, as fetch does. */
@@ -102,6 +117,10 @@ function isSnapshot(body: unknown): body is Snapshot {
 }
 
 function isSourceLine(body: unknown): body is SourceLine {
+  return isVersioned(body);
+}
+
+function isRunList(body: unknown): body is RunList {
   return isVersioned(body);
 }
 

@@ -188,11 +188,15 @@ Named in [`limits.go`](limits.go), published in every snapshot and by
 | `maxClientQueue` | 1 024 | updates queued for one slow client |
 | `maxSourceBytes` | 64 KiB | the text of one source line served (below) |
 | `maxRunSourceBytes` | 16 MiB | source lines a run retains; the oldest go first |
+| `maxListedRuns` | 1 000 | runs a run list holds; the newest are kept, the others counted in `omittedRuns` |
 
 Text is cut at a UTF-8 boundary. Lifecycle `outputs` holds at most 64
 entries and `truncated` at most 8 names.
 
 ## Deep links
+
+The home page, `/[?q={query}]`, searches the runs of the run list (below);
+`q` is its search query, kept in the address as it is typed.
 
 ```
 /runs/{cluster}/{namespace}/{taskUID}[?attempt={attemptID}][&view={view}][#event={eventID}]
@@ -219,6 +223,7 @@ except the stream.
 | Path | Answer |
 | --- | --- |
 | `/api/v1/contract` | `ContractInfo`: schema version and limits |
+| `/api/v1/runs` | `RunList`: the runs the server can read, newest first (below) |
 | `/api/v1/runs/{cluster}/{namespace}/{taskUID}` | `Snapshot` |
 | `/api/v1/runs/{cluster}/{namespace}/{taskUID}/events` | `text/event-stream` (below) |
 | `/api/v1/runs/{cluster}/{namespace}/{taskUID}/source/{eventID}` | `SourceLine`: the log line the event came from (below) |
@@ -260,6 +265,16 @@ nothing else and reads nothing again to answer. It answers 404
 read again under another origin, or an event of another run: the run is
 resolved and authorized exactly as for its snapshot, and only the lines it
 read for that run are looked in.
+
+A **run list** is the `Run` of every Task in the allowlisted namespaces of
+the server's cluster, newest first by creation time (a Task without one
+last; then by namespace, Task name and UID), for the UI to search and open
+by key. It holds the `maxListedRuns` newest; `omittedRuns` counts the older
+ones left out, which open from their link only. Each request lists the
+Tasks again, so it holds the Tasks that exist then: a deleted one is gone,
+not `deleted`. A Task that cannot be decoded is left out, as its link could
+not open it either. It answers 501 `not_implemented` without a cluster, and
+503 `unavailable` when the Kubernetes API did not answer or refused.
 
 ## SSE stream and replay
 

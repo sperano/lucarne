@@ -32,6 +32,7 @@ const (
 	DefErrorResponse = "ErrorResponse"
 	DefContractInfo  = "ContractInfo"
 	DefSourceLine    = "SourceLine"
+	DefRunList       = "RunList"
 )
 
 // Documents lists the definitions a whole wire document is validated
@@ -39,6 +40,7 @@ const (
 var Documents = []string{
 	DefSnapshot, DefEvent, DefAttemptUpdate, DefRunUpdate,
 	DefReset, DefEnd, DefLive, DefErrorResponse, DefContractInfo, DefSourceLine,
+	DefRunList,
 }
 
 // compiled maps each of Documents to its compiled schema. It is compiled

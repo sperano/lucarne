@@ -45,6 +45,9 @@ const (
 	// are dropped first, and a request for one of them is answered
 	// "source_not_found".
 	MaxRunSourceBytes = 16 << 20
+	// MaxListedRuns bounds the runs a RunList holds: the newest are
+	// listed, the older ones counted in RunList.OmittedRuns.
+	MaxListedRuns = 1000
 )
 
 // Limits is the set of limits a server enforces, published in every
@@ -66,6 +69,7 @@ type Limits struct {
 	MaxClientQueue     int64 `json:"maxClientQueue"`
 	MaxSourceBytes     int64 `json:"maxSourceBytes"`
 	MaxRunSourceBytes  int64 `json:"maxRunSourceBytes"`
+	MaxListedRuns      int64 `json:"maxListedRuns"`
 }
 
 // DefaultLimits returns the limits of this contract version.
@@ -87,5 +91,6 @@ func DefaultLimits() Limits {
 		MaxClientQueue:     MaxClientQueue,
 		MaxSourceBytes:     MaxSourceBytes,
 		MaxRunSourceBytes:  MaxRunSourceBytes,
+		MaxListedRuns:      MaxListedRuns,
 	}
 }
