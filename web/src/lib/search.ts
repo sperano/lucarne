@@ -3,6 +3,7 @@
 // those the run dropped to stay within its bounds or those not read yet.
 import type { TranscriptEvent } from './contract';
 import type { Item } from './conversation';
+import { effectiveToolOutcome, isFailedProgressPhase } from './tool-progress';
 import { unreachable } from './unreachable';
 
 export const ITEM_FILTERS = ['all', 'tools', 'errors'] as const;
@@ -56,9 +57,10 @@ export function textOf(item: Item): string {
 
 function failed(item: Item): boolean {
   if (item.kind === 'tool') {
-    if (isFailure(item.result?.toolResult.status)) return true;
-    const phase = item.progress.at(-1)?.toolProgress.phase;
-    return phase === 'failed' || phase === 'killed';
+    const outcome = effectiveToolOutcome(item);
+    return outcome?.kind === 'tool_progress'
+      ? isFailedProgressPhase(outcome.toolProgress.phase)
+      : outcome?.kind === 'tool_result' && isFailure(outcome.toolResult.status);
   }
   return failedEvent(item.event);
 }
@@ -71,7 +73,7 @@ export function failedEvent(event: TranscriptEvent): boolean {
     case 'tool_result':
       return isFailure(event.toolResult.status);
     case 'tool_progress':
-      return event.toolProgress.phase === 'failed' || event.toolProgress.phase === 'killed';
+      return isFailedProgressPhase(event.toolProgress.phase);
     case 'lifecycle':
       return (
         event.lifecycle.isError === true ||

@@ -56,4 +56,24 @@ describe('passes', () => {
     expect(items.flatMap((i, n) => (passes(i, 'tools') ? [n] : []))).toEqual([1, 2, 6]);
     expect(items.flatMap((i, n) => (passes(i, 'errors') ? [n] : []))).toEqual([1, 3, 5, 6]);
   });
+
+  it('keeps a call whose later background notification failed', () => {
+    const background = [
+      make({ kind: 'tool_call', toolCall: { callId: 'background', name: 'Task' } }),
+      make({
+        kind: 'tool_progress',
+        toolProgress: { callId: 'background', phase: 'started', background: true },
+      }),
+      make({
+        kind: 'tool_result',
+        toolResult: { callId: 'background', status: 'ok' },
+      }),
+      make({
+        kind: 'tool_progress',
+        toolProgress: { callId: 'background', phase: 'failed' },
+      }),
+    ];
+    const conversation = buildConversation(background, ATTEMPT_ID);
+    expect(conversation.items.some((item) => passes(item, 'errors'))).toBe(true);
+  });
 });

@@ -21,6 +21,11 @@ import {
   USAGE_SCOPE_LABELS,
 } from './labels';
 import { failedEvent } from './search';
+import {
+  effectiveToolOutcome,
+  isFailedProgressPhase,
+  isTerminalProgressPhase,
+} from './tool-progress';
 import { describeTool } from './tools';
 import { unreachable } from './unreachable';
 import { usageParts } from './usage';
@@ -75,33 +80,34 @@ function callRow(
   const call = event.toolCall;
   const subject = describeTool(call).subject;
   const summary = cut(subject === '' ? call.name : `${call.name} ${subject}`);
-  const result = conversation.calls.get(call.callId)?.result?.toolResult;
-  if (!result) {
-    const progress = conversation.calls.get(call.callId)?.progress.at(-1)?.toolProgress;
-    if (progress !== undefined) {
-      const tone: Tone =
-        progress.phase === 'completed'
-          ? 'ok'
-          : progress.phase === 'failed' || progress.phase === 'killed'
-            ? 'error'
-            : 'muted';
-      return {
-        kind: EVENT_KIND_LABELS.tool_call,
-        summary,
-        status: { label: TOOL_PROGRESS_LABELS[progress.phase], tone },
-        failed: tone === 'error',
-      };
-    }
-    const pending = coverage === 'following' ? 'running' : 'no result';
+  const tool = conversation.calls.get(call.callId);
+  const outcome = tool === undefined ? undefined : effectiveToolOutcome(tool);
+  if (outcome?.kind === 'tool_progress') {
+    const phase = outcome.toolProgress.phase;
+    const tone: Tone = isTerminalProgressPhase(phase)
+      ? isFailedProgressPhase(phase)
+        ? 'error'
+        : 'ok'
+      : 'muted';
     return {
       kind: EVENT_KIND_LABELS.tool_call,
       summary,
-      status: { label: pending, tone: 'muted' },
-      failed: false,
+      status: { label: TOOL_PROGRESS_LABELS[phase], tone },
+      failed: isFailedProgressPhase(phase),
     };
   }
-  const status = resultStatus(result.status, result.exitCode);
-  return { kind: EVENT_KIND_LABELS.tool_call, summary, status, failed: status.tone === 'error' };
+  if (outcome?.kind === 'tool_result') {
+    const result = outcome.toolResult;
+    const status = resultStatus(result.status, result.exitCode);
+    return { kind: EVENT_KIND_LABELS.tool_call, summary, status, failed: status.tone === 'error' };
+  }
+  const pending = coverage === 'following' ? 'running' : 'no result';
+  return {
+    kind: EVENT_KIND_LABELS.tool_call,
+    summary,
+    status: { label: pending, tone: 'muted' },
+    failed: false,
+  };
 }
 
 function resultStatus(

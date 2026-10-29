@@ -4,6 +4,7 @@
 import { EVENT_KINDS, type EventKind, type TranscriptEvent } from './contract';
 import type { Conversation } from './conversation';
 import { eventTexts, failedEvent } from './search';
+import { effectiveToolOutcome, isFailedProgressPhase } from './tool-progress';
 
 export interface EventFilter {
   /** The kinds listed; none listed means every kind. */
@@ -46,9 +47,10 @@ export function toolOf(event: TranscriptEvent, conversation: Conversation): stri
 export function failedRow(event: TranscriptEvent, conversation: Conversation): boolean {
   if (event.kind !== 'tool_call') return failedEvent(event);
   const tool = conversation.calls.get(event.toolCall.callId);
-  if (tool?.result !== undefined) return failedEvent(tool.result);
-  const phase = tool?.progress.at(-1)?.toolProgress.phase;
-  return phase === 'failed' || phase === 'killed';
+  const outcome = tool === undefined ? undefined : effectiveToolOutcome(tool);
+  return outcome?.kind === 'tool_progress'
+    ? isFailedProgressPhase(outcome.toolProgress.phase)
+    : outcome?.kind === 'tool_result' && failedEvent(outcome);
 }
 
 /** The events of conversation that filter lists, in order. */

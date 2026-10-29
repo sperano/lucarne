@@ -3,6 +3,11 @@
   import type { ToolItem } from '../lib/conversation';
   import { formatDuration } from '../lib/format';
   import { STATUS_LABELS, TOOL_PROGRESS_LABELS } from '../lib/labels';
+  import {
+    effectiveToolOutcome,
+    latestProgressBackground,
+    latestProgressElapsed,
+  } from '../lib/tool-progress';
   import { describeTool } from '../lib/tools';
   import EditView from './EditView.svelte';
   import OutputBlock from './OutputBlock.svelte';
@@ -31,31 +36,31 @@
   const call = $derived(item.call.toolCall);
   const tool = $derived(describeTool(call));
   const result = $derived(item.result?.toolResult);
-  const progress = $derived(item.progress.at(-1)?.toolProgress);
-  const progressPhase = $derived(progress?.phase);
+  const outcome = $derived(effectiveToolOutcome(item));
   // A call without a result or progress is running only while the log is still being read.
   const pendingLabel = $derived(coverage === 'following' ? 'running' : 'no result');
-  const status = $derived(result?.status ?? progressPhase ?? 'pending');
+  const status = $derived(
+    outcome?.kind === 'tool_result'
+      ? outcome.toolResult.status
+      : outcome?.kind === 'tool_progress'
+        ? outcome.toolProgress.phase
+        : 'pending',
+  );
   const statusLabel = $derived(
-    result
-      ? STATUS_LABELS[result.status]
-      : progress
-        ? TOOL_PROGRESS_LABELS[progress.phase]
+    outcome?.kind === 'tool_result'
+      ? STATUS_LABELS[outcome.toolResult.status]
+      : outcome?.kind === 'tool_progress'
+        ? TOOL_PROGRESS_LABELS[outcome.toolProgress.phase]
         : pendingLabel,
   );
-  const elapsedMs = $derived(latestElapsed(item.progress));
+  const background = $derived(latestProgressBackground(item.progress));
+  const elapsedMs = $derived(latestProgressElapsed(item.progress));
   const working = $derived(
-    coverage === 'following' && (progressPhase === 'started' || progressPhase === 'running'),
+    coverage === 'following' &&
+      outcome?.kind === 'tool_progress' &&
+      (outcome.toolProgress.phase === 'started' || outcome.toolProgress.phase === 'running'),
   );
   const depth = $derived(Math.min(item.depth, MAX_DEPTH_CLASS));
-
-  function latestElapsed(progressEvents: ToolItem['progress']): number | undefined {
-    for (let i = progressEvents.length - 1; i >= 0; i--) {
-      const elapsed = progressEvents[i]?.toolProgress.elapsedMs;
-      if (elapsed !== undefined) return elapsed;
-    }
-    return undefined;
-  }
 </script>
 
 <article class="tool depth-{String(depth)}" aria-label="Tool call {call.name}">
@@ -65,7 +70,7 @@
       {#if working}<Pulse />{/if}
       <span class="name">{call.name}</span>
       {#if tool.subject !== ''}<code class="subject">{tool.subject}</code>{/if}
-      {#if progress?.background === true}<span class="muted">background</span>{/if}
+      {#if background === true}<span class="muted">background</span>{/if}
       {#if elapsedMs !== undefined}<span class="muted">{formatDuration(elapsedMs)}</span>{/if}
       {#if result?.exitCode !== undefined}<span class="muted">exit {result.exitCode}</span>{/if}
     </summary>

@@ -31,11 +31,38 @@ describe('rowOf', () => {
     kind: 'tool_progress',
     toolProgress: { callId: 'c3', phase: 'completed', elapsedMs: 30000 },
   });
+  const backgroundCall = make({
+    kind: 'tool_call',
+    toolCall: { callId: 'c4', name: 'Task' },
+  });
+  const backgroundStarted = make({
+    kind: 'tool_progress',
+    toolProgress: { callId: 'c4', phase: 'started', background: true },
+  });
+  const backgroundResult = make({
+    kind: 'tool_result',
+    toolResult: { callId: 'c4', status: 'ok', output: 'running in background' },
+  });
+  const backgroundFailed = make({
+    kind: 'tool_progress',
+    toolProgress: { callId: 'c4', phase: 'failed' },
+  });
   const long = make({
     kind: 'message',
     message: { role: 'assistant', type: 'text', text: 'x'.repeat(SUMMARY_CHARS * 4) },
   });
-  const events = [call, failure, pending, progressing, completed, long];
+  const events = [
+    call,
+    failure,
+    pending,
+    progressing,
+    completed,
+    backgroundCall,
+    backgroundStarted,
+    backgroundResult,
+    backgroundFailed,
+    long,
+  ];
   const conversation = buildConversation(events, ATTEMPT);
 
   it('marks a failed call and its result, with the exit code', () => {
@@ -66,6 +93,13 @@ describe('rowOf', () => {
       kind: 'Tool progress',
       summary: 'completed',
       failed: false,
+    });
+  });
+
+  it('uses a later background failure instead of the immediate ok result', () => {
+    expect(rowOf(backgroundCall, conversation, 'following')).toMatchObject({
+      status: { label: 'failed', tone: 'error' },
+      failed: true,
     });
   });
 

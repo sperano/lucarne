@@ -7,6 +7,7 @@ import type { Attempt, Stream, TranscriptEvent } from './contract';
 import type { Conversation, EventOf } from './conversation';
 import { callIdOf } from './filters';
 import { formatCount } from './format';
+import { isTerminalProgressPhase } from './tool-progress';
 
 /** Sub-calls listed at most; the rest are counted. */
 export const MAX_SUBCALLS = 20;
@@ -96,7 +97,10 @@ export function callEvidence(
     const progress = correlation.related
       .filter((r) => r.event.kind === 'tool_progress')
       .at(-1)?.event;
-    if (progress?.kind === 'tool_progress' && terminalProgress(progress.toolProgress.phase)) {
+    if (
+      progress?.kind === 'tool_progress' &&
+      isTerminalProgressPhase(progress.toolProgress.phase)
+    ) {
       return `The runner reported the call ${progress.toolProgress.phase}, but emitted no tool result.`;
     }
     return missingResult(attempt);
@@ -105,10 +109,6 @@ export function callEvidence(
     (r) => r.event.kind !== 'tool_result' || r.event.toolResult.status === 'unknown',
   );
   return unknown ? 'The result does not say whether the call succeeded.' : undefined;
-}
-
-function terminalProgress(phase: string): boolean {
-  return phase === 'completed' || phase === 'failed' || phase === 'killed';
 }
 
 function missingCall(stream: Stream): string {
