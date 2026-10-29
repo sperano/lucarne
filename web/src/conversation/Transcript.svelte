@@ -276,9 +276,8 @@
       Show later items ({formatCount(total - range.end)} after these)
     </button>
   {/if}
-  <div class="tail" bind:this={tail}></div>
   {#if live || unread > 0}
-    <div class="follow">
+    <div class="follow" class:paused={!following}>
       {#if following}
         <button type="button" aria-pressed="true" onclick={() => (following = false)}>
           Following new items
@@ -290,9 +289,13 @@
       {/if}
     </div>
   {/if}
+  <div class="tail" bind:this={tail}></div>
 </section>
 
 <style>
+  .transcript {
+    --follow-bottom-gap: 1rem;
+  }
   .controls {
     display: flex;
     gap: 0.5rem;
@@ -326,18 +329,23 @@
     display: block;
     margin: 0.75rem auto;
   }
-  .sentinel,
-  .tail {
+  .sentinel {
     height: 1px;
   }
   .follow {
-    position: sticky;
-    bottom: 1rem;
     display: flex;
     justify-content: flex-end;
+    margin-top: 0.75rem;
+  }
+  .follow.paused {
+    position: sticky;
+    bottom: var(--follow-bottom-gap);
     pointer-events: none;
   }
   .follow button {
     pointer-events: auto;
+  }
+  .tail {
+    height: var(--follow-bottom-gap);
   }
 </style>
