@@ -62,7 +62,7 @@
 {:else if item.event.kind === 'lifecycle' && item.event.lifecycle.phase === 'thinking'}
   <ThinkingLine {ongoing} />
 {:else if item.event.kind === 'lifecycle'}
-  <LifecycleLine event={item.event} {limits} />
+  <LifecycleLine event={item.event} {limits} {ongoing} />
 {:else if item.event.kind === 'raw'}
   <RawLine event={item.event} {limits} open={targeted} />
   <!-- eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- the last kind is tested so that unreachable() fails to compile when a kind is added. -->

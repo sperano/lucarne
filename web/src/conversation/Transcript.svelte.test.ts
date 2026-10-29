@@ -240,3 +240,38 @@ describe('Transcript of a model thinking', () => {
     expect(line[0]?.querySelector('.dots')).toBeNull();
   });
 });
+
+describe('Transcript of a step under way', () => {
+  const make = eventMaker();
+  const started = () => make({ kind: 'lifecycle', lifecycle: { phase: 'step_started' } });
+  const events = [
+    make({ kind: 'message', message: { role: 'assistant', type: 'text', text: 'First.' } }),
+    started(),
+  ];
+  const stepConversation = buildConversation(events, ATTEMPT_ID);
+
+  const show = (coverage: 'following' | 'ended', live: boolean) =>
+    render(Transcript, {
+      conversation: stepConversation,
+      coverage,
+      limits: LIMITS,
+      target: undefined,
+      live,
+    });
+
+  it('shows the step under way as an animated status while the run is live', () => {
+    const root = show('following', true);
+    const line = root.querySelectorAll('.lifecycle');
+    expect(line).toHaveLength(1);
+    expect(line[0]?.querySelector('p')?.getAttribute('role')).toBe('status');
+    expect(line[0]?.querySelector('.dots')).not.toBeNull();
+  });
+
+  it('is a static line once the attempt is read to its end', () => {
+    const root = show('ended', false);
+    const line = root.querySelectorAll('.lifecycle');
+    expect(line).toHaveLength(1);
+    expect(line[0]?.querySelector('p')?.getAttribute('role')).toBeNull();
+    expect(line[0]?.querySelector('.dots')).toBeNull();
+  });
+});

@@ -1,17 +1,26 @@
 <script lang="ts">
-  import type { Limits } from '../lib/contract';
+  import type { LifecyclePhase, Limits } from '../lib/contract';
   import type { EventOf } from '../lib/conversation';
   import { LIFECYCLE_LABELS } from '../lib/labels';
   import { safeHref } from '../lib/links';
   import OutputBlock from './OutputBlock.svelte';
+  import Pulse from './Pulse.svelte';
   import Truncated from './Truncated.svelte';
 
-  let { event, limits }: { event: EventOf<'lifecycle'>; limits: Limits } = $props();
+  let {
+    event,
+    limits,
+    ongoing = false,
+  }: { event: EventOf<'lifecycle'>; limits: Limits; ongoing?: boolean } = $props();
 
   /** Output values longer than this are shown as a block. */
   const INLINE_VALUE_CHARS = 120;
 
+  /** The phases that say work began but has not finished: while the attempt is still being read. */
+  const IN_PROGRESS = new Set<LifecyclePhase>(['setup_started', 'step_started', 'turn_started']);
+
   const life = $derived(event.lifecycle);
+  const working = $derived(ongoing && IN_PROGRESS.has(life.phase));
   const failed = $derived(
     life.phase === 'setup_failed' ||
       life.phase === 'turn_failed' ||
@@ -32,8 +41,9 @@
 </script>
 
 <div class="lifecycle" class:failed>
-  <p>
+  <p role={working ? 'status' : undefined}>
     <span class="phase">{LIFECYCLE_LABELS[life.phase]}</span>
+    {#if working}<Pulse />{/if}
     {#each facts as fact, i (i)}<span class="fact">{fact}</span>{/each}
   </p>
   {#if life.detail !== undefined}<OutputBlock label="Detail" text={life.detail} />{/if}
