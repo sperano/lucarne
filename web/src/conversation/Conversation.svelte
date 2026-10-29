@@ -1,5 +1,6 @@
 <script lang="ts">
   import { formatCount } from '../lib/format';
+  import { shownItems } from '../lib/conversation';
   import type { Connection } from '../lib/live';
   import type { RunView } from '../lib/runstore';
   import { passes, search, type ItemFilter } from '../lib/search';
@@ -75,7 +76,9 @@
   let current: string | undefined = $state();
   let request: Target | undefined = $state();
   const items = $derived(
-    conversation ? conversation.items.filter((i) => filter === 'all' || passes(i, filter)) : [],
+    conversation
+      ? shownItems(conversation.items).filter((i) => filter === 'all' || passes(i, filter))
+      : [],
   );
   const matches = $derived(search(items, query));
   const matchSet = $derived(new Set(matches));

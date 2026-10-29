@@ -209,6 +209,7 @@ const (
 	LifecycleTurnCompleted    LifecyclePhase = "turn_completed"
 	LifecycleTurnFailed       LifecyclePhase = "turn_failed"
 	LifecycleCompacted        LifecyclePhase = "compacted"
+	LifecycleThinking         LifecyclePhase = "thinking"
 	LifecycleSessionCompleted LifecyclePhase = "session_completed"
 	LifecycleRateLimitStatus  LifecyclePhase = "rate_limit_status"
 	LifecycleLimitHit         LifecyclePhase = "limit_hit"

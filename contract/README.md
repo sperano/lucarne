@@ -121,6 +121,8 @@ Lifecycle phases: `setup_started`, `setup_completed`, `setup_failed`
 (`exitCode`) for the Kelos setup markers on stderr; `session_started`,
 `step_started`, `step_completed` (`stopReason`; one model call, as OpenCode
 bounds them), `turn_started`, `turn_completed`, `turn_failed`, `compacted`,
+`thinking` (the runner's progress while the model thinks, one per progress
+line; a conversation shows a batch of them as one indicator),
 `session_completed` (`subtype`, `isError`, `stopReason`) and
 `rate_limit_status` (`subtype` is the status, `detail` is the runner's rate
 limit information) from the runner; `limit_hit` for the

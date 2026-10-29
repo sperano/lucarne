@@ -199,3 +199,44 @@ describe('Transcript following a live run', () => {
     expect(followButton(root)?.getAttribute('aria-pressed')).toBe('true');
   });
 });
+
+describe('Transcript of a model thinking', () => {
+  const make = eventMaker();
+  const think = () => make({ kind: 'lifecycle', lifecycle: { phase: 'thinking' } });
+  const events = [
+    think(),
+    think(),
+    make({ kind: 'message', message: { role: 'assistant', type: 'text', text: 'Looked.' } }),
+    think(),
+    think(),
+  ];
+  const thinkingConversation = buildConversation(events, ATTEMPT_ID);
+
+  const show = (coverage: 'following' | 'ended', live: boolean) =>
+    render(Transcript, {
+      conversation: thinkingConversation,
+      coverage,
+      limits: LIMITS,
+      target: undefined,
+      live,
+    });
+
+  it('shows the batch under way as one animated status, and no earlier batch', () => {
+    const root = show('following', true);
+    expect(root.querySelectorAll('.items > li')).toHaveLength(2);
+    const status = root.querySelectorAll('.thinking');
+    expect(status).toHaveLength(1);
+    expect(status[0]?.getAttribute('role')).toBe('status');
+    expect(status[0]?.querySelector('.dots')).not.toBeNull();
+    expect(root.textContent).not.toContain('does not render');
+  });
+
+  it('keeps the last batch as a static line once the attempt is read to its end', () => {
+    const root = show('ended', false);
+    expect(root.querySelectorAll('.items > li')).toHaveLength(2);
+    const line = root.querySelectorAll('.thinking');
+    expect(line).toHaveLength(1);
+    expect(line[0]?.getAttribute('role')).toBeNull();
+    expect(line[0]?.querySelector('.dots')).toBeNull();
+  });
+});

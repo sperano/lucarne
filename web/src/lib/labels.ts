@@ -92,6 +92,7 @@ export const LIFECYCLE_LABELS: Record<LifecyclePhase, string> = {
   turn_completed: 'Turn completed',
   turn_failed: 'Turn failed',
   compacted: 'Context compacted',
+  thinking: 'Thinking',
   session_completed: 'Session completed',
   rate_limit_status: 'Rate limit status',
   limit_hit: 'Usage limit hit',

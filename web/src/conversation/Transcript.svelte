@@ -1,7 +1,7 @@
 <script lang="ts">
   import { tick, untrack } from 'svelte';
   import type { CoverageState, Limits } from '../lib/contract';
-  import type { Conversation, Item } from '../lib/conversation';
+  import { shownItems, type Conversation, type Item } from '../lib/conversation';
   import { formatCount } from '../lib/format';
   import { passes, type ItemFilter } from '../lib/search';
   import {
@@ -51,9 +51,17 @@
   /** The keys that scroll the page: pressing one is the reader taking over. */
   const SCROLL_KEYS = new Set(['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' ']);
 
-  const visible: readonly Item[] = $derived(
-    filter === 'all' ? conversation.items : conversation.items.filter((i) => passes(i, filter)),
-  );
+  const targetId = $derived.by(() => {
+    if (target === undefined) return undefined;
+    return conversation.items[conversation.itemOf.get(target.event) ?? -1]?.id;
+  });
+  // Whether the attempt may still grow: its last thinking batch is then under way.
+  const growing = $derived(live && coverage === 'following');
+  const lastId = $derived(conversation.items.at(-1)?.id);
+  const visible: readonly Item[] = $derived.by(() => {
+    const items = shownItems(conversation.items, targetId);
+    return filter === 'all' ? items : items.filter((i) => passes(i, filter));
+  });
   const total = $derived(visible.length);
   const positionOf = $derived(new Map(visible.map((item, i) => [item.id, i])));
 
@@ -216,11 +224,6 @@
     await tick();
     if (tail) bringIntoView(tail, 'end');
   }
-
-  const targetId = $derived.by(() => {
-    if (target === undefined) return undefined;
-    return conversation.items[conversation.itemOf.get(target.event) ?? -1]?.id;
-  });
 </script>
 
 <svelte:window {onscroll} {onkeydown} onwheel={unpin} ontouchstart={unpin} onpointerdown={unpin} />
@@ -254,7 +257,14 @@
         class:current={item.id === current}
         tabindex="-1"
       >
-        <ItemView {item} {conversation} {coverage} {limits} {targeted} />
+        <ItemView
+          {item}
+          {conversation}
+          {coverage}
+          {limits}
+          {targeted}
+          ongoing={growing && item.id === lastId}
+        />
       </li>
     {/each}
   </ol>

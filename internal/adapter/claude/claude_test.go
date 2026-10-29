@@ -55,7 +55,6 @@ func TestLineTypesAndRawReasons(t *testing.T) {
 		{"no type", `{"example":1}`, contract.RawUnknownType},
 		{"type not a string", `{"type":7}`, contract.RawUnknownType},
 		{"unknown system subtype", `{"type":"system","subtype":"hook_started"}`, contract.RawUnknownType},
-		{"thinking token progress", `{"type":"system","subtype":"thinking_tokens","estimated_tokens":1550,"estimated_tokens_delta":200,"session_id":"session-example","uuid":"message-example"}`, contract.RawUnsupported},
 		{"partial message", `{"type":"stream_event","event":{"type":"message_start"}}`, contract.RawUnsupported},
 		{"assistant without message", `{"type":"assistant"}`, contract.RawUnsupported},
 		{"assistant with empty content", `{"type":"assistant","message":{"id":"msg_1","content":[]}}`, contract.RawUnsupported},
@@ -93,6 +92,7 @@ func TestSystemLines(t *testing.T) {
 		`{"type":"system","subtype":"api_retry","attempt":0,"max_retries":10,"retry_delay_ms":5,"error_status":600,"error":"unknown"}`,
 		`{"type":"system","subtype":"compact_boundary","compact_metadata":{"trigger":"manual", "pre_tokens":5}}`,
 		`{"type":"system","subtype":"compact_boundary"}`,
+		`{"type":"system","subtype":"thinking_tokens","estimated_tokens":1550,"estimated_tokens_delta":200,"session_id":"session-example","uuid":"message-example"}`,
 	)
 	started := events[0].Lifecycle
 	if started.Phase != contract.LifecycleSessionStarted || started.SessionID != "s-1" || started.RunnerVersion != "2.1.296" {
@@ -107,6 +107,9 @@ func TestSystemLines(t *testing.T) {
 	}
 	if events[3].Lifecycle.Phase != contract.LifecycleCompacted || events[3].Lifecycle.Detail != nil {
 		t.Errorf("compact without metadata = %+v", events[3].Lifecycle)
+	}
+	if thinking := events[4].Lifecycle; thinking.Phase != contract.LifecycleThinking || thinking.SessionID != "session-example" {
+		t.Errorf("thinking_tokens = %+v", thinking)
 	}
 }
 
