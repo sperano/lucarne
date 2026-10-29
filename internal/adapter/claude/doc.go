@@ -32,10 +32,12 @@
 //     (tokens, total_cost_usd as a decimal string, durations, turns), and an
 //     error per errors entry.
 //   - anything else is raw: stream_event (partial messages, which Kelos does
-//     not ask for) as unsupported, other types and system subtypes as
-//     unknown_type, a line that does not parse as malformed_json, and text as
-//     text. A content block the parser does not render is raw too, as its own
-//     event of the line.
+//     not ask for), tool_progress (a heartbeat while a tool call runs) and
+//     the system subtypes task_started and task_notification (the CLI's
+//     background monitoring of a tool call) as unsupported, other types and
+//     system subtypes as unknown_type, a line that does not parse as
+//     malformed_json, and text as text. A content block the parser does not
+//     render is raw too, as its own event of the line.
 //
 // Capability gaps of Claude Code 2.1.296 as Kelos runs it, and of this
 // adapter:
@@ -54,8 +56,16 @@
 //   - Not rendered: the estimated token count of thinking progress
 //     (thinking_tokens), the per-model usage (modelUsage), permission_denials,
 //     the result text (it repeats the last assistant message), retry waits without a response (no_response),
-//     redacted thinking, images and documents, and the edits of NotebookEdit
-//     or of tools other than Edit, MultiEdit and Write.
+//     redacted thinking, images and documents, the edits of NotebookEdit
+//     or of tools other than Edit, MultiEdit and Write, and the background
+//     monitoring of a tool call (task_started, tool_progress heartbeats,
+//     task_notification): its task_id and run_id are not correlated with
+//     anything else, so none of it joins the tool_use/tool_result pair for
+//     the same tool_use_id. This is the only source of a running call's
+//     elapsed time (tool_use and tool_result carry no timing) and, for a
+//     backgrounded call (is_backgrounded, i.e. run_in_background: tool_result
+//     returns immediately with a "running in background" notice), of its
+//     eventual status (completed, failed or killed).
 //   - Times: a line's timestamp field, when present, is its runnerTime; the
 //     fixtures carry none, so which lines have one is unverified.
 package claude

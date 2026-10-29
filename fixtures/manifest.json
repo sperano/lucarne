@@ -15,6 +15,7 @@
     "claude-code": [
       "kelos-dev/kelos v0.60.0 claude-code/kelos_entrypoint.sh: claude --dangerously-skip-permissions --output-format stream-json --verbose -p, piped to /kelos/kelos-capture",
       "@anthropic-ai/claude-code 2.1.296 bundled CLI: system/init, system/api_retry, system/compact_boundary, rate_limit_event and result message builders",
+      "a live Kelos run's stream-json output: system/task_started, tool_progress heartbeats and system/task_notification around a long Bash call, not documented in the bundled CLI's packaged source",
       "sperano/hollingsworth docker/kelos-agent/limit_capture.py and kelos_entrypoint.sh: limit-resets-at/limit-type outputs and the ---KELOS_LIMIT_HIT--- stderr line"
     ],
     "codex": [
@@ -107,6 +108,15 @@
       "scenarios": ["session_start", "assistant_text", "parallel_tools", "subagent", "tool_success", "tool_failure", "partial_message", "duplicate_line", "usage", "cost"],
       "lines": { "blank": 0, "json": 15, "text": 0 },
       "notes": "Two tool calls of one message whose results come back interleaved with a Task subagent's lines (parent_tool_use_id), a stream_event partial message, a Bash call interrupted (its error text is illustrative), and the same assistant line printed twice. Whether Claude Code interleaves subagent and main-agent lines this way is unverified."
+    },
+    {
+      "file": "claude-code/2.1.296/background-task.log",
+      "runner": "claude-code",
+      "version": "2.1.296",
+      "provenance": "synthetic",
+      "scenarios": ["session_start", "background_task", "tool_success", "assistant_text", "usage", "cost"],
+      "lines": { "blank": 0, "json": 9, "text": 0 },
+      "notes": "system/task_started, two tool_progress heartbeats and system/task_notification around a Bash call's tool_use/tool_result, modelled after a sample observed in a live run; the CLI's packaged source does not document this shape, so field names and presence are unverified."
     },
     {
       "file": "codex/0.162.1/session-basic.log",
