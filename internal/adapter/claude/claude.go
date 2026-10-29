@@ -21,9 +21,8 @@ const (
 	// content block follows as an assistant line.
 	typeStreamEvent = "stream_event"
 	// typeToolProgress is a heartbeat the CLI prints while a tool call (a
-	// long Bash command, say) is still running; the call and its outcome
-	// are already carried by the assistant tool_use and user tool_result
-	// lines sharing its tool_use_id.
+	// long Bash command, say) is still running; it carries the only elapsed
+	// time for that call, which tool_use and tool_result do not.
 	typeToolProgress = "tool_progress"
 )
 
@@ -36,8 +35,10 @@ const (
 )
 
 // System subtypes the parser recognizes but does not render: the CLI's
-// background monitoring of a tool call, started and completed around the
-// tool_use/tool_result pair already carried for the same tool_use_id.
+// background monitoring of a tool call. task_notification carries the
+// completion status (completed, failed or killed) of a backgrounded call,
+// whose tool_result returns immediately with a "running in background"
+// notice and never reports that outcome.
 const (
 	subtypeTaskStarted      = "task_started"
 	subtypeTaskNotification = "task_notification"
