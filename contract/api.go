@@ -15,6 +15,9 @@ const APIPrefix = "/api/v1"
 // ContractPath is the API path of ContractInfo.
 const ContractPath = APIPrefix + "/contract"
 
+// RunsPath is the API path of RunList.
+const RunsPath = APIPrefix + "/runs"
+
 // SSE event names on the run stream.
 const (
 	SSETranscript = "transcript"
@@ -135,6 +138,24 @@ type SourceLine struct {
 	// Bytes is the length of the whole line: more than Text holds when it
 	// was cut.
 	Bytes int64 `json:"bytes"`
+}
+
+// RunList is GET /api/v1/runs: the runs of the allowlisted namespaces,
+// newest first, for the UI to search and open. It holds at most
+// MaxListedRuns; OmittedRuns counts the older ones left out.
+type RunList struct {
+	Schema      string `json:"schema"`
+	Runs        []Run  `json:"runs"`
+	OmittedRuns int64  `json:"omittedRuns"`
+}
+
+// MarshalJSON writes nil Runs as an empty array, which the schema requires.
+func (l RunList) MarshalJSON() ([]byte, error) {
+	type plain RunList
+	if l.Runs == nil {
+		l.Runs = []Run{}
+	}
+	return json.Marshal(plain(l))
 }
 
 // ContractInfo is GET /api/v1/contract.

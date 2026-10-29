@@ -128,6 +128,7 @@
     "maxReplayUpdates": 5000,
     "maxClientQueue": 1024,
     "maxSourceBytes": 65536,
-    "maxRunSourceBytes": 16777216
+    "maxRunSourceBytes": 16777216,
+    "maxListedRuns": 1000
   }
 }

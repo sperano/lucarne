@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseRoute, runHref, runLink } from './route';
+import { homeHref, parseRoute, runHref, runLink } from './route';
 
 const UID = '3f8e2a4c-1b2d-4e5f-8a9b-0c1d2e3f4a5b';
 const RUN_PATH = `/runs/example/agents/${UID}`;
@@ -9,7 +9,17 @@ const KEY = { cluster: 'example', namespace: 'agents', taskUID: UID };
 
 describe('parseRoute', () => {
   it('opens the home page at the root', () => {
-    expect(parseRoute('/', '', '')).toEqual({ page: 'home' });
+    expect(parseRoute('/', '', '')).toEqual({ page: 'home', query: '' });
+  });
+
+  it('keeps the search query of the home page', () => {
+    expect(parseRoute('/', '?q=fix%20login&other=1', '')).toEqual({
+      page: 'home',
+      query: 'fix login',
+    });
+    const href = new URL(homeHref('a&b=c #d'), 'http://example.com');
+    expect(parseRoute(href.pathname, href.search, '')).toEqual({ page: 'home', query: 'a&b=c #d' });
+    expect(homeHref('')).toBe('/');
   });
 
   it('opens a run in the conversation view by default', () => {

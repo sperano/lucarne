@@ -160,6 +160,7 @@ func newDocument(t *testing.T, def string) any {
 		DefErrorResponse: &ErrorResponse{},
 		DefContractInfo:  &ContractInfo{},
 		DefSourceLine:    &SourceLine{},
+		DefRunList:       &RunList{},
 	}
 	doc, ok := documents[def]
 	if !ok {

@@ -104,7 +104,7 @@ func newStackWith(t *testing.T, smallBuffers bool, mutate ...func(*stream.Config
 	if err != nil {
 		t.Fatal(err)
 	}
-	srv := httptest.NewUnstartedServer(server.New(indexHTML, server.Options{Runs: hub, Logger: logger, Heartbeat: heartbeat}))
+	srv := httptest.NewUnstartedServer(server.New(indexHTML, server.Options{Runs: hub, Catalog: src, Logger: logger, Heartbeat: heartbeat}))
 	if smallBuffers {
 		srv.Listener = smallSendBuffers{srv.Listener}
 	}

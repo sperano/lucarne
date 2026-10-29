@@ -1,0 +1,15 @@
+{
+  "schema": "lucarne.transcript/v1",
+  "runs": [
+    {
+      "key": {
+        "cluster": "example",
+        "namespace": "agents",
+        "taskUID": "fix-login-redirect"
+      },
+      "taskName": "fix-login-redirect",
+      "phase": "running"
+    }
+  ],
+  "omittedRuns": 0
+}

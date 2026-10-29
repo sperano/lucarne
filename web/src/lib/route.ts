@@ -1,5 +1,6 @@
 // Deep links, as specified in contract/README.md:
 //   /runs/{cluster}/{namespace}/{taskUID}[?attempt={attemptID}][&view={view}][#event={eventID}]
+// and the home page, which searches the runs: /[?q={query}]
 import schema from '../../../contract/v1/transcript.schema.json';
 import type { RunKey } from './contract';
 
@@ -10,6 +11,8 @@ export const DEFAULT_VIEW: View = 'conversation';
 const RUNS_PREFIX = 'runs';
 const RUN_PATH_SEGMENTS = 4;
 const EVENT_FRAGMENT_PREFIX = '#event=';
+const HOME_PATH = '/';
+const QUERY_PARAMETER = 'q';
 
 // The identity patterns are the schema's own, so a link the UI accepts is
 // one the API accepts.
@@ -21,13 +24,15 @@ const patterns = {
 };
 
 export type Route =
-  | { page: 'home' }
+  | { page: 'home'; query: string }
   | { page: 'run'; key: RunKey; view: View; attempt?: string; event?: string }
   | { page: 'invalid'; reason: string };
 
 /** Parses a location's path, query and fragment into a route. */
 export function parseRoute(pathname: string, search: string, hash: string): Route {
-  if (pathname === '/') return { page: 'home' };
+  if (pathname === HOME_PATH) {
+    return { page: 'home', query: new URLSearchParams(search).get(QUERY_PARAMETER) ?? '' };
+  }
   const segments = pathname.split('/').slice(1);
   if (segments[0] !== RUNS_PREFIX || segments.length !== RUN_PATH_SEGMENTS) {
     return { page: 'invalid', reason: `not a run link: ${pathname}` };
@@ -52,6 +57,12 @@ export function parseRoute(pathname: string, search: string, hash: string): Rout
     ...(attempt === null ? {} : { attempt }),
     ...(event === null ? {} : { event }),
   };
+}
+
+/** The home page's link, with the search query when there is one. */
+export function homeHref(query: string): string {
+  if (query === '') return HOME_PATH;
+  return `${HOME_PATH}?${new URLSearchParams({ [QUERY_PARAMETER]: query }).toString()}`;
 }
 
 /** The canonical deep link of a run. */

@@ -42,6 +42,8 @@ var version = defaultVersion
 type options struct {
 	// runs serves the run endpoints; nil answers them 501.
 	runs *stream.Hub
+	// catalog serves the run list; nil answers it 501.
+	catalog server.RunLister
 	// drainDelay is how long /readyz answers 503 after the stop signal,
 	// before the listener closes, so that the Service stops routing here.
 	drainDelay time.Duration
@@ -68,42 +70,48 @@ func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stderr, nil))
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
-	runs, err := newRuns(*cluster, allowed, logger)
+	opts, err := newReaders(*cluster, allowed, logger)
 	if err != nil {
 		logger.Error("read runs", "error", err)
 		os.Exit(1)
 	}
+	opts.drainDelay, opts.logger = *drainDelay, logger
 	listener, err := net.Listen("tcp", *listen)
 	if err != nil {
 		logger.Error("listen", "address", *listen, "error", err)
 		os.Exit(1)
 	}
-	if err := run(ctx, listener, options{runs: runs, drainDelay: *drainDelay, logger: logger}); err != nil {
+	if err := run(ctx, listener, opts); err != nil {
 		logger.Error("lucarne stopped", "error", err)
 		os.Exit(1)
 	}
 }
 
-// newRuns is the hub reading the runs of cluster's allowlisted namespaces
-// through the in-cluster or kubeconfig credentials, nil when none is.
-func newRuns(cluster string, allowed []string, logger *slog.Logger) (*stream.Hub, error) {
+// newReaders are the hub and the run list reading the runs of cluster's
+// allowlisted namespaces through the in-cluster or kubeconfig credentials,
+// neither when no namespace is allowlisted.
+func newReaders(cluster string, allowed []string, logger *slog.Logger) (options, error) {
 	if len(allowed) == 0 {
 		logger.Warn("no namespace allowlisted: the run endpoints answer 501")
-		return nil, nil
+		return options{}, nil
 	}
 	cfg, err := kube.RESTConfig()
 	if err != nil {
-		return nil, err
+		return options{}, err
 	}
 	clients, err := kube.NewClients(cfg)
 	if err != nil {
-		return nil, err
+		return options{}, err
 	}
 	src, err := kube.New(kube.Config{Cluster: cluster, Namespaces: allowed}, clients)
 	if err != nil {
-		return nil, err
+		return options{}, err
 	}
-	return stream.New(stream.Config{Source: src, Logger: logger})
+	runs, err := stream.New(stream.Config{Source: src, Logger: logger})
+	if err != nil {
+		return options{}, err
+	}
+	return options{runs: runs, catalog: src}, nil
 }
 
 // run serves on listener until ctx is done, then drains and shuts down
@@ -115,9 +123,10 @@ func run(ctx context.Context, listener net.Listener, opts options) error {
 	// WriteTimeout stays zero: SSE responses are long-lived.
 	srv := &http.Server{
 		Handler: server.New(web.Dist(), server.Options{
-			Runs:   opts.runs,
-			Logger: logger,
-			Ready:  func() bool { return !draining.Load() },
+			Runs:    opts.runs,
+			Catalog: opts.catalog,
+			Logger:  logger,
+			Ready:   func() bool { return !draining.Load() },
 		}),
 		ReadHeaderTimeout: readHeaderTimeout,
 		IdleTimeout:       idleTimeout,

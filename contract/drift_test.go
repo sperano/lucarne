@@ -72,6 +72,7 @@ func TestGoTypesMatchSchemaObjects(t *testing.T) {
 		"Raw": Raw{}, "Gap": Gap{}, "Event": Event{}, "Snapshot": Snapshot{},
 		"AttemptUpdate": AttemptUpdate{}, "RunUpdate": RunUpdate{}, "Reset": Reset{}, "End": End{}, "Live": Live{},
 		"ErrorResponse": ErrorResponse{}, "ContractInfo": ContractInfo{}, "SourceLine": SourceLine{},
+		"RunList": RunList{},
 	}
 	for name, value := range types {
 		t.Run(name, func(t *testing.T) {
@@ -224,6 +225,7 @@ func TestSchemaBoundsMatchLimits(t *testing.T) {
 		{property(defs, "Snapshot", "events"), MaxEventsPerRun},
 		{property(defs, "Lifecycle", "outputs"), MaxOutputs},
 		{property(defs, "Event", "truncated"), MaxTruncatedFields},
+		{property(defs, "RunList", "runs"), MaxListedRuns},
 	}
 	for _, c := range maxItems {
 		if got := c.schema["maxItems"]; got != float64(c.limit) {

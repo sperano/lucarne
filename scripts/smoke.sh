@@ -30,4 +30,6 @@ curl -fsS "$BASE/api/v1/contract" | grep -q '"schema":"lucarne.transcript/v1"'
 # Started without -namespace, it reads no cluster: run endpoints answer 501.
 status=$(curl -sS -o /dev/null -w '%{http_code}' "$BASE/api/v1$RUN_LINK")
 [ "$status" = 501 ] || { echo "run snapshot answered $status without a source, want 501" >&2; exit 1; }
+status=$(curl -sS -o /dev/null -w '%{http_code}' "$BASE/api/v1/runs")
+[ "$status" = 501 ] || { echo "run list answered $status without a source, want 501" >&2; exit 1; }
 echo "smoke: ok ($asset)"
