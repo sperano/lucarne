@@ -31,8 +31,7 @@
       "name": "Bash",
       "input": {
         "command": "npm run lint \u0026\u0026 npm test",
-        "description": "Lint and test the web package",
-        "is_backgrounded": false
+        "description": "Lint and test the web package"
       }
     }
   },

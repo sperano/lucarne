@@ -61,8 +61,11 @@
 //     or of tools other than Edit, MultiEdit and Write, and the background
 //     monitoring of a running tool call (task_started, tool_progress
 //     heartbeats, task_notification): its task_id and run_id are not
-//     correlated with anything else, and its description, elapsed time and
-//     summary duplicate what the tool_use and tool_result already carry.
+//     correlated with anything else. For a foreground call (the only shape
+//     observed), its description, elapsed time and summary duplicate what
+//     the tool_use and tool_result already carry; whether a backgrounded
+//     call's task_notification is its only completion record is
+//     unverified.
 //   - Times: a line's timestamp field, when present, is its runnerTime; the
 //     fixtures carry none, so which lines have one is unverified.
 package claude
