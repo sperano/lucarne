@@ -120,6 +120,30 @@
     next.focus();
   }
 
+  function runs(n: number): string {
+    return `${formatCount(n)} ${n === 1 ? 'run' : 'runs'}`;
+  }
+
+  function matchedText(matched: number, listed: number): string {
+    return `${formatCount(matched)} of ${runs(listed)} ${listed === 1 ? 'matches' : 'match'}, newest first.`;
+  }
+
+  function omittedText(listed: number, omitted: number): string {
+    const kept =
+      listed === 1
+        ? 'Only the newest run is listed'
+        : `Only the ${formatCount(listed)} newest runs are listed`;
+    const left =
+      omitted === 1
+        ? 'the older one is left out, and opens from its link only'
+        : `the ${formatCount(omitted)} older ones are left out, and open from their link only`;
+    return `${kept}: ${left}.`;
+  }
+
+  function hiddenText(hidden: number): string {
+    return hidden === 1 ? 'the other one' : `the ${formatCount(hidden)} others`;
+  }
+
   function failureText(failure: ApiFailure): string {
     const code = failure.code === undefined ? '' : ` ${failure.code}`;
     return `The runs could not be listed (${String(failure.status)}${code}): ${failure.message}`;
@@ -177,23 +201,21 @@
       {:else if matches.length === 0}
         No run matches “{query.trim()}”.
       {:else if query.trim() === ''}
-        {formatCount(matches.length)} runs, newest first.
+        {runs(matches.length)}, newest first.
       {:else}
-        {formatCount(matches.length)} of {formatCount(load.list.runs.length)} runs match, newest first.
+        {matchedText(matches.length, load.list.runs.length)}
       {/if}
     </p>
     {#if load.list.omittedRuns > 0}
       <p class="notice warning" role="note">
-        Only the {formatCount(load.list.runs.length)} newest runs are listed: the {formatCount(
-          load.list.omittedRuns,
-        )} older ones are left out, and open from their link only.
+        {omittedText(load.list.runs.length, load.list.omittedRuns)}
       </p>
     {/if}
     {#if matches.length > shown.length}
       <p class="notice info" role="note">
-        Showing the first {formatCount(shown.length)} matches: refine the search to reach the {formatCount(
+        Showing the first {formatCount(shown.length)} matches: refine the search to reach {hiddenText(
           matches.length - shown.length,
-        )} others.
+        )}.
       </p>
     {/if}
     <ol id="run-results" class="runs" aria-label="Matching runs" bind:this={results}>

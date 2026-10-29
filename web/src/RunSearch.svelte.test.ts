@@ -141,6 +141,23 @@ describe('RunSearch', () => {
     expect(names(root)).toEqual([`task-${String(SHOWN_RUNS + extra - 1)}`]);
   });
 
+  it('counts a single run and a single older one in the singular', async () => {
+    const one: RunList = { ...LIST, runs: manyRuns(1), omittedRuns: 1 };
+    const { root } = show([one]);
+    await expect.poll(() => count(root)).toBe('1 run, newest first.');
+    expect(root.querySelector('[role=note]')?.textContent.trim()).toBe(
+      'Only the newest run is listed: the older one is left out, and opens from its link only.',
+    );
+    await userEvent.fill(box(root), 'task-0');
+    expect(count(root)).toBe('1 of 1 run matches, newest first.');
+  });
+
+  it('names the one match left out of the window in the singular', async () => {
+    const { root } = show([{ ...LIST, runs: manyRuns(SHOWN_RUNS + 1) }]);
+    await expect.poll(() => links(root)).toHaveLength(SHOWN_RUNS);
+    expect(root.querySelector('[role=note]')?.textContent).toContain('reach the other one.');
+  });
+
   it('says when there is no run at all', async () => {
     const { root } = show([{ ...LIST, runs: [] }]);
     await expect.poll(() => count(root)).toContain('No run to list');
