@@ -164,13 +164,30 @@ describe('Transcript following a live run', () => {
   };
   const lastItem = (root: HTMLElement) => root.querySelector('.items > li:last-child')?.textContent;
 
+  function expectFollowLayout(root: HTMLElement): void {
+    const item = root.querySelector<HTMLElement>('.items > li:last-child');
+    const follow = root.querySelector<HTMLElement>('.follow');
+    const button = follow?.querySelector('button');
+    const tail = root.querySelector<HTMLElement>('.tail');
+    if (!item || !follow || !button || !tail) throw new Error('follow layout is incomplete');
+    expect(getComputedStyle(follow).position).toBe('static');
+    expect(follow.getBoundingClientRect().top).toBeGreaterThanOrEqual(
+      item.getBoundingClientRect().bottom,
+    );
+    expect(window.innerHeight - button.getBoundingClientRect().bottom).toBeGreaterThanOrEqual(
+      tail.getBoundingClientRect().height - 1,
+    );
+  }
+
   it('keeps to the end as events arrive', async () => {
     const { root, send } = await following();
     await expect.poll(() => atEnd(root)).toBe(true);
     expect(followButton(root)?.getAttribute('aria-pressed')).toBe('true');
+    expectFollowLayout(root);
     send(STREAMED);
     await expect.poll(() => lastItem(root)).toContain(`Step ${String(loaded + STREAMED - 1)}`);
     await expect.poll(() => atEnd(root)).toBe(true);
+    expectFollowLayout(root);
   });
 
   it('pauses when the reader scrolls up, holds still, and resumes when asked', async () => {
@@ -178,6 +195,8 @@ describe('Transcript following a live run', () => {
     await expect.poll(() => atEnd(root)).toBe(true);
     window.scrollBy(0, -window.innerHeight * 2);
     await expect.poll(() => followButton(root)?.getAttribute('aria-pressed')).toBe('false');
+    const paused = root.querySelector<HTMLElement>('.follow');
+    expect(paused && getComputedStyle(paused).position).toBe('sticky');
     const anchor = [...root.querySelectorAll('.items > li')].find(
       (li) => li.getBoundingClientRect().top >= 0,
     );
