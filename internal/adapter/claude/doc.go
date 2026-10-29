@@ -32,10 +32,13 @@
 //     (tokens, total_cost_usd as a decimal string, durations, turns), and an
 //     error per errors entry.
 //   - anything else is raw: stream_event (partial messages, which Kelos does
-//     not ask for) as unsupported, other types and system subtypes as
-//     unknown_type, a line that does not parse as malformed_json, and text as
-//     text. A content block the parser does not render is raw too, as its own
-//     event of the line.
+//     not ask for), tool_progress (a heartbeat while a tool call runs) and
+//     the system subtypes task_started and task_notification (the CLI's
+//     background monitoring of a tool call, carried already by its own
+//     tool_use/tool_result) as unsupported, other types and system subtypes
+//     as unknown_type, a line that does not parse as malformed_json, and
+//     text as text. A content block the parser does not render is raw too,
+//     as its own event of the line.
 //
 // Capability gaps of Claude Code 2.1.296 as Kelos runs it, and of this
 // adapter:
@@ -54,8 +57,12 @@
 //   - Not rendered: the estimated token count of thinking progress
 //     (thinking_tokens), the per-model usage (modelUsage), permission_denials,
 //     the result text (it repeats the last assistant message), retry waits without a response (no_response),
-//     redacted thinking, images and documents, and the edits of NotebookEdit
-//     or of tools other than Edit, MultiEdit and Write.
+//     redacted thinking, images and documents, the edits of NotebookEdit
+//     or of tools other than Edit, MultiEdit and Write, and the background
+//     monitoring of a running tool call (task_started, tool_progress
+//     heartbeats, task_notification): its task_id and run_id are not
+//     correlated with anything else, and its description, elapsed time and
+//     summary duplicate what the tool_use and tool_result already carry.
 //   - Times: a line's timestamp field, when present, is its runnerTime; the
 //     fixtures carry none, so which lines have one is unverified.
 package claude

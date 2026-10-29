@@ -20,6 +20,11 @@ const (
 	// --include-partial-messages, which Kelos does not pass; the complete
 	// content block follows as an assistant line.
 	typeStreamEvent = "stream_event"
+	// typeToolProgress is a heartbeat the CLI prints while a tool call (a
+	// long Bash command, say) is still running; the call and its outcome
+	// are already carried by the assistant tool_use and user tool_result
+	// lines sharing its tool_use_id.
+	typeToolProgress = "tool_progress"
 )
 
 // System subtypes the parser renders.
@@ -30,13 +35,27 @@ const (
 	subtypeThinkingTokens  = "thinking_tokens"
 )
 
+// System subtypes the parser recognizes but does not render: the CLI's
+// background monitoring of a tool call, started and completed around the
+// tool_use/tool_result pair already carried for the same tool_use_id.
+const (
+	subtypeTaskStarted      = "task_started"
+	subtypeTaskNotification = "task_notification"
+)
+
 // renderedSubtypes are the system subtypes the parser renders.
 var renderedSubtypes = map[string]bool{
 	subtypeInit: true, subtypeAPIRetry: true, subtypeCompactBoundary: true, subtypeThinkingTokens: true,
 }
 
+// unsupportedSubtypes are system subtypes the parser knows and does not
+// render.
+var unsupportedSubtypes = map[string]bool{
+	subtypeTaskStarted: true, subtypeTaskNotification: true,
+}
+
 // unsupportedTypes are line types the parser knows and does not render.
-var unsupportedTypes = map[string]bool{typeStreamEvent: true}
+var unsupportedTypes = map[string]bool{typeStreamEvent: true, typeToolProgress: true}
 
 // Parser normalizes Claude Code stream-json lines. It is an adapter.Runner;
 // it keeps only the tool calls still waiting for their result.
@@ -92,6 +111,9 @@ func (p *Parser) render(h head, text []byte, out *adapter.Emitter) bool {
 func rawReason(h head) contract.RawReason {
 	switch h.Type {
 	case typeSystem:
+		if unsupportedSubtypes[h.Subtype] {
+			return contract.RawUnsupported
+		}
 		if !renderedSubtypes[h.Subtype] {
 			return contract.RawUnknownType
 		}
