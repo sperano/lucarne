@@ -7,20 +7,21 @@ type EventKind string
 
 // Event kinds. Exactly the payload field named after the kind is set.
 const (
-	KindMessage    EventKind = "message"
-	KindToolCall   EventKind = "tool_call"
-	KindToolResult EventKind = "tool_result"
-	KindEdit       EventKind = "edit"
-	KindUsage      EventKind = "usage"
-	KindError      EventKind = "error"
-	KindLifecycle  EventKind = "lifecycle"
-	KindRaw        EventKind = "raw"
-	KindGap        EventKind = "gap"
+	KindMessage      EventKind = "message"
+	KindToolCall     EventKind = "tool_call"
+	KindToolProgress EventKind = "tool_progress"
+	KindToolResult   EventKind = "tool_result"
+	KindEdit         EventKind = "edit"
+	KindUsage        EventKind = "usage"
+	KindError        EventKind = "error"
+	KindLifecycle    EventKind = "lifecycle"
+	KindRaw          EventKind = "raw"
+	KindGap          EventKind = "gap"
 )
 
 // EventKinds lists every kind, in the schema's order.
 var EventKinds = []EventKind{
-	KindMessage, KindToolCall, KindToolResult, KindEdit, KindUsage,
+	KindMessage, KindToolCall, KindToolProgress, KindToolResult, KindEdit, KindUsage,
 	KindError, KindLifecycle, KindRaw, KindGap,
 }
 
@@ -34,15 +35,16 @@ type Event struct {
 	Source    Source    `json:"source"`
 	Truncated []string  `json:"truncated,omitempty"`
 
-	Message    *Message    `json:"message,omitempty"`
-	ToolCall   *ToolCall   `json:"toolCall,omitempty"`
-	ToolResult *ToolResult `json:"toolResult,omitempty"`
-	Edit       *Edit       `json:"edit,omitempty"`
-	Usage      *Usage      `json:"usage,omitempty"`
-	Error      *ErrorInfo  `json:"error,omitempty"`
-	Lifecycle  *Lifecycle  `json:"lifecycle,omitempty"`
-	Raw        *Raw        `json:"raw,omitempty"`
-	Gap        *Gap        `json:"gap,omitempty"`
+	Message      *Message      `json:"message,omitempty"`
+	ToolCall     *ToolCall     `json:"toolCall,omitempty"`
+	ToolProgress *ToolProgress `json:"toolProgress,omitempty"`
+	ToolResult   *ToolResult   `json:"toolResult,omitempty"`
+	Edit         *Edit         `json:"edit,omitempty"`
+	Usage        *Usage        `json:"usage,omitempty"`
+	Error        *ErrorInfo    `json:"error,omitempty"`
+	Lifecycle    *Lifecycle    `json:"lifecycle,omitempty"`
+	Raw          *Raw          `json:"raw,omitempty"`
+	Gap          *Gap          `json:"gap,omitempty"`
 }
 
 // Source is where an event came from in its attempt's log. LogTime is the
@@ -92,6 +94,31 @@ type ToolCall struct {
 	Title        string          `json:"title,omitempty"`
 	ParentCallID string          `json:"parentCallId,omitempty"`
 }
+
+// ToolProgress is a progress report for the tool call with the same CallID.
+// ElapsedMs is absent when the source gave no elapsed time.
+type ToolProgress struct {
+	CallID     string            `json:"callId"`
+	Phase      ToolProgressPhase `json:"phase"`
+	ElapsedMs  *int64            `json:"elapsedMs,omitempty"`
+	Detail     string            `json:"detail,omitempty"`
+	Subtype    string            `json:"subtype,omitempty"`
+	Background *bool             `json:"background,omitempty"`
+}
+
+// ToolProgressPhase says where a tool stands, as reported by the runner.
+type ToolProgressPhase string
+
+// Tool progress phases. Unknown is a progress event whose source used a
+// status the adapter does not know.
+const (
+	ToolProgressStarted   ToolProgressPhase = "started"
+	ToolProgressRunning   ToolProgressPhase = "running"
+	ToolProgressCompleted ToolProgressPhase = "completed"
+	ToolProgressFailed    ToolProgressPhase = "failed"
+	ToolProgressKilled    ToolProgressPhase = "killed"
+	ToolProgressUnknown   ToolProgressPhase = "unknown"
+)
 
 // ToolResult is the outcome of the tool call with the same CallID. Output
 // is nil when the source reported none, and empty when the tool printed

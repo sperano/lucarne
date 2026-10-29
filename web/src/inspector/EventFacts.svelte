@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { Attempt, RunKey, TranscriptEvent } from '../lib/contract';
-  import { formatCount, formatTime } from '../lib/format';
-  import { COVERAGE_LABELS, STATUS_LABELS } from '../lib/labels';
+  import { formatCount, formatDuration, formatTime } from '../lib/format';
+  import { COVERAGE_LABELS, STATUS_LABELS, TOOL_PROGRESS_LABELS } from '../lib/labels';
   import { runHref } from '../lib/route';
   import CopyButton from './CopyButton.svelte';
 
@@ -95,6 +95,24 @@
     {@render fact(
       'Exit code',
       event.toolResult.exitCode === undefined ? undefined : String(event.toolResult.exitCode),
+      'Not reported',
+    )}
+  {:else if event.kind === 'tool_progress'}
+    {@render fact('Progress', TOOL_PROGRESS_LABELS[event.toolProgress.phase], '')}
+    {@render fact(
+      'Elapsed',
+      event.toolProgress.elapsedMs === undefined
+        ? undefined
+        : formatDuration(event.toolProgress.elapsedMs),
+      'Not reported',
+    )}
+    {@render fact(
+      'Execution',
+      event.toolProgress.background === undefined
+        ? undefined
+        : event.toolProgress.background
+          ? 'Background'
+          : 'Foreground',
       'Not reported',
     )}
   {:else if event.kind === 'edit'}

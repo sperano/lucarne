@@ -57,8 +57,6 @@ func TestLineTypesAndRawReasons(t *testing.T) {
 		{"unknown system subtype", `{"type":"system","subtype":"hook_started"}`, contract.RawUnknownType},
 		{"partial message", `{"type":"stream_event","event":{"type":"message_start"}}`, contract.RawUnsupported},
 		{"tool progress heartbeat", `{"type":"tool_progress","tool_use_id":"toolu_1-heartbeat-0","tool_name":"Bash","elapsed_time_seconds":30,"heartbeat":true}`, contract.RawUnsupported},
-		{"task started", `{"type":"system","subtype":"task_started","task_id":"t-1","tool_use_id":"toolu_1","task_type":"local_bash"}`, contract.RawUnsupported},
-		{"task notification", `{"type":"system","subtype":"task_notification","task_id":"t-1","tool_use_id":"toolu_1","status":"completed"}`, contract.RawUnsupported},
 		{"assistant without message", `{"type":"assistant"}`, contract.RawUnsupported},
 		{"assistant with empty content", `{"type":"assistant","message":{"id":"msg_1","content":[]}}`, contract.RawUnsupported},
 		{"user content not an array", `{"type":"user","message":{"content":7}}`, contract.RawUnsupported},

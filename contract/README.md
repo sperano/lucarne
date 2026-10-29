@@ -105,6 +105,7 @@ their limit.
 | --- | --- | --- |
 | `message` | `role` (`user`, `assistant`), `type` (`text`, `reasoning`), `text`, `messageId?` | text the runner attributed to someone; reasoning only when the runner printed it |
 | `tool_call` | `callId`, `name`, `input` or `inputText` (cut serialization), `title?`, `parentCallId?` | a tool invocation |
+| `tool_progress` | `callId`, `phase` (`started`, `running`, `completed`, `failed`, `killed`, `unknown`), `elapsedMs?`, `detail?`, `subtype?`, `background?` | a runner's progress report for the call with the same `callId` |
 | `tool_result` | `callId`, `status` (`ok`, `error`, `declined`, `unknown`), `output?`, `exitCode?` | the outcome of the call with the same `callId` |
 | `edit` | `path`, `change` (`add`, `update`, `delete`, `unknown`), `callId?`, `diff?`, `before?`, `after?` | a file change, with whatever diff or text the source carried |
 | `usage` | `scope` (`message`, `step`, `turn`, `session`) and only the counters reported: tokens, `costUSD` (decimal string), `durationMs`, `apiDurationMs`, `turns` | a runner's usage report; `scope` says what it covers as the runner defines it |
@@ -116,6 +117,9 @@ their limit.
 A `tool_call` that repeats an earlier `callId` is the same call, its input
 changed in place (Codex updates a todo list this way); the later one
 supersedes the earlier.
+
+Progress never substitutes for a `tool_result`: it can be the only eventual
+outcome a runner reports for background work.
 
 Lifecycle phases: `setup_started`, `setup_completed`, `setup_failed`
 (`exitCode`) for the Kelos setup markers on stderr; `session_started`,

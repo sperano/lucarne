@@ -12,6 +12,7 @@ import type {
   RawReason,
   RunPhase,
   RunnerKind,
+  ToolProgressPhase,
   ToolResultStatus,
   UsageScope,
 } from './contract';
@@ -51,6 +52,7 @@ export const COVERAGE_LABELS: Record<CoverageState, string> = {
 export const EVENT_KIND_LABELS: Record<EventKind, string> = {
   message: 'Message',
   tool_call: 'Tool call',
+  tool_progress: 'Tool progress',
   tool_result: 'Tool result',
   edit: 'Edit',
   usage: 'Usage',
@@ -65,6 +67,15 @@ export const STATUS_LABELS: Record<ToolResultStatus, string> = {
   error: 'error',
   declined: 'declined',
   unknown: 'outcome unknown',
+};
+
+export const TOOL_PROGRESS_LABELS: Record<ToolProgressPhase, string> = {
+  started: 'started',
+  running: 'running',
+  completed: 'completed',
+  failed: 'failed',
+  killed: 'killed',
+  unknown: 'progress unknown',
 };
 
 export const EDIT_LABELS: Record<EditChange, string> = {

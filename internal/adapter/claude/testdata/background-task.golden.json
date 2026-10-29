@@ -39,64 +39,66 @@
     "seq": 3,
     "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0:9bb0866b7f2feb7a:3:0",
     "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0",
-    "kind": "raw",
+    "kind": "tool_progress",
     "source": {
       "line": 3,
       "part": 0,
       "type": "system"
     },
-    "raw": {
-      "reason": "unsupported",
-      "text": "{\"type\":\"system\",\"subtype\":\"task_started\",\"task_id\":\"example-task-1\",\"run_id\":\"example-run-1\",\"tool_use_id\":\"toolu_01ExampleLint\",\"description\":\"npm run lint \u0026\u0026 npm test\",\"is_backgrounded\":false,\"task_type\":\"local_bash\",\"uuid\":\"00000000-0000-4000-8000-000000000017\",\"session_id\":\"0b1c2d3e-4f50-4617-8293-a4b5c6d7e8f9\"}",
-      "bytes": 318
+    "toolProgress": {
+      "callId": "toolu_01ExampleLint",
+      "phase": "started",
+      "detail": "npm run lint \u0026\u0026 npm test",
+      "subtype": "local_bash",
+      "background": false
     }
   },
   {
     "seq": 4,
     "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0:9bb0866b7f2feb7a:4:0",
     "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0",
-    "kind": "raw",
+    "kind": "tool_progress",
     "source": {
       "line": 4,
       "part": 0,
       "type": "tool_progress"
     },
-    "raw": {
-      "reason": "unsupported",
-      "text": "{\"type\":\"tool_progress\",\"tool_use_id\":\"toolu_01ExampleLint-heartbeat-0\",\"tool_name\":\"Bash\",\"parent_tool_use_id\":\"toolu_01ExampleLint\",\"elapsed_time_seconds\":30,\"heartbeat\":true,\"session_id\":\"0b1c2d3e-4f50-4617-8293-a4b5c6d7e8f9\",\"uuid\":\"00000000-0000-4000-8000-000000000018\"}",
-      "bytes": 275
+    "toolProgress": {
+      "callId": "toolu_01ExampleLint",
+      "phase": "running",
+      "elapsedMs": 30000
     }
   },
   {
     "seq": 5,
     "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0:9bb0866b7f2feb7a:5:0",
     "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0",
-    "kind": "raw",
+    "kind": "tool_progress",
     "source": {
       "line": 5,
       "part": 0,
       "type": "tool_progress"
     },
-    "raw": {
-      "reason": "unsupported",
-      "text": "{\"type\":\"tool_progress\",\"tool_use_id\":\"toolu_01ExampleLint-heartbeat-1\",\"tool_name\":\"Bash\",\"parent_tool_use_id\":\"toolu_01ExampleLint\",\"elapsed_time_seconds\":60,\"heartbeat\":true,\"session_id\":\"0b1c2d3e-4f50-4617-8293-a4b5c6d7e8f9\",\"uuid\":\"00000000-0000-4000-8000-000000000019\"}",
-      "bytes": 275
+    "toolProgress": {
+      "callId": "toolu_01ExampleLint",
+      "phase": "running",
+      "elapsedMs": 60000
     }
   },
   {
     "seq": 6,
     "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0:9bb0866b7f2feb7a:6:0",
     "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0",
-    "kind": "raw",
+    "kind": "tool_progress",
     "source": {
       "line": 6,
       "part": 0,
       "type": "system"
     },
-    "raw": {
-      "reason": "unsupported",
-      "text": "{\"type\":\"system\",\"subtype\":\"task_notification\",\"task_id\":\"example-task-1\",\"run_id\":\"example-run-1\",\"tool_use_id\":\"toolu_01ExampleLint\",\"status\":\"completed\",\"output_file\":\"\",\"summary\":\"npm run lint \u0026\u0026 npm test\",\"uuid\":\"00000000-0000-4000-8000-00000000001a\",\"session_id\":\"0b1c2d3e-4f50-4617-8293-a4b5c6d7e8f9\"}",
-      "bytes": 308
+    "toolProgress": {
+      "callId": "toolu_01ExampleLint",
+      "phase": "completed",
+      "detail": "npm run lint \u0026\u0026 npm test"
     }
   },
   {

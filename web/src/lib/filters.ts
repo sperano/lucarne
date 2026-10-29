@@ -24,13 +24,15 @@ export function filtering(filter: EventFilter): boolean {
   return filter.kinds.length > 0 || filter.tool !== undefined || filter.failures;
 }
 
-/** The name of the tool event belongs to: a call's own, or its call's for a result or an edit. */
+/** The name of the tool event belongs to: a call's own, or its correlated call's. */
 export function toolOf(event: TranscriptEvent, conversation: Conversation): string | undefined {
   switch (event.kind) {
     case 'tool_call':
       return event.toolCall.name;
     case 'tool_result':
       return conversation.calls.get(event.toolResult.callId)?.call.toolCall.name;
+    case 'tool_progress':
+      return conversation.calls.get(event.toolProgress.callId)?.call.toolCall.name;
     case 'edit':
       return event.edit.callId === undefined
         ? undefined
@@ -43,8 +45,10 @@ export function toolOf(event: TranscriptEvent, conversation: Conversation): stri
 /** Whether event reports a failure, or is a call whose result does. */
 export function failedRow(event: TranscriptEvent, conversation: Conversation): boolean {
   if (event.kind !== 'tool_call') return failedEvent(event);
-  const result = conversation.calls.get(event.toolCall.callId)?.result;
-  return result !== undefined && failedEvent(result);
+  const tool = conversation.calls.get(event.toolCall.callId);
+  if (tool?.result !== undefined) return failedEvent(tool.result);
+  const phase = tool?.progress.at(-1)?.toolProgress.phase;
+  return phase === 'failed' || phase === 'killed';
 }
 
 /** The events of conversation that filter lists, in order. */
@@ -106,6 +110,8 @@ export function callIdOf(event: TranscriptEvent): string | undefined {
       return event.toolCall.callId;
     case 'tool_result':
       return event.toolResult.callId;
+    case 'tool_progress':
+      return event.toolProgress.callId;
     case 'edit':
       return event.edit.callId;
     default:

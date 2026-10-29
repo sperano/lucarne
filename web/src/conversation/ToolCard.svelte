@@ -1,10 +1,12 @@
 <script lang="ts">
   import type { CoverageState, Limits } from '../lib/contract';
   import type { ToolItem } from '../lib/conversation';
-  import { STATUS_LABELS } from '../lib/labels';
+  import { formatDuration } from '../lib/format';
+  import { STATUS_LABELS, TOOL_PROGRESS_LABELS } from '../lib/labels';
   import { describeTool } from '../lib/tools';
   import EditView from './EditView.svelte';
   import OutputBlock from './OutputBlock.svelte';
+  import Pulse from './Pulse.svelte';
   import ToolResult from './ToolResult.svelte';
   import Truncated from './Truncated.svelte';
 
@@ -29,18 +31,42 @@
   const call = $derived(item.call.toolCall);
   const tool = $derived(describeTool(call));
   const result = $derived(item.result?.toolResult);
-  const status = $derived(result ? result.status : 'pending');
-  const depth = $derived(Math.min(item.depth, MAX_DEPTH_CLASS));
-  // A call without a result is running only while the log is still being read.
+  const progress = $derived(item.progress.at(-1)?.toolProgress);
+  const progressPhase = $derived(progress?.phase);
+  // A call without a result or progress is running only while the log is still being read.
   const pendingLabel = $derived(coverage === 'following' ? 'running' : 'no result');
+  const status = $derived(result?.status ?? progressPhase ?? 'pending');
+  const statusLabel = $derived(
+    result
+      ? STATUS_LABELS[result.status]
+      : progress
+        ? TOOL_PROGRESS_LABELS[progress.phase]
+        : pendingLabel,
+  );
+  const elapsedMs = $derived(latestElapsed(item.progress));
+  const working = $derived(
+    coverage === 'following' && (progressPhase === 'started' || progressPhase === 'running'),
+  );
+  const depth = $derived(Math.min(item.depth, MAX_DEPTH_CLASS));
+
+  function latestElapsed(progressEvents: ToolItem['progress']): number | undefined {
+    for (let i = progressEvents.length - 1; i >= 0; i--) {
+      const elapsed = progressEvents[i]?.toolProgress.elapsedMs;
+      if (elapsed !== undefined) return elapsed;
+    }
+    return undefined;
+  }
 </script>
 
 <article class="tool depth-{String(depth)}" aria-label="Tool call {call.name}">
   <details {open}>
     <summary>
-      <span class="status {status}">{result ? STATUS_LABELS[result.status] : pendingLabel}</span>
+      <span class="status {status}">{statusLabel}</span>
+      {#if working}<Pulse />{/if}
       <span class="name">{call.name}</span>
       {#if tool.subject !== ''}<code class="subject">{tool.subject}</code>{/if}
+      {#if progress?.background === true}<span class="muted">background</span>{/if}
+      {#if elapsedMs !== undefined}<span class="muted">{formatDuration(elapsedMs)}</span>{/if}
       {#if result?.exitCode !== undefined}<span class="muted">exit {result.exitCode}</span>{/if}
     </summary>
     <div class="body">
@@ -142,6 +168,10 @@
     color: var(--ok);
   }
   .status.error {
+    color: var(--error);
+  }
+  .status.failed,
+  .status.killed {
     color: var(--error);
   }
   .body {

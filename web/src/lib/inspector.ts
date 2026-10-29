@@ -17,6 +17,7 @@ import {
   LIFECYCLE_LABELS,
   RAW_REASON_LABELS,
   STATUS_LABELS,
+  TOOL_PROGRESS_LABELS,
   USAGE_SCOPE_LABELS,
 } from './labels';
 import { failedEvent } from './search';
@@ -76,6 +77,21 @@ function callRow(
   const summary = cut(subject === '' ? call.name : `${call.name} ${subject}`);
   const result = conversation.calls.get(call.callId)?.result?.toolResult;
   if (!result) {
+    const progress = conversation.calls.get(call.callId)?.progress.at(-1)?.toolProgress;
+    if (progress !== undefined) {
+      const tone: Tone =
+        progress.phase === 'completed'
+          ? 'ok'
+          : progress.phase === 'failed' || progress.phase === 'killed'
+            ? 'error'
+            : 'muted';
+      return {
+        kind: EVENT_KIND_LABELS.tool_call,
+        summary,
+        status: { label: TOOL_PROGRESS_LABELS[progress.phase], tone },
+        failed: tone === 'error',
+      };
+    }
     const pending = coverage === 'following' ? 'running' : 'no result';
     return {
       kind: EVENT_KIND_LABELS.tool_call,
@@ -107,6 +123,11 @@ function summaryOf(event: Exclude<TranscriptEvent, EventOf<'tool_call' | 'tool_r
     }
     case 'edit':
       return `${EDIT_LABELS[event.edit.change]} ${event.edit.path}`;
+    case 'tool_progress': {
+      const progress = event.toolProgress;
+      const detail = progress.detail === undefined ? '' : `: ${firstLine(progress.detail)}`;
+      return `${TOOL_PROGRESS_LABELS[progress.phase]}${detail}`;
+    }
     case 'usage': {
       const parts = usageParts(event.usage);
       const scope = USAGE_SCOPE_LABELS[event.usage.scope];

@@ -86,6 +86,14 @@ describe('Conversation over the runner fixtures', () => {
     expect(texts(root, '.edit .change')).toContain('Deleted');
   });
 
+  it('shows Claude tool progress on the tool card instead of unsupported rows', () => {
+    const root = show(findFixture('claude-code', 'background-task').snapshot);
+    const tool = root.querySelector('.tool');
+    expect(tool?.querySelector('summary')?.textContent).toContain('1 min 00 s');
+    expect(root.textContent).not.toContain('Event the adapter does not render');
+    expect(root.querySelectorAll('details.raw')).toHaveLength(0);
+  });
+
   it('shows failed and declined calls', () => {
     const statuses = texts(show(findFixture('codex', 'tool-failures').snapshot), '.tool .status');
     expect(statuses).toEqual(['error', 'error', 'error', 'declined']);

@@ -77,6 +77,18 @@ describe('kinds and tools', () => {
   it('names the tools called, sorted', () => {
     expect(toolNames(conversation)).toEqual(['Bash', 'Read']);
   });
+
+  it('attributes progress to its tool', () => {
+    const make = eventMaker();
+    const call = make({ kind: 'tool_call', toolCall: { callId: 'progress-call', name: 'Bash' } });
+    const progress = make({
+      kind: 'tool_progress',
+      toolProgress: { callId: 'progress-call', phase: 'running' },
+    });
+    const c = buildConversation([call, progress], call.attempt);
+    expect(toolOf(progress, c)).toBe('Bash');
+    expect(ids(filterEvents(c, { ...NO_FILTER, tool: 'Bash' }))).toEqual([call.id, progress.id]);
+  });
 });
 
 describe('searchEvents', () => {

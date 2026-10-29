@@ -20,6 +20,8 @@ export interface ToolItem {
   readonly call: EventOf<'tool_call'>;
   /** How many times a later event replaced the call's input. */
   readonly revisions: number;
+  /** Progress reports for this call, in the order the runner emitted them. */
+  readonly progress: readonly EventOf<'tool_progress'>[];
   readonly result?: EventOf<'tool_result'>;
   readonly edits: readonly EventOf<'edit'>[];
   /** How many calls enclose this one through parentCallId, as far as the transcript shows. */
@@ -70,6 +72,12 @@ export class ConversationBuilder {
       case 'tool_call':
         this.addCall(event);
         return;
+      case 'tool_progress': {
+        const tool = this.calls.get(event.toolProgress.callId);
+        if (tool) this.replace(tool, { ...tool, progress: [...tool.progress, event] }, event.id);
+        else this.push({ kind: 'event', id: event.id, event });
+        return;
+      }
       case 'tool_result': {
         const tool = this.calls.get(event.toolResult.callId);
         if (tool && !tool.result) this.replace(tool, { ...tool, result: event }, event.id);
@@ -115,6 +123,7 @@ export class ConversationBuilder {
       id: event.id,
       call: event,
       revisions: 0,
+      progress: [],
       edits: [],
       depth: parent ? parent.depth + 1 : 0,
     };

@@ -11,11 +11,12 @@ import { formatCount } from './format';
 /** Sub-calls listed at most; the rest are counted. */
 export const MAX_SUBCALLS = 20;
 
-export type Relation = 'call' | 'revision' | 'result' | 'edit' | 'parent' | 'subcall';
+export type Relation = 'call' | 'revision' | 'progress' | 'result' | 'edit' | 'parent' | 'subcall';
 
 export const RELATION_LABELS: Record<Relation, string> = {
   call: 'Call',
   revision: 'Earlier input',
+  progress: 'Progress',
   result: 'Result',
   edit: 'Edit',
   parent: 'Called from',
@@ -68,6 +69,8 @@ function relationOf(
       return e.toolCall.parentCallId === callId ? 'subcall' : undefined;
     case 'tool_result':
       return e.toolResult.callId === callId ? 'result' : undefined;
+    case 'tool_progress':
+      return e.toolProgress.callId === callId ? 'progress' : undefined;
     case 'edit':
       return e.edit.callId === callId ? 'edit' : undefined;
     default:
@@ -89,11 +92,23 @@ export function callEvidence(
   if (correlation.callId === undefined) return undefined;
   const has = (r: Relation) => correlation.related.some((x) => x.relation === r);
   if (!has('call')) return missingCall(stream);
-  if (!has('result')) return missingResult(attempt);
+  if (!has('result')) {
+    const progress = correlation.related
+      .filter((r) => r.event.kind === 'tool_progress')
+      .at(-1)?.event;
+    if (progress?.kind === 'tool_progress' && terminalProgress(progress.toolProgress.phase)) {
+      return `The runner reported the call ${progress.toolProgress.phase}, but emitted no tool result.`;
+    }
+    return missingResult(attempt);
+  }
   const unknown = correlation.related.every(
     (r) => r.event.kind !== 'tool_result' || r.event.toolResult.status === 'unknown',
   );
   return unknown ? 'The result does not say whether the call succeeded.' : undefined;
+}
+
+function terminalProgress(phase: string): boolean {
+  return phase === 'completed' || phase === 'failed' || phase === 'killed';
 }
 
 function missingCall(stream: Stream): string {

@@ -9,6 +9,7 @@ export const API_PREFIX = '/api/v1';
 export const EVENT_KINDS = [
   'message',
   'tool_call',
+  'tool_progress',
   'tool_result',
   'edit',
   'usage',
@@ -60,6 +61,16 @@ export type MessageType = (typeof MESSAGE_TYPES)[number];
 
 export const TOOL_RESULT_STATUSES = ['ok', 'error', 'declined', 'unknown'] as const;
 export type ToolResultStatus = (typeof TOOL_RESULT_STATUSES)[number];
+
+export const TOOL_PROGRESS_PHASES = [
+  'started',
+  'running',
+  'completed',
+  'failed',
+  'killed',
+  'unknown',
+] as const;
+export type ToolProgressPhase = (typeof TOOL_PROGRESS_PHASES)[number];
 
 export const EDIT_CHANGES = ['add', 'update', 'delete', 'unknown'] as const;
 export type EditChange = (typeof EDIT_CHANGES)[number];
@@ -231,6 +242,15 @@ export interface ToolCall {
   readonly parentCallId?: string;
 }
 
+export interface ToolProgress {
+  readonly callId: string;
+  readonly phase: ToolProgressPhase;
+  readonly elapsedMs?: number;
+  readonly detail?: string;
+  readonly subtype?: string;
+  readonly background?: boolean;
+}
+
 export interface ToolResult {
   readonly callId: string;
   readonly status: ToolResultStatus;
@@ -318,6 +338,7 @@ export interface EventBase {
 export interface EventPayloads {
   message: { readonly message: Message };
   tool_call: { readonly toolCall: ToolCall };
+  tool_progress: { readonly toolProgress: ToolProgress };
   tool_result: { readonly toolResult: ToolResult };
   edit: { readonly edit: Edit };
   usage: { readonly usage: Usage };

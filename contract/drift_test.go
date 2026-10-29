@@ -67,7 +67,7 @@ func TestGoTypesMatchSchemaObjects(t *testing.T) {
 		"RunKey": RunKey{}, "AttemptKey": AttemptKey{}, "Run": Run{}, "Runner": Runner{},
 		"ContainerState": ContainerState{}, "Coverage": Coverage{}, "Attempt": Attempt{},
 		"Stream": Stream{}, "Limits": Limits{}, "Source": Source{}, "Message": Message{},
-		"ToolCall": ToolCall{}, "ToolResult": ToolResult{}, "Edit": Edit{}, "Usage": Usage{},
+		"ToolCall": ToolCall{}, "ToolProgress": ToolProgress{}, "ToolResult": ToolResult{}, "Edit": Edit{}, "Usage": Usage{},
 		"Retry": Retry{}, "ErrorInfo": ErrorInfo{}, "Output": Output{}, "Lifecycle": Lifecycle{},
 		"Raw": Raw{}, "Gap": Gap{}, "Event": Event{}, "Snapshot": Snapshot{},
 		"AttemptUpdate": AttemptUpdate{}, "RunUpdate": RunUpdate{}, "Reset": Reset{}, "End": End{}, "Live": Live{},
@@ -151,6 +151,9 @@ func eventEnumCases(defs map[string]map[string]any) []enumCase {
 			MessageText, MessageReasoning})},
 		{"tool result statuses", property(defs, "ToolResult", "status"), toStrings([]ToolResultStatus{
 			ResultOK, ResultError, ResultDeclined, ResultUnknown})},
+		{"tool progress phases", property(defs, "ToolProgress", "phase"), toStrings([]ToolProgressPhase{
+			ToolProgressStarted, ToolProgressRunning, ToolProgressCompleted,
+			ToolProgressFailed, ToolProgressKilled, ToolProgressUnknown})},
 		{"edit changes", property(defs, "Edit", "change"), toStrings([]EditChange{
 			ChangeAdd, ChangeUpdate, ChangeDelete, ChangeUnknown})},
 		{"usage scopes", property(defs, "Usage", "scope"), toStrings([]UsageScope{
