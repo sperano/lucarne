@@ -3,6 +3,9 @@ import { ATTEMPT_ID, eventMaker, type EventBody } from '../dev/events';
 import { buildConversation, type ToolItem } from './conversation';
 import {
   effectiveToolOutcome,
+  isActiveProgressPhase,
+  isFailedProgressPhase,
+  isTerminalProgressPhase,
   latestProgressBackground,
   latestProgressElapsed,
 } from './tool-progress';
@@ -15,6 +18,19 @@ function tool(bodies: readonly EventBody[]): ToolItem {
 }
 
 describe('tool progress state', () => {
+  it('classifies progress phases', () => {
+    expect(isActiveProgressPhase('started')).toBe(true);
+    expect(isActiveProgressPhase('running')).toBe(true);
+    expect(isActiveProgressPhase('completed')).toBe(false);
+    expect(isTerminalProgressPhase('completed')).toBe(true);
+    expect(isTerminalProgressPhase('failed')).toBe(true);
+    expect(isTerminalProgressPhase('killed')).toBe(true);
+    expect(isTerminalProgressPhase('unknown')).toBe(false);
+    expect(isFailedProgressPhase('failed')).toBe(true);
+    expect(isFailedProgressPhase('killed')).toBe(true);
+    expect(isFailedProgressPhase('completed')).toBe(false);
+  });
+
   it('lets a later terminal notification override an immediate result', () => {
     const item = tool([
       { kind: 'tool_call', toolCall: { callId: 'c', name: 'Task' } },

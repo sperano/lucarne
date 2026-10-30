@@ -5,6 +5,7 @@
   import { STATUS_LABELS, TOOL_PROGRESS_LABELS } from '../lib/labels';
   import {
     effectiveToolOutcome,
+    isActiveProgressPhase,
     latestProgressBackground,
     latestProgressElapsed,
   } from '../lib/tool-progress';
@@ -58,7 +59,7 @@
   const working = $derived(
     coverage === 'following' &&
       outcome?.kind === 'tool_progress' &&
-      (outcome.toolProgress.phase === 'started' || outcome.toolProgress.phase === 'running'),
+      isActiveProgressPhase(outcome.toolProgress.phase),
   );
   const depth = $derived(Math.min(item.depth, MAX_DEPTH_CLASS));
 </script>

@@ -1,6 +1,10 @@
 import type { ToolProgressPhase } from './contract';
 import type { EventOf, ToolItem } from './conversation';
 
+export function isActiveProgressPhase(phase: ToolProgressPhase): boolean {
+  return phase === 'started' || phase === 'running';
+}
+
 export function isTerminalProgressPhase(phase: ToolProgressPhase): boolean {
   return phase === 'completed' || isFailedProgressPhase(phase);
 }

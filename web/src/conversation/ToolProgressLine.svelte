@@ -2,15 +2,13 @@
   import type { EventOf } from '../lib/conversation';
   import { formatDuration } from '../lib/format';
   import { TOOL_PROGRESS_LABELS } from '../lib/labels';
-  import { isFailedProgressPhase } from '../lib/tool-progress';
+  import { isActiveProgressPhase, isFailedProgressPhase } from '../lib/tool-progress';
   import Pulse from './Pulse.svelte';
 
   let { event, ongoing = false }: { event: EventOf<'tool_progress'>; ongoing?: boolean } = $props();
 
   const progress = $derived(event.toolProgress);
-  const working = $derived(
-    ongoing && (progress.phase === 'started' || progress.phase === 'running'),
-  );
+  const working = $derived(ongoing && isActiveProgressPhase(progress.phase));
   const failed = $derived(isFailedProgressPhase(progress.phase));
 </script>
 
