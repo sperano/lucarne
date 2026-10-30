@@ -16,6 +16,9 @@ const (
 	blockToolResult       = "tool_result"
 	blockImage            = "image"
 	blockDocument         = "document"
+	// blockToolReference names a tool a tool search loaded, inside a
+	// tool_result's content.
+	blockToolReference = "tool_reference"
 )
 
 // unsupportedBlocks are block types the parser knows and does not render:
@@ -56,6 +59,7 @@ type block struct {
 	ToolUseID string          `json:"tool_use_id"`
 	Content   json.RawMessage `json:"content"`
 	IsError   *bool           `json:"is_error"`
+	ToolName  string          `json:"tool_name"`
 }
 
 // decodeMessageLine decodes an assistant or user line with a message.

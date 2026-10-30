@@ -62,6 +62,24 @@ func TestToolResultContent(t *testing.T) {
 	}
 }
 
+func TestToolReferencesAreResultText(t *testing.T) {
+	t.Parallel()
+	events := normalize(t,
+		`{"type":"assistant","message":{"id":"m","content":[{"type":"tool_use","id":"t1","name":"ToolSearch","input":{"query":"select:WebSearch,WebFetch"}}]}}`,
+		`{"type":"user","message":{"content":[{"type":"tool_result","tool_use_id":"t1","content":[{"type":"tool_reference","tool_name":"WebSearch"},{"type":"tool_reference","tool_name":"WebFetch"}]}]}}`,
+		`{"type":"user","message":{"content":[{"type":"tool_result","tool_use_id":"t2","content":[{"type":"text","text":"Loaded:"},{"type":"tool_reference","tool_name":"mcp__example__read"},{"type":"tool_reference"}]}]}}`,
+	)
+	if raw := ofKind(events, contract.KindRaw); len(raw) != 1 || raw[0].Raw.Text != `{"type":"tool_reference"}` {
+		t.Fatalf("raw events = %s, want only the reference without a name", dump(raw))
+	}
+	results := ofKind(events, contract.KindToolResult)
+	for i, want := range []string{"WebSearch\nWebFetch", "Loaded:\nmcp__example__read"} {
+		if out := results[i].ToolResult.Output; out == nil || *out != want {
+			t.Errorf("result %d output = %v, want %q", i, out, want)
+		}
+	}
+}
+
 func TestUserText(t *testing.T) {
 	t.Parallel()
 	events := normalize(t,
