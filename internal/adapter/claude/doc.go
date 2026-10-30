@@ -28,7 +28,9 @@
 //     usage is emitted only from the line that carries its stop_reason.
 //   - user: text becomes a user message; each tool_result a tool result
 //     correlated by tool_use_id, ok unless is_error is true (the API's
-//     default); a successful Edit, MultiEdit or Write also gives an edit from
+//     default), whose output is its text blocks and the names of the tools
+//     its tool_reference blocks load (a tool search's), one per line; a
+//     successful Edit, MultiEdit or Write also gives an edit from
 //     tool_use_result: the jsdiff hunks as a unified diff, and Write's new
 //     content as after.
 //   - result: a session_completed lifecycle event, the session's usage

@@ -83,8 +83,8 @@ func (p *Parser) toolResult(b block, structured json.RawMessage, out *adapter.Em
 }
 
 // resultOutput is a tool result's text: the content string, or its text
-// blocks joined, nil when it has neither. The blocks that are not text
-// (images) are returned undecoded.
+// blocks and the names of its tool references, one per line, nil when it has
+// none of them. The other blocks (images) are returned undecoded.
 func resultOutput(content json.RawMessage) (*string, []json.RawMessage) {
 	if len(content) == 0 || string(content) == "null" {
 		return nil, nil
@@ -100,9 +100,8 @@ func resultOutput(content json.RawMessage) (*string, []json.RawMessage) {
 	var texts []string
 	var others []json.RawMessage
 	for _, raw := range blocks {
-		var b block
-		if json.Unmarshal(raw, &b) == nil && b.Type == blockText && b.Text != nil {
-			texts = append(texts, *b.Text)
+		if text, ok := resultText(raw); ok {
+			texts = append(texts, text)
 		} else {
 			others = append(others, raw)
 		}
@@ -112,6 +111,22 @@ func resultOutput(content json.RawMessage) (*string, []json.RawMessage) {
 	}
 	joined := strings.Join(texts, textSeparator)
 	return &joined, others
+}
+
+// resultText is the text a tool result's content block shows: a text
+// block's text, or the name of the tool a tool reference loaded.
+func resultText(raw json.RawMessage) (string, bool) {
+	var b block
+	if json.Unmarshal(raw, &b) != nil {
+		return "", false
+	}
+	switch {
+	case b.Type == blockText && b.Text != nil:
+		return *b.Text, true
+	case b.Type == blockToolReference && b.ToolName != "":
+		return b.ToolName, true
+	}
+	return "", false
 }
 
 func countToolResults(blocks []json.RawMessage) int {
