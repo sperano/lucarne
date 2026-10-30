@@ -80,14 +80,7 @@
         "taskName": { "$ref": "#/$defs/Label" },
         "runner": { "$ref": "#/$defs/RunnerKind" },
         "phase": {
-          "enum": [
-            "pending",
-            "waiting",
-            "running",
-            "succeeded",
-            "failed",
-            "unknown"
-          ]
+          "enum": ["pending", "waiting", "running", "succeeded", "failed", "unknown"]
         },
         "deleted": { "type": "boolean" },
         "created": { "$ref": "#/$defs/Time" },
@@ -121,9 +114,7 @@
       "type": "object",
       "required": ["state", "lines", "gaps", "truncatedLines"],
       "properties": {
-        "state": {
-          "enum": ["pending", "following", "ended", "unavailable", "expired"]
-        },
+        "state": { "enum": ["pending", "following", "ended", "unavailable", "expired"] },
         "lines": { "$ref": "#/$defs/Count" },
         "gaps": { "$ref": "#/$defs/Count" },
         "truncatedLines": { "$ref": "#/$defs/Count" },
@@ -233,9 +224,7 @@
       "properties": {
         "callId": { "$ref": "#/$defs/Label" },
         "name": { "$ref": "#/$defs/Label" },
-        "input": {
-          "description": "The source's input when it fits maxToolInputBytes serialized."
-        },
+        "input": { "description": "The source's input when it fits maxToolInputBytes serialized." },
         "inputText": { "$ref": "#/$defs/ToolInputText" },
         "title": { "$ref": "#/$defs/Label" },
         "parentCallId": { "$ref": "#/$defs/Label" }
@@ -252,14 +241,7 @@
       "properties": {
         "callId": { "$ref": "#/$defs/Label" },
         "phase": {
-          "enum": [
-            "started",
-            "running",
-            "completed",
-            "failed",
-            "killed",
-            "unknown"
-          ]
+          "enum": ["started", "running", "completed", "failed", "killed", "unknown"]
         },
         "elapsedMs": { "$ref": "#/$defs/Count" },
         "detail": { "$ref": "#/$defs/Text" },
@@ -300,9 +282,7 @@
         "title": { "$ref": "#/$defs/Label" }
       },
       "if": { "properties": { "type": { "const": "image" } } },
-      "then": {
-        "not": { "properties": { "title": true }, "required": ["title"] }
-      },
+      "then": { "not": { "properties": { "title": true }, "required": ["title"] } },
       "additionalProperties": false
     },
     "Edit": {
@@ -410,13 +390,7 @@
       "required": ["reason", "text", "bytes"],
       "properties": {
         "reason": {
-          "enum": [
-            "text",
-            "malformed_json",
-            "unknown_type",
-            "unsupported",
-            "oversized"
-          ]
+          "enum": ["text", "malformed_json", "unknown_type", "unsupported", "oversized"]
         },
         "text": { "$ref": "#/$defs/RawText" },
         "bytes": { "$ref": "#/$defs/Count" }
@@ -428,12 +402,7 @@
       "required": ["reason"],
       "properties": {
         "reason": {
-          "enum": [
-            "source_truncated",
-            "read_interrupted",
-            "input_limit",
-            "attempt_expired"
-          ]
+          "enum": ["source_truncated", "read_interrupted", "input_limit", "attempt_expired"]
         },
         "lines": { "$ref": "#/$defs/Count" },
         "detail": { "$ref": "#/$defs/Label" }
@@ -543,14 +512,8 @@
         }
       ],
       "if": { "properties": { "kind": { "const": "gap" } } },
-      "then": {
-        "properties": {
-          "id": { "type": "string", "pattern": ":gap\\.[0-9]+$" }
-        }
-      },
-      "else": {
-        "properties": { "id": { "type": "string", "pattern": ":[0-9]+$" } }
-      },
+      "then": { "properties": { "id": { "type": "string", "pattern": ":gap\\.[0-9]+$" } } },
+      "else": { "properties": { "id": { "type": "string", "pattern": ":[0-9]+$" } } },
       "unevaluatedProperties": false
     },
 
@@ -599,12 +562,7 @@
       "properties": {
         "epoch": { "$ref": "#/$defs/Epoch" },
         "reason": {
-          "enum": [
-            "epoch_changed",
-            "replay_expired",
-            "client_too_slow",
-            "bad_cursor"
-          ]
+          "enum": ["epoch_changed", "replay_expired", "client_too_slow", "bad_cursor"]
         }
       },
       "additionalProperties": false
