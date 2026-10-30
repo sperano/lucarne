@@ -9,6 +9,7 @@ import { render } from '../render';
 import ToolCard from './ToolCard.svelte';
 
 const LONG_OUTPUT_LINES = 300;
+const MEDIA_BYTES = 12 * 1024;
 
 function toolFrom(bodies: readonly EventBody[]): ToolItem {
   const { items } = buildConversation(bodies.map(eventMaker()), ATTEMPT_ID);
@@ -97,5 +98,29 @@ describe('ToolCard', () => {
     await userEvent.keyboard('{Enter}');
     expect(pre().split('\n')).toHaveLength(LONG_OUTPUT_LINES);
     expect(button?.getAttribute('aria-expanded')).toBe('true');
+  });
+
+  it('lists the media of a result, with what the source did not give named as missing', () => {
+    const item = toolFrom([
+      { kind: 'tool_call', toolCall: { callId: 'c', name: 'Read', input: { file_path: 'a.png' } } },
+      {
+        kind: 'tool_result',
+        toolResult: {
+          callId: 'c',
+          status: 'ok',
+          media: [
+            { type: 'image', mediaType: 'image/png', byteSize: MEDIA_BYTES },
+            { type: 'document', title: 'Notes' },
+          ],
+        },
+      },
+    ]);
+    const root = show(item);
+    const entries = [...root.querySelectorAll('[aria-label="Images and documents"] li')];
+    expect(entries.map((li) => li.textContent)).toEqual([
+      'image, image/png, 12 KiB',
+      'document "Notes", media type not given, size not given',
+    ]);
+    expect(root.textContent).not.toContain('carries no output');
   });
 });

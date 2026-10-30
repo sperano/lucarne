@@ -250,8 +250,32 @@
         "callId": { "$ref": "#/$defs/Label" },
         "status": { "enum": ["ok", "error", "declined", "unknown"] },
         "output": { "$ref": "#/$defs/ToolOutputText" },
-        "exitCode": { "type": "integer" }
+        "exitCode": { "type": "integer" },
+        "media": {
+          "description": "The result's image and document blocks, in source order; never their bytes.",
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "items": { "$ref": "#/$defs/Media" }
+        }
       },
+      "additionalProperties": false
+    },
+    "Media": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": { "enum": ["image", "document"] },
+        "mediaType": { "$ref": "#/$defs/Label" },
+        "byteSize": {
+          "description": "The decoded size of a base64 source; absent when the source does not give it.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "title": { "$ref": "#/$defs/Label" }
+      },
+      "if": { "properties": { "type": { "const": "image" } } },
+      "then": { "not": { "properties": { "title": true }, "required": ["title"] } },
       "additionalProperties": false
     },
     "Edit": {

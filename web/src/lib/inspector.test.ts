@@ -103,6 +103,18 @@ describe('rowOf', () => {
     });
   });
 
+  it('summarizes a result without output by its media, or says it has none', () => {
+    const read = make({ kind: 'tool_call', toolCall: { callId: 'c5', name: 'Read' } });
+    const picture = make({
+      kind: 'tool_result',
+      toolResult: { callId: 'c5', status: 'ok', media: [{ type: 'image' }, { type: 'image' }] },
+    });
+    const empty = make({ kind: 'tool_result', toolResult: { callId: 'c6', status: 'ok' } });
+    const withMedia = buildConversation([read, picture, empty], ATTEMPT);
+    expect(rowOf(picture, withMedia, 'ended').summary).toBe('Read: 2 images');
+    expect(rowOf(empty, withMedia, 'ended').summary).toBe('call c6: no output');
+  });
+
   it('cuts a long summary', () => {
     const summary = rowOf(long, conversation, 'ended').summary;
     expect(summary).toHaveLength(SUMMARY_CHARS);

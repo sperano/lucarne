@@ -60,6 +60,8 @@ type block struct {
 	Content   json.RawMessage `json:"content"`
 	IsError   *bool           `json:"is_error"`
 	ToolName  string          `json:"tool_name"`
+	Source    *mediaSource    `json:"source"`
+	Title     *string         `json:"title"`
 }
 
 // decodeMessageLine decodes an assistant or user line with a message.

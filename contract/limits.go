@@ -35,6 +35,8 @@ const (
 	MaxClientQueue = 1024
 	// MaxOutputs bounds the entries of a kelos_outputs lifecycle event.
 	MaxOutputs = 64
+	// MaxMedia bounds the media entries of a tool result.
+	MaxMedia = 64
 	// MaxTruncatedFields bounds an event's "truncated" list.
 	MaxTruncatedFields = 8
 	// MaxSourceBytes bounds the text of a SourceLine: the start of a log

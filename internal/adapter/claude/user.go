@@ -55,7 +55,7 @@ func (p *Parser) userBlock(raw json.RawMessage, id string, structured json.RawMe
 	}
 }
 
-// toolResult adds the result, its content blocks that are not text, and
+// toolResult adds the result, its content blocks it does not render, and
 // the edit a successful edit or write made.
 func (p *Parser) toolResult(b block, structured json.RawMessage, out *adapter.Emitter) {
 	tool := p.calls.close(b.ToolUseID)
@@ -63,15 +63,16 @@ func (p *Parser) toolResult(b block, structured json.RawMessage, out *adapter.Em
 	if b.IsError != nil && *b.IsError {
 		status = contract.ResultError
 	}
-	output, others := resultOutput(b.Content)
 	var cut adapter.Truncation
+	content := resultContent(b.Content, &cut)
 	result := &contract.ToolResult{
 		CallID: cut.Text("callId", b.ToolUseID, contract.MaxLabelBytes),
 		Status: status,
-		Output: cut.Optional("output", output, contract.MaxToolOutputBytes),
+		Output: cut.Optional("output", content.output, contract.MaxToolOutputBytes),
+		Media:  content.media,
 	}
 	out.Emit(contract.Event{Kind: contract.KindToolResult, ToolResult: result, Truncated: cut.Fields()})
-	for _, other := range others {
+	for _, other := range content.others {
 		out.Raw(contract.RawUnsupported, other)
 	}
 	if status != contract.ResultOK {
@@ -82,44 +83,67 @@ func (p *Parser) toolResult(b block, structured json.RawMessage, out *adapter.Em
 	}
 }
 
-// resultOutput is a tool result's text: the content string, or its text
-// blocks and the names of its tool references, one per line, nil when it has
-// none of them. The other blocks (images) are returned undecoded.
-func resultOutput(content json.RawMessage) (*string, []json.RawMessage) {
+// toolContent is what a tool result's content holds: its text, nil when
+// it has none, its media, and the blocks it does not render, undecoded.
+type toolContent struct {
+	output *string
+	media  []contract.Media
+	others []json.RawMessage
+}
+
+// resultContent splits a tool result's content: the content string, or its
+// text blocks and the names of its tool references, one per line, as the
+// output; its image and document blocks, at most contract.MaxMedia of
+// them, as media; the rest as others.
+func resultContent(content json.RawMessage, cut *adapter.Truncation) toolContent {
 	if len(content) == 0 || string(content) == "null" {
-		return nil, nil
+		return toolContent{}
 	}
 	var s string
 	if json.Unmarshal(content, &s) == nil {
-		return &s, nil
+		return toolContent{output: &s}
 	}
 	blocks, ok := contentBlocks(content)
 	if !ok {
-		return nil, []json.RawMessage{content}
+		return toolContent{others: []json.RawMessage{content}}
 	}
+	var c toolContent
 	var texts []string
-	var others []json.RawMessage
 	for _, raw := range blocks {
-		if text, ok := resultText(raw); ok {
+		var b block
+		if json.Unmarshal(raw, &b) != nil {
+			c.others = append(c.others, raw)
+		} else if text, ok := resultText(b); ok {
 			texts = append(texts, text)
-		} else {
-			others = append(others, raw)
+		} else if !c.addMedia(b, cut) {
+			c.others = append(c.others, raw)
 		}
 	}
-	if texts == nil && len(blocks) > 0 {
-		return nil, others
+	if texts != nil || len(blocks) == 0 {
+		joined := strings.Join(texts, textSeparator)
+		c.output = &joined
 	}
-	joined := strings.Join(texts, textSeparator)
-	return &joined, others
+	return c
+}
+
+// addMedia adds b to the media when it is an image or document block it
+// can read; one past contract.MaxMedia is dropped and media marked cut.
+func (c *toolContent) addMedia(b block, cut *adapter.Truncation) bool {
+	m, ok := resultMedia(b, cut)
+	if !ok {
+		return false
+	}
+	if len(c.media) == contract.MaxMedia {
+		cut.Mark(mediaField)
+		return true
+	}
+	c.media = append(c.media, m)
+	return true
 }
 
 // resultText is the text a tool result's content block shows: a text
 // block's text, or the name of the tool a tool reference loaded.
-func resultText(raw json.RawMessage) (string, bool) {
-	var b block
-	if json.Unmarshal(raw, &b) != nil {
-		return "", false
-	}
+func resultText(b block) (string, bool) {
 	switch {
 	case b.Type == blockText && b.Text != nil:
 		return *b.Text, true

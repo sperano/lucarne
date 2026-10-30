@@ -106,7 +106,7 @@ their limit.
 | `message` | `role` (`user`, `assistant`), `type` (`text`, `reasoning`), `text`, `messageId?` | text the runner attributed to someone; reasoning only when the runner printed it |
 | `tool_call` | `callId`, `name`, `input` or `inputText` (cut serialization), `title?`, `parentCallId?` | a tool invocation |
 | `tool_progress` | `callId`, `phase` (`started`, `running`, `completed`, `failed`, `killed`, `unknown`), `elapsedMs?`, `detail?`, `subtype?`, `background?` | a runner's progress report for the call with the same `callId` |
-| `tool_result` | `callId`, `status` (`ok`, `error`, `declined`, `unknown`), `output?`, `exitCode?` | the outcome of the call with the same `callId` |
+| `tool_result` | `callId`, `status` (`ok`, `error`, `declined`, `unknown`), `output?`, `exitCode?`, `media?` | the outcome of the call with the same `callId` |
 | `edit` | `path`, `change` (`add`, `update`, `delete`, `unknown`), `callId?`, `diff?`, `before?`, `after?` | a file change, with whatever diff or text the source carried |
 | `usage` | `scope` (`message`, `step`, `turn`, `session`) and only the counters reported: tokens, `costUSD` (decimal string), `durationMs`, `apiDurationMs`, `turns` | a runner's usage report; `scope` says what it covers as the runner defines it |
 | `error` | `message`, `code?`, `status?` (HTTP), `retry?` (`attempt`, `max?`, `delayMs?`) | an error the runner reported; `retry` only when it announced one |
@@ -117,6 +117,13 @@ their limit.
 A `tool_call` that repeats an earlier `callId` is the same call, its input
 changed in place (Codex updates a todo list this way); the later one
 supersedes the earlier.
+
+A `tool_result`'s `media` lists the images and documents it carried, in
+source order, one entry each: `type` (`image`, `document`), `mediaType?`
+(the source's MIME type), `byteSize?` (the decoded size of a base64 source;
+absent for a source that does not give it, such as a URL or a file
+reference) and, for a document, `title?`. It never holds their bytes: they
+do not reach the browser.
 
 Progress never substitutes for a `tool_result`: it can be the only eventual
 outcome a runner reports for background work.
@@ -194,8 +201,8 @@ Named in [`limits.go`](limits.go), published in every snapshot and by
 | `maxRunSourceBytes` | 16 MiB | source lines a run retains; the oldest go first |
 | `maxListedRuns` | 1 000 | runs a run list holds; the newest are kept, the others counted in `omittedRuns` |
 
-Text is cut at a UTF-8 boundary. Lifecycle `outputs` holds at most 64
-entries and `truncated` at most 8 names.
+Text is cut at a UTF-8 boundary. Lifecycle `outputs` and tool result
+`media` hold at most 64 entries each, and `truncated` at most 8 names.
 
 ## Deep links
 

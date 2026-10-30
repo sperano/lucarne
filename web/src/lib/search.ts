@@ -3,6 +3,7 @@
 // those the run dropped to stay within its bounds or those not read yet.
 import type { TranscriptEvent } from './contract';
 import type { Item } from './conversation';
+import { mediaTexts } from './media';
 import { effectiveToolOutcome, isFailedProgressPhase } from './tool-progress';
 import { unreachable } from './unreachable';
 
@@ -98,6 +99,7 @@ function toolTexts(item: Extract<Item, { kind: 'tool' }>): Text[] {
     call.title,
     call.input === undefined ? call.inputText : JSON.stringify(call.input),
     item.result?.toolResult.output,
+    ...mediaTexts(item.result?.toolResult.media),
     ...item.progress.flatMap((e) => eventTexts(e)),
     ...item.edits.flatMap((e) => eventTexts(e)),
   ];
@@ -117,7 +119,7 @@ export function eventTexts(event: TranscriptEvent): Text[] {
       ];
     }
     case 'tool_result':
-      return [event.toolResult.output];
+      return [event.toolResult.output, ...mediaTexts(event.toolResult.media)];
     case 'tool_progress': {
       const progress = event.toolProgress;
       return [progress.phase, progress.detail, progress.subtype];
