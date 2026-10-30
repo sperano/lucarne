@@ -72,6 +72,9 @@ export const TOOL_PROGRESS_PHASES = [
 ] as const;
 export type ToolProgressPhase = (typeof TOOL_PROGRESS_PHASES)[number];
 
+export const MEDIA_KINDS = ['image', 'document'] as const;
+export type MediaKind = (typeof MEDIA_KINDS)[number];
+
 export const EDIT_CHANGES = ['add', 'update', 'delete', 'unknown'] as const;
 export type EditChange = (typeof EDIT_CHANGES)[number];
 
@@ -256,6 +259,17 @@ export interface ToolResult {
   readonly status: ToolResultStatus;
   readonly output?: string;
   readonly exitCode?: number;
+  /** The result's images and documents, in source order: never their bytes. */
+  readonly media?: readonly Media[];
+}
+
+/** An image or document a tool result carried; byteSize only for a base64 source. */
+export interface Media {
+  readonly type: MediaKind;
+  readonly mediaType?: string;
+  readonly byteSize?: number;
+  /** A document's title; an image has none. */
+  readonly title?: string;
 }
 
 export interface Edit {

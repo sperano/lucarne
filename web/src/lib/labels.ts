@@ -9,6 +9,7 @@ import type {
   EventKind,
   GapReason,
   LifecyclePhase,
+  MediaKind,
   RawReason,
   RunPhase,
   RunnerKind,
@@ -67,6 +68,11 @@ export const STATUS_LABELS: Record<ToolResultStatus, string> = {
   error: 'error',
   declined: 'declined',
   unknown: 'outcome unknown',
+};
+
+export const MEDIA_KIND_LABELS: Record<MediaKind, { one: string; many: string }> = {
+  image: { one: 'image', many: 'images' },
+  document: { one: 'document', many: 'documents' },
 };
 
 export const TOOL_PROGRESS_LABELS: Record<ToolProgressPhase, string> = {

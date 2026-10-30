@@ -67,7 +67,7 @@ func TestGoTypesMatchSchemaObjects(t *testing.T) {
 		"RunKey": RunKey{}, "AttemptKey": AttemptKey{}, "Run": Run{}, "Runner": Runner{},
 		"ContainerState": ContainerState{}, "Coverage": Coverage{}, "Attempt": Attempt{},
 		"Stream": Stream{}, "Limits": Limits{}, "Source": Source{}, "Message": Message{},
-		"ToolCall": ToolCall{}, "ToolProgress": ToolProgress{}, "ToolResult": ToolResult{}, "Edit": Edit{}, "Usage": Usage{},
+		"ToolCall": ToolCall{}, "ToolProgress": ToolProgress{}, "ToolResult": ToolResult{}, "Media": Media{}, "Edit": Edit{}, "Usage": Usage{},
 		"Retry": Retry{}, "ErrorInfo": ErrorInfo{}, "Output": Output{}, "Lifecycle": Lifecycle{},
 		"Raw": Raw{}, "Gap": Gap{}, "Event": Event{}, "Snapshot": Snapshot{},
 		"AttemptUpdate": AttemptUpdate{}, "RunUpdate": RunUpdate{}, "Reset": Reset{}, "End": End{}, "Live": Live{},
@@ -154,6 +154,8 @@ func eventEnumCases(defs map[string]map[string]any) []enumCase {
 		{"tool progress phases", property(defs, "ToolProgress", "phase"), toStrings([]ToolProgressPhase{
 			ToolProgressStarted, ToolProgressRunning, ToolProgressCompleted,
 			ToolProgressFailed, ToolProgressKilled, ToolProgressUnknown})},
+		{"media kinds", property(defs, "Media", "type"), toStrings([]MediaKind{
+			MediaImage, MediaDocument})},
 		{"edit changes", property(defs, "Edit", "change"), toStrings([]EditChange{
 			ChangeAdd, ChangeUpdate, ChangeDelete, ChangeUnknown})},
 		{"usage scopes", property(defs, "Usage", "scope"), toStrings([]UsageScope{
@@ -227,6 +229,7 @@ func TestSchemaBoundsMatchLimits(t *testing.T) {
 		{property(defs, "Snapshot", "attempts"), MaxAttemptsPerRun},
 		{property(defs, "Snapshot", "events"), MaxEventsPerRun},
 		{property(defs, "Lifecycle", "outputs"), MaxOutputs},
+		{property(defs, "ToolResult", "media"), MaxMedia},
 		{property(defs, "Event", "truncated"), MaxTruncatedFields},
 		{property(defs, "RunList", "runs"), MaxListedRuns},
 	}

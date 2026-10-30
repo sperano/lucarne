@@ -5,6 +5,7 @@
 import type {
   CoverageState,
   Lifecycle,
+  Media,
   ToolResultStatus,
   TranscriptEvent,
   Usage,
@@ -20,6 +21,7 @@ import {
   TOOL_PROGRESS_LABELS,
   USAGE_SCOPE_LABELS,
 } from './labels';
+import { mediaSummary } from './media';
 import { failedEvent } from './search';
 import {
   effectiveToolOutcome,
@@ -61,7 +63,7 @@ export function rowOf(
   if (event.kind === 'tool_result') {
     const r = event.toolResult;
     const name = conversation.calls.get(r.callId)?.call.toolCall.name ?? `call ${r.callId}`;
-    const output = r.output === undefined ? 'no output' : firstLine(r.output);
+    const output = r.output === undefined ? noOutput(r.media) : firstLine(r.output);
     return {
       kind,
       summary: cut(`${name}: ${output}`),
@@ -156,6 +158,12 @@ function lifecycleSummary(l: Lifecycle): string {
   const detail = l.model ?? l.subtype ?? l.stopReason ?? l.detail;
   const label = LIFECYCLE_LABELS[l.phase];
   return detail === undefined ? label : `${label}: ${firstLine(detail)}`;
+}
+
+/** What a result without output carried instead: its media, or nothing. */
+function noOutput(media: readonly Media[] | undefined): string {
+  const summary = mediaSummary(media ?? []);
+  return summary === '' ? 'no output' : summary;
 }
 
 /** The first line of text, at most SUMMARY_CHARS of it: a row never holds a whole output. */

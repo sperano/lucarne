@@ -122,13 +122,34 @@ const (
 
 // ToolResult is the outcome of the tool call with the same CallID. Output
 // is nil when the source reported none, and empty when the tool printed
-// nothing.
+// nothing. Media lists the result's image and document blocks in source
+// order.
 type ToolResult struct {
 	CallID   string           `json:"callId"`
 	Status   ToolResultStatus `json:"status"`
 	Output   *string          `json:"output,omitempty"`
 	ExitCode *int             `json:"exitCode,omitempty"`
+	Media    []Media          `json:"media,omitempty"`
 }
+
+// Media describes an image or document a tool result carried, never its
+// bytes. ByteSize is the decoded size of a base64 source and nil for a
+// source that does not give it; Title is a document's.
+type Media struct {
+	Type      MediaKind `json:"type"`
+	MediaType string    `json:"mediaType,omitempty"`
+	ByteSize  *int64    `json:"byteSize,omitempty"`
+	Title     string    `json:"title,omitempty"`
+}
+
+// MediaKind says whether a media entry is an image or a document.
+type MediaKind string
+
+// Media kinds.
+const (
+	MediaImage    MediaKind = "image"
+	MediaDocument MediaKind = "document"
+)
 
 // ToolResultStatus is a tool call's outcome as the runner reported it.
 type ToolResultStatus string
