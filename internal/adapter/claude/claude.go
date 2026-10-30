@@ -38,12 +38,15 @@ const (
 const (
 	subtypeTaskStarted      = "task_started"
 	subtypeTaskNotification = "task_notification"
+	// subtypeTaskProgress is a subagent's running report: its description,
+	// type, elapsed time and token and tool counts so far.
+	subtypeTaskProgress = "task_progress"
 )
 
 // renderedSubtypes are the system subtypes the parser renders.
 var renderedSubtypes = map[string]bool{
 	subtypeInit: true, subtypeAPIRetry: true, subtypeCompactBoundary: true, subtypeThinkingTokens: true,
-	subtypeTaskStarted: true, subtypeTaskNotification: true,
+	subtypeTaskStarted: true, subtypeTaskNotification: true, subtypeTaskProgress: true,
 }
 
 // unsupportedTypes are line types the parser knows and does not render.
@@ -147,7 +150,8 @@ type systemLine struct {
 // renderSystem renders the system subtypes the adapter knows; any other
 // subtype is left raw.
 func renderSystem(subtype string, text []byte, out *adapter.Emitter) bool {
-	if subtype == subtypeTaskStarted || subtype == subtypeTaskNotification {
+	switch subtype {
+	case subtypeTaskStarted, subtypeTaskProgress, subtypeTaskNotification:
 		return renderTaskProgress(subtype, text, out)
 	}
 	var s systemLine

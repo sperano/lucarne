@@ -45,3 +45,23 @@ func TestToolProgressUnknownAndInvalidValues(t *testing.T) {
 		t.Errorf("unknown status = %s", events[1].ToolProgress.Phase)
 	}
 }
+
+func TestSubagentTaskProgress(t *testing.T) {
+	t.Parallel()
+	events := normalize(t,
+		`{"type":"system","subtype":"task_progress","task_id":"example-task","run_id":"example-run","tool_use_id":"toolu_1","description":"Running go test ./...","subagent_type":"general-purpose","usage":{"total_tokens":57279,"tool_uses":7,"duration_ms":22991},"last_tool_name":"Bash"}`,
+		`{"type":"system","subtype":"task_progress","tool_use_id":"toolu_1","usage":{"duration_ms":-1}}`,
+	)
+	if len(events) != 2 {
+		t.Fatalf("events = %s", dump(events))
+	}
+	running := events[0].ToolProgress
+	if running == nil || running.Phase != contract.ToolProgressRunning || running.CallID != "toolu_1" ||
+		running.ElapsedMs == nil || *running.ElapsedMs != 22991 || running.Detail != "Running go test ./..." ||
+		running.Subtype != "general-purpose" || running.Background != nil {
+		t.Fatalf("running = %+v", running)
+	}
+	if invalid := events[1].ToolProgress; invalid == nil || invalid.ElapsedMs != nil {
+		t.Errorf("invalid duration = %+v", invalid)
+	}
+}

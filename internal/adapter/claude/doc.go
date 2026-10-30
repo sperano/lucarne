@@ -14,9 +14,12 @@
 //     compact_metadata as written.
 //   - system/thinking_tokens: a thinking lifecycle event (session), one per
 //     progress line while a thinking block streams.
-//   - system/task_started, tool_progress and system/task_notification: tool
-//     progress events correlated to the monitored call. They carry the start,
-//     elapsed time and completion status the source reports.
+//   - system/task_started, tool_progress, system/task_progress and
+//     system/task_notification: tool progress events correlated to the
+//     monitored call. They carry the start, elapsed time and completion
+//     status the source reports. A task_progress line (a subagent's running
+//     report) is running, its usage.duration_ms the elapsed time, its
+//     description the detail and its subagent_type the subtype.
 //   - rate_limit_event: a rate_limit_status lifecycle event whose subtype is
 //     the status, whose sessionId is the source session and whose detail is
 //     rate_limit_info as written.
@@ -68,9 +71,9 @@
 //     media source other than base64 (the log does not give it), images and
 //     documents of assistant messages, and the edits of NotebookEdit
 //     or of tools other than Edit, MultiEdit and Write. Background monitoring
-//     is correlated through tool_use_id; its runner task/run IDs and output
-//     file remain available in the source line rather than the normalized
-//     event.
+//     is correlated through tool_use_id; its runner task/run IDs, output
+//     file, and a subagent's token and tool-use counts and last tool remain
+//     available in the source line rather than the normalized event.
 //   - Times: a line's timestamp field, when present, is its runnerTime; the
 //     fixtures carry none, so which lines have one is unverified.
 package claude
