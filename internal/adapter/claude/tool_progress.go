@@ -16,6 +16,15 @@ type taskProgressLine struct {
 	Summary        string `json:"summary"`
 	TaskType       string `json:"task_type"`
 	IsBackgrounded *bool  `json:"is_backgrounded"`
+	// SubagentType and Usage are on task_progress lines only.
+	SubagentType string             `json:"subagent_type"`
+	Usage        *taskProgressUsage `json:"usage"`
+}
+
+// taskProgressUsage is a task_progress line's running total; only its
+// duration is rendered, the token and tool counts stay in the source line.
+type taskProgressUsage struct {
+	DurationMs *int64 `json:"duration_ms"`
 }
 
 type toolProgressLine struct {
@@ -28,14 +37,30 @@ func renderTaskProgress(subtype string, text []byte, out *adapter.Emitter) bool 
 	if json.Unmarshal(text, &line) != nil || line.ToolUseID == "" {
 		return false
 	}
-	phase := contract.ToolProgressStarted
-	detail := line.Description
-	if subtype == subtypeTaskNotification {
-		phase = progressPhase(line.Status)
-		detail = line.Summary
+	switch subtype {
+	case subtypeTaskProgress:
+		out.Emit(toolProgress(
+			line.ToolUseID, contract.ToolProgressRunning, line.durationMs(), line.Description, line.SubagentType, nil,
+		))
+	case subtypeTaskNotification:
+		out.Emit(toolProgress(
+			line.ToolUseID, progressPhase(line.Status), nil, line.Summary, line.TaskType, line.IsBackgrounded,
+		))
+	default:
+		out.Emit(toolProgress(
+			line.ToolUseID, contract.ToolProgressStarted, nil, line.Description, line.TaskType, line.IsBackgrounded,
+		))
 	}
-	out.Emit(toolProgress(line.ToolUseID, phase, nil, detail, line.TaskType, line.IsBackgrounded))
 	return true
+}
+
+// durationMs is the task's elapsed time a task_progress line reports, nil
+// when it reports none or an invalid one.
+func (l taskProgressLine) durationMs() *int64 {
+	if l.Usage == nil {
+		return nil
+	}
+	return adapter.Count(l.Usage.DurationMs)
 }
 
 func renderToolProgress(text []byte, out *adapter.Emitter) bool {
