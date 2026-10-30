@@ -11,6 +11,7 @@
   import RawLine from './RawLine.svelte';
   import ThinkingLine from './ThinkingLine.svelte';
   import ToolCard from './ToolCard.svelte';
+  import ToolProgressLine from './ToolProgressLine.svelte';
   import UsageLine from './UsageLine.svelte';
 
   let {
@@ -53,6 +54,8 @@
     repeated={conversation.calls.has(item.event.toolResult.callId)}
     {limits}
   />
+{:else if item.event.kind === 'tool_progress'}
+  <ToolProgressLine event={item.event} {ongoing} />
 {:else if item.event.kind === 'edit'}
   <EditView event={item.event} {limits} />
 {:else if item.event.kind === 'usage'}

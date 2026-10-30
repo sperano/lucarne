@@ -228,6 +228,21 @@
       },
       "additionalProperties": false
     },
+    "ToolProgress": {
+      "type": "object",
+      "required": ["callId", "phase"],
+      "properties": {
+        "callId": { "$ref": "#/$defs/Label" },
+        "phase": {
+          "enum": ["started", "running", "completed", "failed", "killed", "unknown"]
+        },
+        "elapsedMs": { "$ref": "#/$defs/Count" },
+        "detail": { "$ref": "#/$defs/Text" },
+        "subtype": { "$ref": "#/$defs/Label" },
+        "background": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
     "ToolResult": {
       "type": "object",
       "required": ["callId", "status"],
@@ -375,6 +390,7 @@
           "enum": [
             "message",
             "tool_call",
+            "tool_progress",
             "tool_result",
             "edit",
             "usage",
@@ -406,6 +422,13 @@
             "toolCall": { "$ref": "#/$defs/ToolCall" }
           },
           "required": ["toolCall"]
+        },
+        {
+          "properties": {
+            "kind": { "const": "tool_progress" },
+            "toolProgress": { "$ref": "#/$defs/ToolProgress" }
+          },
+          "required": ["toolProgress"]
         },
         {
           "properties": {

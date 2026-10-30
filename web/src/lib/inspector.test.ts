@@ -26,11 +26,43 @@ describe('rowOf', () => {
     toolResult: { callId: 'c1', status: 'error', output: 'FAIL\tgreet', exitCode: 1 },
   });
   const pending = make({ kind: 'tool_call', toolCall: { callId: 'c2', name: 'Read' } });
+  const progressing = make({ kind: 'tool_call', toolCall: { callId: 'c3', name: 'Bash' } });
+  const completed = make({
+    kind: 'tool_progress',
+    toolProgress: { callId: 'c3', phase: 'completed', elapsedMs: 30000 },
+  });
+  const backgroundCall = make({
+    kind: 'tool_call',
+    toolCall: { callId: 'c4', name: 'Task' },
+  });
+  const backgroundStarted = make({
+    kind: 'tool_progress',
+    toolProgress: { callId: 'c4', phase: 'started', background: true },
+  });
+  const backgroundResult = make({
+    kind: 'tool_result',
+    toolResult: { callId: 'c4', status: 'ok', output: 'running in background' },
+  });
+  const backgroundFailed = make({
+    kind: 'tool_progress',
+    toolProgress: { callId: 'c4', phase: 'failed' },
+  });
   const long = make({
     kind: 'message',
     message: { role: 'assistant', type: 'text', text: 'x'.repeat(SUMMARY_CHARS * 4) },
   });
-  const events = [call, failure, pending, long];
+  const events = [
+    call,
+    failure,
+    pending,
+    progressing,
+    completed,
+    backgroundCall,
+    backgroundStarted,
+    backgroundResult,
+    backgroundFailed,
+    long,
+  ];
   const conversation = buildConversation(events, ATTEMPT);
 
   it('marks a failed call and its result, with the exit code', () => {
@@ -50,6 +82,25 @@ describe('rowOf', () => {
   it('says a call has no result yet only while the log is followed', () => {
     expect(rowOf(pending, conversation, 'following').status?.label).toBe('running');
     expect(rowOf(pending, conversation, 'ended').status?.label).toBe('no result');
+  });
+
+  it('uses terminal progress when the runner emits no tool result', () => {
+    expect(rowOf(progressing, conversation, 'ended').status).toEqual({
+      label: 'completed',
+      tone: 'ok',
+    });
+    expect(rowOf(completed, conversation, 'ended')).toMatchObject({
+      kind: 'Tool progress',
+      summary: 'completed',
+      failed: false,
+    });
+  });
+
+  it('uses a later background failure instead of the immediate ok result', () => {
+    expect(rowOf(backgroundCall, conversation, 'following')).toMatchObject({
+      status: { label: 'failed', tone: 'error' },
+      failed: true,
+    });
   });
 
   it('cuts a long summary', () => {

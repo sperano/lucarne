@@ -13,6 +13,8 @@ const call = (callId: string, name = 'command_execution', extra = {}) =>
   ev({ kind: 'tool_call', toolCall: { callId, name, input: { command: 'go test' }, ...extra } });
 const result = (callId: string) =>
   ev({ kind: 'tool_result', toolResult: { callId, status: 'ok' } });
+const progress = (callId: string, phase: 'started' | 'running' | 'completed' = 'running') =>
+  ev({ kind: 'tool_progress', toolProgress: { callId, phase } });
 const edit = (callId?: string) =>
   ev({
     kind: 'edit',
@@ -41,6 +43,22 @@ describe('buildConversation', () => {
     expect(c.itemOf.get(events[2]?.id ?? '')).toBe(0);
   });
 
+  it('groups every progress report with its call and maps each event to the card', () => {
+    const events = [
+      call('c1'),
+      progress('c1', 'started'),
+      progress('c1'),
+      progress('c1', 'completed'),
+    ];
+    const c = buildConversation(events, ATTEMPT);
+    expect(c.items).toHaveLength(1);
+    const tool = c.items[0];
+    expect(tool?.kind === 'tool' && tool.progress.map((event) => event.id)).toEqual(
+      events.slice(1).map((event) => event.id),
+    );
+    for (const event of events) expect(c.itemOf.get(event.id)).toBe(0);
+  });
+
   it('lets a repeated callId supersede the input in place', () => {
     const first = call('todo', 'todo_list');
     const second = call('todo', 'todo_list', { input: { items: [] } });
@@ -52,8 +70,9 @@ describe('buildConversation', () => {
     expect(c.itemOf.get(second.id)).toBe(0);
   });
 
-  it('keeps results and edits it cannot group as items of their own', () => {
+  it('keeps progress, results and edits it cannot group as items of their own', () => {
     const events = [
+      progress('nowhere'),
       result('nowhere'),
       edit(),
       edit('nowhere'),
@@ -63,6 +82,7 @@ describe('buildConversation', () => {
     ];
     const c = buildConversation(events, ATTEMPT);
     expect(c.items.map((i) => (i.kind === 'tool' ? 'tool' : i.event.kind))).toEqual([
+      'tool_progress',
       'tool_result',
       'edit',
       'edit',

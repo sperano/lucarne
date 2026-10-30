@@ -1,0 +1,16 @@
+{
+  "seq": 8,
+  "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0:a41b8ce4913d276f:8:0",
+  "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0",
+  "kind": "tool_progress",
+  "source": {
+    "line": 8,
+    "part": 0,
+    "type": "tool_progress"
+  },
+  "toolProgress": {
+    "callId": "toolu_01ExampleLint",
+    "phase": "running",
+    "elapsedMs": 30000
+  }
+}

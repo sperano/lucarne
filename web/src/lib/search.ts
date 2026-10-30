@@ -3,6 +3,7 @@
 // those the run dropped to stay within its bounds or those not read yet.
 import type { TranscriptEvent } from './contract';
 import type { Item } from './conversation';
+import { effectiveToolOutcome, isFailedProgressPhase } from './tool-progress';
 import { unreachable } from './unreachable';
 
 export const ITEM_FILTERS = ['all', 'tools', 'errors'] as const;
@@ -23,7 +24,9 @@ export function passes(item: Item, filter: ItemFilter): boolean {
     case 'all':
       return true;
     case 'tools':
-      return item.kind === 'tool' || ['tool_result', 'edit'].includes(item.event.kind);
+      return (
+        item.kind === 'tool' || ['tool_progress', 'tool_result', 'edit'].includes(item.event.kind)
+      );
     case 'errors':
       return failed(item);
     default:
@@ -53,17 +56,24 @@ export function textOf(item: Item): string {
 }
 
 function failed(item: Item): boolean {
-  if (item.kind === 'tool') return isFailure(item.result?.toolResult.status);
+  if (item.kind === 'tool') {
+    const outcome = effectiveToolOutcome(item);
+    return outcome?.kind === 'tool_progress'
+      ? isFailedProgressPhase(outcome.toolProgress.phase)
+      : outcome?.kind === 'tool_result' && isFailure(outcome.toolResult.status);
+  }
   return failedEvent(item.event);
 }
 
-/** Whether event reports a failure: a runner error, a failed or declined result, a failed phase. */
+/** Whether event reports a failure: a runner error, failed tool event, or failed phase. */
 export function failedEvent(event: TranscriptEvent): boolean {
   switch (event.kind) {
     case 'error':
       return true;
     case 'tool_result':
       return isFailure(event.toolResult.status);
+    case 'tool_progress':
+      return isFailedProgressPhase(event.toolProgress.phase);
     case 'lifecycle':
       return (
         event.lifecycle.isError === true ||
@@ -88,6 +98,7 @@ function toolTexts(item: Extract<Item, { kind: 'tool' }>): Text[] {
     call.title,
     call.input === undefined ? call.inputText : JSON.stringify(call.input),
     item.result?.toolResult.output,
+    ...item.progress.flatMap((e) => eventTexts(e)),
     ...item.edits.flatMap((e) => eventTexts(e)),
   ];
 }
@@ -107,6 +118,10 @@ export function eventTexts(event: TranscriptEvent): Text[] {
     }
     case 'tool_result':
       return [event.toolResult.output];
+    case 'tool_progress': {
+      const progress = event.toolProgress;
+      return [progress.phase, progress.detail, progress.subtype];
+    }
     case 'edit':
       return [event.edit.path, event.edit.diff, event.edit.before, event.edit.after];
     case 'usage':

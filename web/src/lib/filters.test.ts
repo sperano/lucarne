@@ -56,6 +56,30 @@ describe('filterEvents', () => {
     expect(ids(filterEvents(conversation, { ...NO_FILTER, failures: true }))).toEqual(at(2, 3));
   });
 
+  it('lists a call whose later background notification failed', () => {
+    const make = eventMaker();
+    const backgroundEvents = [
+      make({ kind: 'tool_call', toolCall: { callId: 'background', name: 'Task' } }),
+      make({
+        kind: 'tool_progress',
+        toolProgress: { callId: 'background', phase: 'started', background: true },
+      }),
+      make({
+        kind: 'tool_result',
+        toolResult: { callId: 'background', status: 'ok', output: 'running in background' },
+      }),
+      make({
+        kind: 'tool_progress',
+        toolProgress: { callId: 'background', phase: 'failed' },
+      }),
+    ];
+    const background = buildConversation(backgroundEvents, backgroundEvents[0]?.attempt ?? '');
+    expect(ids(filterEvents(background, { ...NO_FILTER, failures: true }))).toEqual([
+      backgroundEvents[0]?.id,
+      backgroundEvents[3]?.id,
+    ]);
+  });
+
   it('combines the filters', () => {
     const f = { kinds: ['tool_result' as const], tool: 'Bash', failures: true };
     expect(ids(filterEvents(conversation, f))).toEqual(at(3));
@@ -76,6 +100,18 @@ describe('kinds and tools', () => {
 
   it('names the tools called, sorted', () => {
     expect(toolNames(conversation)).toEqual(['Bash', 'Read']);
+  });
+
+  it('attributes progress to its tool', () => {
+    const make = eventMaker();
+    const call = make({ kind: 'tool_call', toolCall: { callId: 'progress-call', name: 'Bash' } });
+    const progress = make({
+      kind: 'tool_progress',
+      toolProgress: { callId: 'progress-call', phase: 'running' },
+    });
+    const c = buildConversation([call, progress], call.attempt);
+    expect(toolOf(progress, c)).toBe('Bash');
+    expect(ids(filterEvents(c, { ...NO_FILTER, tool: 'Bash' }))).toEqual([call.id, progress.id]);
   });
 });
 

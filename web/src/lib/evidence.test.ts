@@ -21,6 +21,10 @@ const result = (callId: string, status: 'ok' | 'error' | 'unknown' = 'ok'): Even
   kind: 'tool_result',
   toolResult: { callId, status },
 });
+const progress = (callId: string, phase: 'running' | 'completed' | 'failed'): EventBody => ({
+  kind: 'tool_progress',
+  toolProgress: { callId, phase },
+});
 
 const pick = (events: readonly TranscriptEvent[], i: number) => {
   const event = events[i];
@@ -35,21 +39,23 @@ describe('correlate', () => {
       call('todo', 'TodoWrite', 'task'),
       call('todo', 'TodoWrite', 'task'),
       call('sub', 'Bash', 'todo'),
+      progress('todo', 'running'),
       result('todo'),
       { kind: 'edit', edit: { callId: 'todo', path: 'TODO.md', change: 'update' } },
       result('todo', 'error'),
       { kind: 'message', message: { role: 'assistant', type: 'text', text: 'unrelated' } },
     ]);
-    const c = correlate(pick(events, 4), conversation);
+    const c = correlate(pick(events, 5), conversation);
     expect(c.callId).toBe('todo');
     expect(c.related.map((r) => [r.relation, r.event.source.line])).toEqual([
       ['parent', 1],
       ['revision', 2],
       ['call', 3],
       ['subcall', 4],
-      ['result', 5],
-      ['edit', 6],
-      ['result', 7],
+      ['progress', 5],
+      ['result', 6],
+      ['edit', 7],
+      ['result', 8],
     ]);
   });
 
@@ -82,6 +88,16 @@ describe('callEvidence', () => {
   it('says nothing of a call with a result that has a status', () => {
     const { events, conversation, attempt } = setup([call('c', 'Bash'), result('c')]);
     expect(callEvidence(correlate(pick(events, 0), conversation), attempt, stream)).toBeUndefined();
+  });
+
+  it('reports a terminal progress outcome when no result follows', () => {
+    const { events, conversation, attempt } = setup([
+      call('c', 'Bash'),
+      progress('c', 'completed'),
+    ]);
+    expect(callEvidence(correlate(pick(events, 1), conversation), attempt, stream)).toBe(
+      'The runner reported the call completed, but emitted no tool result.',
+    );
   });
 
   it.each([

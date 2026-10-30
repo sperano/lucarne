@@ -18,6 +18,7 @@ import {
   RUN_PHASES,
   RUNNER_KINDS,
   SCHEMA_VERSION,
+  TOOL_PROGRESS_PHASES,
   TOOL_RESULT_STATUSES,
   USAGE_SCOPES,
   type Attempt,
@@ -51,6 +52,7 @@ import {
   type SourceLine,
   type Stream,
   type ToolCall,
+  type ToolProgress,
   type ToolResult,
   type Usage,
 } from './contract';
@@ -194,6 +196,14 @@ const objects: Record<string, Record<string, boolean>> = {
     title: false,
     parentCallId: false,
   } satisfies RequiredKeys<ToolCall>,
+  ToolProgress: {
+    callId: true,
+    phase: true,
+    elapsedMs: false,
+    detail: false,
+    subtype: false,
+    background: false,
+  } satisfies RequiredKeys<ToolProgress>,
   ToolResult: {
     callId: true,
     status: true,
@@ -285,6 +295,7 @@ describe('TypeScript types match the schema', () => {
     const payloads: Record<keyof EventPayloads, string> = {
       message: 'message',
       tool_call: 'toolCall',
+      tool_progress: 'toolProgress',
       tool_result: 'toolResult',
       edit: 'edit',
       usage: 'usage',
@@ -310,6 +321,7 @@ describe('TypeScript types match the schema', () => {
     ['coverage states', $defs.Coverage.properties.state.enum, COVERAGE_STATES],
     ['message roles', $defs.Message.properties.role.enum, MESSAGE_ROLES],
     ['message types', $defs.Message.properties.type.enum, MESSAGE_TYPES],
+    ['tool progress phases', $defs.ToolProgress.properties.phase.enum, TOOL_PROGRESS_PHASES],
     ['tool result statuses', $defs.ToolResult.properties.status.enum, TOOL_RESULT_STATUSES],
     ['edit changes', $defs.Edit.properties.change.enum, EDIT_CHANGES],
     ['usage scopes', $defs.Usage.properties.scope.enum, USAGE_SCOPES],

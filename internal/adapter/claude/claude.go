@@ -34,11 +34,7 @@ const (
 	subtypeThinkingTokens  = "thinking_tokens"
 )
 
-// System subtypes the parser recognizes but does not render: the CLI's
-// background monitoring of a tool call. task_notification carries the
-// completion status (completed, failed or killed) of a backgrounded call,
-// whose tool_result returns immediately with a "running in background"
-// notice and never reports that outcome.
+// System subtypes for the CLI's background monitoring of a tool call.
 const (
 	subtypeTaskStarted      = "task_started"
 	subtypeTaskNotification = "task_notification"
@@ -47,16 +43,11 @@ const (
 // renderedSubtypes are the system subtypes the parser renders.
 var renderedSubtypes = map[string]bool{
 	subtypeInit: true, subtypeAPIRetry: true, subtypeCompactBoundary: true, subtypeThinkingTokens: true,
-}
-
-// unsupportedSubtypes are system subtypes the parser knows and does not
-// render.
-var unsupportedSubtypes = map[string]bool{
 	subtypeTaskStarted: true, subtypeTaskNotification: true,
 }
 
 // unsupportedTypes are line types the parser knows and does not render.
-var unsupportedTypes = map[string]bool{typeStreamEvent: true, typeToolProgress: true}
+var unsupportedTypes = map[string]bool{typeStreamEvent: true}
 
 // Parser normalizes Claude Code stream-json lines. It is an adapter.Runner;
 // it keeps only the tool calls still waiting for their result.
@@ -102,6 +93,8 @@ func (p *Parser) render(h head, text []byte, out *adapter.Emitter) bool {
 		return renderResult(text, out)
 	case typeRateLimit:
 		return renderRateLimit(text, out)
+	case typeToolProgress:
+		return renderToolProgress(text, out)
 	}
 	return false
 }
@@ -112,14 +105,11 @@ func (p *Parser) render(h head, text []byte, out *adapter.Emitter) bool {
 func rawReason(h head) contract.RawReason {
 	switch h.Type {
 	case typeSystem:
-		if unsupportedSubtypes[h.Subtype] {
-			return contract.RawUnsupported
-		}
 		if !renderedSubtypes[h.Subtype] {
 			return contract.RawUnknownType
 		}
 		return contract.RawUnsupported
-	case typeAssistant, typeUser, typeResult, typeRateLimit:
+	case typeAssistant, typeUser, typeResult, typeRateLimit, typeToolProgress:
 		return contract.RawUnsupported
 	}
 	if unsupportedTypes[h.Type] {
@@ -154,10 +144,12 @@ type systemLine struct {
 	CompactMetadata json.RawMessage `json:"compact_metadata"`
 }
 
-// renderSystem renders init, api_retry, compact_boundary and thinking_tokens;
-// any other subtype is left raw (hooks, tasks, status, and those still to
-// come).
+// renderSystem renders the system subtypes the adapter knows; any other
+// subtype is left raw.
 func renderSystem(subtype string, text []byte, out *adapter.Emitter) bool {
+	if subtype == subtypeTaskStarted || subtype == subtypeTaskNotification {
+		return renderTaskProgress(subtype, text, out)
+	}
 	var s systemLine
 	if !renderedSubtypes[subtype] || json.Unmarshal(text, &s) != nil {
 		return false

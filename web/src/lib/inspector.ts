@@ -17,9 +17,15 @@ import {
   LIFECYCLE_LABELS,
   RAW_REASON_LABELS,
   STATUS_LABELS,
+  TOOL_PROGRESS_LABELS,
   USAGE_SCOPE_LABELS,
 } from './labels';
 import { failedEvent } from './search';
+import {
+  effectiveToolOutcome,
+  isFailedProgressPhase,
+  isTerminalProgressPhase,
+} from './tool-progress';
 import { describeTool } from './tools';
 import { unreachable } from './unreachable';
 import { usageParts } from './usage';
@@ -74,18 +80,34 @@ function callRow(
   const call = event.toolCall;
   const subject = describeTool(call).subject;
   const summary = cut(subject === '' ? call.name : `${call.name} ${subject}`);
-  const result = conversation.calls.get(call.callId)?.result?.toolResult;
-  if (!result) {
-    const pending = coverage === 'following' ? 'running' : 'no result';
+  const tool = conversation.calls.get(call.callId);
+  const outcome = tool === undefined ? undefined : effectiveToolOutcome(tool);
+  if (outcome?.kind === 'tool_progress') {
+    const phase = outcome.toolProgress.phase;
+    const tone: Tone = isTerminalProgressPhase(phase)
+      ? isFailedProgressPhase(phase)
+        ? 'error'
+        : 'ok'
+      : 'muted';
     return {
       kind: EVENT_KIND_LABELS.tool_call,
       summary,
-      status: { label: pending, tone: 'muted' },
-      failed: false,
+      status: { label: TOOL_PROGRESS_LABELS[phase], tone },
+      failed: isFailedProgressPhase(phase),
     };
   }
-  const status = resultStatus(result.status, result.exitCode);
-  return { kind: EVENT_KIND_LABELS.tool_call, summary, status, failed: status.tone === 'error' };
+  if (outcome?.kind === 'tool_result') {
+    const result = outcome.toolResult;
+    const status = resultStatus(result.status, result.exitCode);
+    return { kind: EVENT_KIND_LABELS.tool_call, summary, status, failed: status.tone === 'error' };
+  }
+  const pending = coverage === 'following' ? 'running' : 'no result';
+  return {
+    kind: EVENT_KIND_LABELS.tool_call,
+    summary,
+    status: { label: pending, tone: 'muted' },
+    failed: false,
+  };
 }
 
 function resultStatus(
@@ -107,6 +129,11 @@ function summaryOf(event: Exclude<TranscriptEvent, EventOf<'tool_call' | 'tool_r
     }
     case 'edit':
       return `${EDIT_LABELS[event.edit.change]} ${event.edit.path}`;
+    case 'tool_progress': {
+      const progress = event.toolProgress;
+      const detail = progress.detail === undefined ? '' : `: ${firstLine(progress.detail)}`;
+      return `${TOOL_PROGRESS_LABELS[progress.phase]}${detail}`;
+    }
     case 'usage': {
       const parts = usageParts(event.usage);
       const scope = USAGE_SCOPE_LABELS[event.usage.scope];
