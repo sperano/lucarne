@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { eventMaker } from '../dev/events';
+import type { Media } from './contract';
 import { FIXTURE_RUNS } from '../dev/fixtures';
 import { buildConversation } from './conversation';
 import {
@@ -113,6 +114,23 @@ describe('rowOf', () => {
     const withMedia = buildConversation([read, picture, empty], ATTEMPT);
     expect(rowOf(picture, withMedia, 'ended').summary).toBe('Read: 2 images');
     expect(rowOf(empty, withMedia, 'ended').summary).toBe('call c6: no output');
+  });
+
+  it('summarizes a message with the media that came with it', () => {
+    const summary = (text: string, media: readonly Media[] = []) =>
+      rowOf(
+        make({
+          kind: 'message',
+          message: { role: 'user', type: 'text', text, ...(media.length > 0 && { media }) },
+        }),
+        conversation,
+        'ended',
+      ).summary;
+    expect(summary('Look\nhere', [{ type: 'image' }])).toBe('User: Look (1 image)');
+    expect(summary('', [{ type: 'image' }, { type: 'document' }])).toBe(
+      'User: 1 image, 1 document',
+    );
+    expect(summary('Plain')).toBe('User: Plain');
   });
 
   it('cuts a long summary', () => {

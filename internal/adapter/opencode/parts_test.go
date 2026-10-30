@@ -1,6 +1,7 @@
 package opencode
 
 import (
+	"reflect"
 	"strings"
 	"testing"
 
@@ -26,7 +27,7 @@ func TestTextRoles(t *testing.T) {
 		t.Fatalf("got %d events: %s", len(events), adaptertest.Dump(events))
 	}
 	for i, ev := range events {
-		if ev.Message == nil || *ev.Message != want[i] {
+		if ev.Message == nil || !reflect.DeepEqual(*ev.Message, want[i]) {
 			t.Errorf("event %d = %+v, want message %+v", i, ev.Message, want[i])
 		}
 	}

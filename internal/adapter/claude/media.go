@@ -42,14 +42,21 @@ type mediaSource struct {
 	Data      *string `json:"data"`
 }
 
-// resultMedia describes an image or document block of a tool result, never
-// its bytes. It is false for another block, and for one without a source of
+// readableMedia is whether b is an image or document block with a source of
 // a type the API defines for it.
-func resultMedia(b block, cut *adapter.Truncation) (contract.Media, bool) {
-	kind, ok := mediaKinds[b.Type]
-	if !ok || b.Source == nil || !slices.Contains(mediaSources[b.Type], b.Source.Type) {
+func readableMedia(b block) bool {
+	_, ok := mediaKinds[b.Type]
+	return ok && b.Source != nil && slices.Contains(mediaSources[b.Type], b.Source.Type)
+}
+
+// blockMedia describes an image or document block of a message or tool
+// result, never its bytes. It is false for another block, and for one
+// without a source of a type the API defines for it.
+func blockMedia(b block, cut *adapter.Truncation) (contract.Media, bool) {
+	if !readableMedia(b) {
 		return contract.Media{}, false
 	}
+	kind := mediaKinds[b.Type]
 	m := contract.Media{
 		Type:      kind,
 		MediaType: cut.Text(mediaField, b.Source.MediaType, contract.MaxLabelBytes),

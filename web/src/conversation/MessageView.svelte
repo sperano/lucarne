@@ -3,6 +3,7 @@
   import type { EventOf } from '../lib/conversation';
   import { parseMarkdown } from '../lib/markdown';
   import Markdown from './Markdown.svelte';
+  import MediaList from './MediaList.svelte';
   import Truncated from './Truncated.svelte';
 
   let {
@@ -15,6 +16,7 @@
 
   const message = $derived(event.message);
   const blocks = $derived(parseMarkdown(message.text));
+  const media = $derived(message.media ?? []);
 </script>
 
 <article class="message {message.role}" aria-label="{ROLE_LABELS[message.role]} message">
@@ -25,12 +27,13 @@
     </details>
   {:else}
     <p class="role">{ROLE_LABELS[message.role]}</p>
-    {#if message.text === ''}
-      <p class="note">The message is empty.</p>
-    {:else}
+    {#if message.text !== ''}
       <Markdown {blocks} />
+    {:else if media.length === 0}
+      <p class="note">The message is empty.</p>
     {/if}
   {/if}
+  <MediaList {media} />
   <Truncated fields={event.truncated} {limits} />
 </article>
 

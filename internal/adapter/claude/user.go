@@ -33,26 +33,81 @@ func (p *Parser) renderUser(text []byte, out *adapter.Emitter) bool {
 	if countToolResults(blocks) != 1 {
 		structured = nil
 	}
+	messages := userMessages{id: line.Message.ID, out: out}
 	for _, raw := range blocks {
-		p.userBlock(raw, line.Message.ID, structured, out)
+		p.userBlock(raw, &messages, structured, out)
 	}
+	messages.flush()
 	return true
 }
 
-func (p *Parser) userBlock(raw json.RawMessage, id string, structured json.RawMessage, out *adapter.Emitter) {
+func (p *Parser) userBlock(raw json.RawMessage, messages *userMessages, structured json.RawMessage, out *adapter.Emitter) {
 	var b block
 	if json.Unmarshal(raw, &b) != nil {
+		messages.flush()
 		out.Raw(contract.RawUnsupported, raw)
 		return
 	}
 	switch {
 	case b.Type == blockText && b.Text != nil:
-		out.Emit(message(contract.RoleUser, contract.MessageText, *b.Text, id))
+		messages.text(*b.Text)
+	case messages.media(b):
 	case b.Type == blockToolResult && b.ToolUseID != "":
+		messages.flush()
 		p.toolResult(b, structured, out)
 	default:
+		messages.flush()
 		out.Raw(blockRawReason(b.Type), raw)
 	}
+}
+
+// userMessages builds the messages of a user line: a text block's message
+// holds the media blocks right after it, and media blocks no text block
+// comes right before get a message of their own without text. The open
+// message is emitted once a block that is neither follows, or the line ends.
+type userMessages struct {
+	id   string
+	out  *adapter.Emitter
+	open *contract.Message
+	cut  adapter.Truncation
+}
+
+// text opens the message of a text block.
+func (u *userMessages) text(text string) {
+	u.flush()
+	u.open = &contract.Message{
+		Role:      contract.RoleUser,
+		Type:      contract.MessageText,
+		Text:      u.cut.Text("text", text, contract.MaxTextBytes),
+		MessageID: u.cut.Text("messageId", u.id, contract.MaxLabelBytes),
+	}
+}
+
+// media adds b to the open message when it is an image or document block
+// it can read; one past contract.MaxMedia is dropped and media marked cut.
+func (u *userMessages) media(b block) bool {
+	if !readableMedia(b) {
+		return false
+	}
+	if u.open == nil {
+		u.text("")
+	}
+	if len(u.open.Media) == contract.MaxMedia {
+		u.cut.Mark(mediaField)
+		return true
+	}
+	m, _ := blockMedia(b, &u.cut)
+	u.open.Media = append(u.open.Media, m)
+	return true
+}
+
+// flush emits the open message, if any.
+func (u *userMessages) flush() {
+	if u.open == nil {
+		return
+	}
+	u.out.Emit(contract.Event{Kind: contract.KindMessage, Message: u.open, Truncated: u.cut.Fields()})
+	u.open, u.cut = nil, adapter.Truncation{}
 }
 
 // toolResult adds the result, its content blocks it does not render, and
@@ -129,7 +184,7 @@ func resultContent(content json.RawMessage, cut *adapter.Truncation) toolContent
 // addMedia adds b to the media when it is an image or document block it
 // can read; one past contract.MaxMedia is dropped and media marked cut.
 func (c *toolContent) addMedia(b block, cut *adapter.Truncation) bool {
-	m, ok := resultMedia(b, cut)
+	m, ok := blockMedia(b, cut)
 	if !ok {
 		return false
 	}

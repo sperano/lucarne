@@ -59,11 +59,14 @@ type Source struct {
 }
 
 // Message is text the runner attributed to the user or the assistant.
+// Media lists the image and document blocks that came with it, in source
+// order.
 type Message struct {
 	Role      MessageRole `json:"role"`
 	Type      MessageType `json:"type"`
 	Text      string      `json:"text"`
 	MessageID string      `json:"messageId,omitempty"`
+	Media     []Media     `json:"media,omitempty"`
 }
 
 // MessageRole is who the runner attributed a message to.
@@ -132,8 +135,8 @@ type ToolResult struct {
 	Media    []Media          `json:"media,omitempty"`
 }
 
-// Media describes an image or document a tool result carried, never its
-// bytes. ByteSize is the decoded size of a base64 source and nil for a
+// Media describes an image or document a message or tool result carried,
+// never its bytes. ByteSize is the decoded size of a base64 source and nil for a
 // source that does not give it; Title is a document's.
 type Media struct {
 	Type      MediaKind `json:"type"`

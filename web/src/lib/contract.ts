@@ -234,6 +234,8 @@ export interface Message {
   readonly type: MessageType;
   readonly text: string;
   readonly messageId?: string;
+  /** The images and documents that came with the text, in source order: never their bytes. */
+  readonly media?: readonly Media[];
 }
 
 export interface ToolCall {
@@ -263,7 +265,7 @@ export interface ToolResult {
   readonly media?: readonly Media[];
 }
 
-/** An image or document a tool result carried; byteSize only for a base64 source. */
+/** An image or document a message or tool result carried; byteSize only for a base64 source. */
 export interface Media {
   readonly type: MediaKind;
   readonly mediaType?: string;

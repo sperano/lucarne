@@ -26,16 +26,18 @@
 //     error field (an API error the CLI printed as a message, such as
 //     rate_limit) gives error events instead of text messages. The message's
 //     usage is emitted only from the line that carries its stop_reason.
-//   - user: text becomes a user message; each tool_result a tool result
+//   - user: text becomes a user message, whose media are the image and
+//     document blocks right after it (blocks no text comes right before get
+//     a message of their own, without text); each tool_result a tool result
 //     correlated by tool_use_id, ok unless is_error is true (the API's
 //     default), whose output is its text blocks and the names of the tools
 //     its tool_reference blocks load (a tool search's), one per line, and
-//     whose media are its image and document blocks: type, the source's
-//     media_type, the decoded size of a base64 source and a document's
-//     title, never the bytes. A media block without a source of a type the
-//     API defines for it stays raw. A successful Edit, MultiEdit or Write
-//     also gives an edit from tool_use_result: the jsdiff hunks as a
-//     unified diff, and Write's new content as after.
+//     whose media are its image and document blocks. A media entry is the
+//     block's type, the source's media_type, the decoded size of a base64
+//     source and a document's title, never the bytes; a media block without
+//     a source of a type the API defines for it stays raw. A successful
+//     Edit, MultiEdit or Write also gives an edit from tool_use_result: the
+//     jsdiff hunks as a unified diff, and Write's new content as after.
 //   - result: a session_completed lifecycle event, the session's usage
 //     (tokens, total_cost_usd as a decimal string, durations, turns), and an
 //     error per errors entry.
@@ -64,7 +66,7 @@
 //     the result text (it repeats the last assistant message), retry waits without a response (no_response),
 //     redacted thinking, the bytes of images and documents, the size of a
 //     media source other than base64 (the log does not give it), images and
-//     documents outside tool results, and the edits of NotebookEdit
+//     documents of assistant messages, and the edits of NotebookEdit
 //     or of tools other than Edit, MultiEdit and Write. Background monitoring
 //     is correlated through tool_use_id; its runner task/run IDs and output
 //     file remain available in the source line rather than the normalized

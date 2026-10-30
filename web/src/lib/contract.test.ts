@@ -189,7 +189,13 @@ const objects: Record<string, Record<string, boolean>> = {
     logTime: false,
     runnerTime: false,
   } satisfies RequiredKeys<Source>,
-  Message: { role: true, type: true, text: true, messageId: false } satisfies RequiredKeys<Message>,
+  Message: {
+    role: true,
+    type: true,
+    text: true,
+    messageId: false,
+    media: false,
+  } satisfies RequiredKeys<Message>,
   ToolCall: {
     callId: true,
     name: true,
