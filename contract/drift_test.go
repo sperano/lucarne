@@ -229,6 +229,7 @@ func TestSchemaBoundsMatchLimits(t *testing.T) {
 		{property(defs, "Snapshot", "attempts"), MaxAttemptsPerRun},
 		{property(defs, "Snapshot", "events"), MaxEventsPerRun},
 		{property(defs, "Lifecycle", "outputs"), MaxOutputs},
+		{property(defs, "Message", "media"), MaxMedia},
 		{property(defs, "ToolResult", "media"), MaxMedia},
 		{property(defs, "Event", "truncated"), MaxTruncatedFields},
 		{property(defs, "RunList", "runs"), MaxListedRuns},

@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { Limits } from '../lib/contract';
   import type { EventOf } from '../lib/conversation';
-  import { mediaLabel } from '../lib/media';
+  import MediaList from './MediaList.svelte';
   import OutputBlock from './OutputBlock.svelte';
   import Truncated from './Truncated.svelte';
 
@@ -18,25 +18,5 @@
 {:else}
   <OutputBlock label={result.status === 'error' ? 'Error output' : 'Output'} text={result.output} />
 {/if}
-{#if media.length > 0}
-  <figure class="media">
-    <figcaption class="note">Images and documents (Lucarne does not show their content)</figcaption>
-    <ul aria-label="Images and documents">
-      {#each media as entry, i (i)}<li>{mediaLabel(entry)}</li>{/each}
-    </ul>
-  </figure>
-{/if}
+<MediaList {media} />
 <Truncated fields={event.truncated} {limits} />
-
-<style>
-  .media {
-    margin: 0.5rem 0;
-  }
-  figcaption {
-    margin: 0 0 0.125rem;
-  }
-  ul {
-    margin: 0;
-    padding-left: 1.25rem;
-  }
-</style>

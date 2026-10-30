@@ -6,6 +6,7 @@ import type {
   CoverageState,
   Lifecycle,
   Media,
+  Message,
   ToolResultStatus,
   TranscriptEvent,
   Usage,
@@ -127,7 +128,7 @@ function summaryOf(event: Exclude<TranscriptEvent, EventOf<'tool_call' | 'tool_r
       const m = event.message;
       const what =
         m.type === 'reasoning' ? `${ROLE_LABELS[m.role]} reasoning` : ROLE_LABELS[m.role];
-      return `${what}: ${firstLine(m.text)}`;
+      return `${what}: ${messageSummary(m)}`;
     }
     case 'edit':
       return `${EDIT_LABELS[event.edit.change]} ${event.edit.path}`;
@@ -158,6 +159,13 @@ function lifecycleSummary(l: Lifecycle): string {
   const detail = l.model ?? l.subtype ?? l.stopReason ?? l.detail;
   const label = LIFECYCLE_LABELS[l.phase];
   return detail === undefined ? label : `${label}: ${firstLine(detail)}`;
+}
+
+/** A message's first line, then the media that came with it: "Look (1 image)". */
+function messageSummary(m: Message): string {
+  const media = mediaSummary(m.media ?? []);
+  if (media === '') return firstLine(m.text);
+  return m.text === '' ? media : `${firstLine(m.text)} (${media})`;
 }
 
 /** What a result without output carried instead: its media, or nothing. */

@@ -38,6 +38,25 @@ describe('search', () => {
     expect(search(items, 'overloaded')).toEqual(ids([3]));
   });
 
+  it('finds a message by the media types and titles of its media', () => {
+    const attached = buildConversation(
+      [
+        eventMaker()({
+          kind: 'message',
+          message: {
+            role: 'user',
+            type: 'text',
+            text: '',
+            media: [{ type: 'document', mediaType: 'application/pdf', title: 'Layout spec' }],
+          },
+        }),
+      ],
+      ATTEMPT_ID,
+    ).items;
+    expect(search(attached, 'layout')).toEqual([attached[0]?.id]);
+    expect(search(attached, 'pdf')).toEqual([attached[0]?.id]);
+  });
+
   it('finds nothing for an empty query', () => {
     expect(search(items, '  ')).toEqual([]);
   });

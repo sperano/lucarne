@@ -109,7 +109,7 @@ function toolTexts(item: Extract<Item, { kind: 'tool' }>): Text[] {
 export function eventTexts(event: TranscriptEvent): Text[] {
   switch (event.kind) {
     case 'message':
-      return [event.message.text];
+      return [event.message.text, ...mediaTexts(event.message.media)];
     case 'tool_call': {
       const call = event.toolCall;
       return [
