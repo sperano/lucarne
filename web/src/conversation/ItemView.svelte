@@ -7,6 +7,7 @@
   import GapNotice from './GapNotice.svelte';
   import LifecycleLine from './LifecycleLine.svelte';
   import MessageView from './MessageView.svelte';
+  import NoticeLine from './NoticeLine.svelte';
   import OrphanResult from './OrphanResult.svelte';
   import RawLine from './RawLine.svelte';
   import ThinkingLine from './ThinkingLine.svelte';
@@ -64,6 +65,8 @@
   <ErrorNotice event={item.event} {limits} />
 {:else if item.event.kind === 'lifecycle' && item.event.lifecycle.phase === 'thinking'}
   <ThinkingLine {ongoing} />
+{:else if item.event.kind === 'lifecycle' && item.event.lifecycle.phase === 'runner_notice'}
+  <NoticeLine event={item.event} {limits} open={targeted} />
 {:else if item.event.kind === 'lifecycle'}
   <LifecycleLine event={item.event} {limits} {ongoing} />
 {:else if item.event.kind === 'raw'}

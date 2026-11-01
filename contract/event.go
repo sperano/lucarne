@@ -263,6 +263,7 @@ const (
 	LifecycleThinking         LifecyclePhase = "thinking"
 	LifecycleSessionCompleted LifecyclePhase = "session_completed"
 	LifecycleRateLimitStatus  LifecyclePhase = "rate_limit_status"
+	LifecycleRunnerNotice     LifecyclePhase = "runner_notice"
 	LifecycleLimitHit         LifecyclePhase = "limit_hit"
 	LifecycleKelosOutputs     LifecyclePhase = "kelos_outputs"
 )

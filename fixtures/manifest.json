@@ -15,6 +15,7 @@
     "claude-code": [
       "kelos-dev/kelos v0.60.0 claude-code/kelos_entrypoint.sh: claude --dangerously-skip-permissions --output-format stream-json --verbose -p, piped to /kelos/kelos-capture",
       "@anthropic-ai/claude-code 2.1.296 bundled CLI: system/init, system/api_retry, system/compact_boundary, rate_limit_event and result message builders",
+      "@anthropic-ai/claude-agent-sdk 0.3.316 sdk.d.ts (Claude Code 2.1.316): the SDKMessage union, for the hook, status, notice and task_updated shapes",
       "a live Kelos run's stream-json output: system/task_started, tool_progress heartbeats and system/task_notification around a long Bash call, not documented in the bundled CLI's packaged source",
       "sperano/hollingsworth docker/kelos-agent/limit_capture.py and kelos_entrypoint.sh: limit-resets-at/limit-type outputs and the ---KELOS_LIMIT_HIT--- stderr line"
     ],
@@ -115,8 +116,17 @@
       "version": "2.1.296",
       "provenance": "synthetic",
       "scenarios": ["session_start", "background_task", "tool_success", "assistant_text", "usage", "cost"],
-      "lines": { "blank": 0, "json": 9, "text": 0 },
-      "notes": "system/task_started, two tool_progress heartbeats and system/task_notification around a Bash call's tool_use/tool_result, modelled after a sample observed in a live run; the CLI's packaged source does not document this shape, so field names and presence are unverified."
+      "lines": { "blank": 0, "json": 10, "text": 0 },
+      "notes": "system/task_started, two tool_progress heartbeats, system/task_updated and system/task_notification around a Bash call's tool_use/tool_result, modelled after a sample observed in a live run; the CLI's packaged source does not document this shape, so field names and presence are unverified. The task_updated line has the shape of one seen in a live run on 2026-10-30."
+    },
+    {
+      "file": "claude-code/2.1.296/runner-notices.log",
+      "runner": "claude-code",
+      "version": "2.1.296",
+      "provenance": "synthetic",
+      "scenarios": ["session_start", "runner_notice", "background_task", "tool_success", "assistant_text", "unknown_event", "usage", "cost"],
+      "lines": { "blank": 0, "json": 19, "text": 0 },
+      "notes": "Hook, status, informational, notification, tool_use_summary, files_persisted and permission_denied lines, task_updated lines for a known and an unknown background task, and a system subtype no adapter knows. Shapes follow @anthropic-ai/claude-agent-sdk 0.3.316 sdk.d.ts (SDKMessage, Claude Code 2.1.316), not a capture: which of them Claude Code 2.1.296 prints in -p mode is unverified."
     },
     {
       "file": "codex/0.162.1/session-basic.log",

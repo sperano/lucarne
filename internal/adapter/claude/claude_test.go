@@ -51,11 +51,10 @@ func TestLineTypesAndRawReasons(t *testing.T) {
 		{"text", "(node:17) warning", contract.RawText},
 		{"cut object", `{"type":"assistant","mess`, contract.RawMalformedJSON},
 		{"array", `[1,2]`, contract.RawText},
-		{"unknown type", `{"type":"example_future_type"}`, contract.RawUnknownType},
 		{"no type", `{"example":1}`, contract.RawUnknownType},
 		{"type not a string", `{"type":7}`, contract.RawUnknownType},
-		{"unknown system subtype", `{"type":"system","subtype":"hook_started"}`, contract.RawUnknownType},
-		{"partial message", `{"type":"stream_event","event":{"type":"message_start"}}`, contract.RawUnsupported},
+		{"type that is no name", `{"type":"<b>bold</b>"}`, contract.RawUnknownType},
+		{"system subtype that is no name", `{"type":"system","subtype":"two words"}`, contract.RawUnknownType},
 		{"tool progress heartbeat", `{"type":"tool_progress","tool_use_id":"toolu_1-heartbeat-0","tool_name":"Bash","elapsed_time_seconds":30,"heartbeat":true}`, contract.RawUnsupported},
 		{"assistant without message", `{"type":"assistant"}`, contract.RawUnsupported},
 		{"assistant with empty content", `{"type":"assistant","message":{"id":"msg_1","content":[]}}`, contract.RawUnsupported},
@@ -74,9 +73,33 @@ func TestLineTypesAndRawReasons(t *testing.T) {
 	}
 }
 
+func TestUnknownKindsAreNamedNotices(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		name string
+		line string
+		want string
+	}{
+		{"unknown type", `{"type":"example_future_type","data":1}`, "example_future_type"},
+		{"unknown system subtype", `{"type":"system","subtype":"example_future_subtype"}`, "example_future_subtype"},
+		{"system without subtype", `{"type":"system"}`, "system"},
+		{"partial message", `{"type":"stream_event","event":{"type":"message_start"}}`, "stream_event"},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			life := only(t, normalize(t, c.line), contract.KindLifecycle).Lifecycle
+			if life.Phase != contract.LifecycleRunnerNotice || life.Subtype != c.want ||
+				life.Detail != nil || life.IsError != nil {
+				t.Errorf("lifecycle = %+v, want a runner notice named %s and nothing else", life, c.want)
+			}
+		})
+	}
+}
+
 func TestRawTextIsBounded(t *testing.T) {
 	t.Parallel()
-	line := `{"type":"example_future_type","data":"` + strings.Repeat("é", contract.MaxRawBytes) + `"}`
+	line := `{"type":"assistant","data":"` + strings.Repeat("é", contract.MaxRawBytes) + `"}`
 	raw := only(t, normalize(t, line), contract.KindRaw)
 	if len(raw.Raw.Text) > contract.MaxRawBytes || raw.Raw.Bytes != int64(len(line)) {
 		t.Errorf("raw text is %d bytes for a %d-byte line, bytes = %d", len(raw.Raw.Text), len(line), raw.Raw.Bytes)

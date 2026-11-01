@@ -137,7 +137,11 @@ bounds them), `turn_started`, `turn_completed`, `turn_failed`, `compacted`,
 line; a conversation shows a batch of them as one indicator),
 `session_completed` (`subtype`, `isError`, `stopReason`) and
 `rate_limit_status` (`subtype` is the status, `detail` is the runner's rate
-limit information) from the runner; `limit_hit` for the
+limit information) and `runner_notice` (any other line the runner printed:
+`subtype` is the runner's name for its kind, a system line's subtype or the
+line's own type, `detail?` the text it carried, `exitCode?` a hook's exit
+code, `isError?` when it reports something going wrong; a kind the adapter
+does not know has only its name) from the runner; `limit_hit` for the
 `---KELOS_LIMIT_HIT---` line; `kelos_outputs` for the
 `---KELOS_OUTPUTS_START---` block, one `outputs` entry per `key: value`
 line, values as written (`response` stays base64).

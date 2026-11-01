@@ -104,7 +104,25 @@ describe('Conversation over the runner fixtures', () => {
     const raws = [...root.querySelectorAll<HTMLDetailsElement>('details.raw')];
     expect(raws.length).toBeGreaterThan(0);
     expect(raws.every((d) => !d.open)).toBe(true);
-    expect(texts(root, '.raw .label')).toContain('Malformed JSON line');
+    expect(texts(root, '.raw.damaged .label')).toContain('Damaged line');
+    expect(texts(root, '.raw.damaged summary').join('\n')).toContain('Malformed JSON line');
+  });
+
+  it('shows runner notices on one line each, until the reader hides them', async () => {
+    const root = show(findFixture('claude-code', 'runner-notices').snapshot);
+    const names = () => texts(root, '.runner-notice .name');
+    expect(names()).toContain('system · hook_response');
+    expect(names()).toContain('system · example_future_notice');
+    // A notice that reports a failure is marked, and stays when notices are hidden.
+    const denied = [...root.querySelectorAll('.runner-notice.failed')].map((n) => n.textContent);
+    expect(denied.join('\n')).toContain('permission_denied');
+    const hide = root.querySelector<HTMLInputElement>('input[type="checkbox"]');
+    if (!hide) throw new Error('no checkbox');
+    expect(hide.checked).toBe(false);
+    await userEvent.click(hide);
+    await expect.poll(() => names()).not.toContain('system · hook_response');
+    expect(names().some((n) => n.includes('permission_denied'))).toBe(true);
+    expect(root.textContent).toContain('make build');
   });
 });
 

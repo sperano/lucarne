@@ -325,14 +325,19 @@ describe('Inspector diagnostics', () => {
       loadSource: fixtureSource('claude-code', 'malformed-lines'),
     });
     await userEvent.click(kindBox(root, 'Raw line'));
-    const raws = snapshot.events.filter((e) => e.kind === 'raw');
-    expect(rows(root)).toHaveLength(raws.length);
-    for (const reason of ['malformed_json', 'unknown_type'] as const) {
-      const raw = raws.find((e) => e.raw.reason === reason);
-      const row = rows(root).find((r) => r.dataset.event === raw?.id);
-      if (!raw || !row) throw new Error(`no ${reason} row`);
+    await userEvent.click(kindBox(root, 'Lifecycle'));
+    const listed = snapshot.events.filter((e) => e.kind === 'raw' || e.kind === 'lifecycle');
+    expect(rows(root)).toHaveLength(listed.length);
+    const malformed = listed.find((e) => e.kind === 'raw' && e.raw.reason === 'malformed_json');
+    // A type no adapter knows is a runner notice that only names it: the source line says the rest.
+    const unknown = listed.find(
+      (e) => e.kind === 'lifecycle' && e.lifecycle.subtype === 'example_future_type',
+    );
+    for (const event of [malformed, unknown]) {
+      const row = rows(root).find((r) => r.dataset.event === event?.id);
+      if (!event || !row) throw new Error('no row for an unknown record or malformed input');
       await userEvent.click(row);
-      const written = lines[raw.source.line - 1] ?? '';
+      const written = lines[event.source.line - 1] ?? '';
       await expect
         .poll(() => sourceCode(root).replace(/\s+/g, ''))
         .toBe(written.replace(/\s+/g, ''));

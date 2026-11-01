@@ -10,6 +10,7 @@ import (
 const millisecondsPerSecond int64 = 1000
 
 type taskProgressLine struct {
+	TaskID         string `json:"task_id"`
 	ToolUseID      string `json:"tool_use_id"`
 	Status         string `json:"status"`
 	Description    string `json:"description"`
@@ -32,11 +33,12 @@ type toolProgressLine struct {
 	ElapsedTimeSecond *int64 `json:"elapsed_time_seconds"`
 }
 
-func renderTaskProgress(subtype string, text []byte, out *adapter.Emitter) bool {
+func (p *Parser) renderTaskProgress(subtype string, text []byte, out *adapter.Emitter) bool {
 	var line taskProgressLine
 	if json.Unmarshal(text, &line) != nil || line.ToolUseID == "" {
 		return false
 	}
+	p.trackTask(subtype, line)
 	switch subtype {
 	case subtypeTaskProgress:
 		out.Emit(toolProgress(
@@ -52,6 +54,19 @@ func renderTaskProgress(subtype string, text []byte, out *adapter.Emitter) bool 
 		))
 	}
 	return true
+}
+
+// trackTask remembers which call a task runs for while it runs, and
+// forgets it when its notification ends it.
+func (p *Parser) trackTask(subtype string, line taskProgressLine) {
+	if line.TaskID == "" {
+		return
+	}
+	if subtype == subtypeTaskNotification {
+		p.tasks.close(line.TaskID)
+		return
+	}
+	p.tasks.open(line.TaskID, line.ToolUseID)
 }
 
 // durationMs is the task's elapsed time a task_progress line reports, nil
@@ -105,7 +120,7 @@ func progressPhase(status string) contract.ToolProgressPhase {
 		return contract.ToolProgressCompleted
 	case "failed":
 		return contract.ToolProgressFailed
-	case "killed":
+	case "killed", "stopped":
 		return contract.ToolProgressKilled
 	default:
 		return contract.ToolProgressUnknown
