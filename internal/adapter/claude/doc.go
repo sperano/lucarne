@@ -2,7 +2,7 @@
 // --output-format stream-json --verbose, as Kelos starts it) into transcript
 // events. It is an adapter.Runner: it sees every line that is not blank,
 // oversized or a Kelos marker, and keeps only the IDs of tool calls waiting
-// for their result.
+// for their result and of background tasks still running.
 //
 // What each line becomes:
 //
@@ -20,6 +20,29 @@
 //     status the source reports. A task_progress line (a subagent's running
 //     report) is running, its usage.duration_ms the elapsed time, its
 //     description the detail and its subagent_type the subtype.
+//   - system/task_updated: tool progress for the call whose task_started
+//     (or task_progress) line named the task, until a terminal status or
+//     its task_notification ends it: pending, running and paused are
+//     running, completed, failed and killed are themselves (a
+//     task_notification's stopped is killed). The patch's error, else its
+//     description, is the detail; end_time stays in the source line, as
+//     the log gives no start time to measure it from. A task the log did
+//     not start, or a patch without a status, is a runner notice instead.
+//   - runner notices, one runner_notice lifecycle event each, whose subtype
+//     is the system subtype, or the line type for tool_use_summary and
+//     auth_status: hook_started, hook_progress and hook_response (the
+//     hook's name, an outcome other than success, its output; exit_code as
+//     exitCode; error outcome as isError), status (compacting, a
+//     compaction's result and error), informational, notification,
+//     local_command_output, tool_use_summary, session_state_changed and
+//     worker_shutting_down (their text), memory_recall (the paths),
+//     files_persisted (the files, then those that failed), plugin_install,
+//     background_tasks_changed (the tasks' descriptions), and, as errors,
+//     model_refusal_fallback and model_refusal_no_fallback (the CLI's text,
+//     the model it fell back to), mirror_error, permission_denied (the tool
+//     and the message) and auth_status with an error. A notice line of the
+//     wrong shape is its kind's notice without detail, still an error for
+//     the kinds that always report one.
 //   - rate_limit_event: a rate_limit_status lifecycle event whose subtype is
 //     the status, whose sessionId is the source session and whose detail is
 //     rate_limit_info as written.
@@ -44,11 +67,15 @@
 //   - result: a session_completed lifecycle event, the session's usage
 //     (tokens, total_cost_usd as a decimal string, durations, turns), and an
 //     error per errors entry.
-//   - anything else is raw: stream_event (partial messages, which Kelos does
-//     not ask for) as unsupported, other types and system subtypes as
-//     unknown_type, a line that does not parse as malformed_json, and text as
-//     text. A content block the parser does not render is raw too, as its own
-//     event of the line.
+//   - a type or system subtype the parser does not know (stream_event,
+//     partial messages Kelos does not ask for, among them) is a runner
+//     notice that only names it; the inspector shows the line itself. A
+//     type or subtype that is not a name (markup, words) stays raw as
+//     unknown_type.
+//   - anything else is raw: a known type of the wrong shape as unsupported,
+//     an object without a string type as unknown_type, a line that does not
+//     parse as malformed_json, and text as text. A content block the parser
+//     does not render is raw too, as its own event of the line.
 //
 // Capability gaps of Claude Code 2.1.296 as Kelos runs it, and of this
 // adapter:
@@ -72,7 +99,8 @@
 //     documents of assistant messages, and the edits of NotebookEdit
 //     or of tools other than Edit, MultiEdit and Write. Background monitoring
 //     is correlated through tool_use_id; its runner task/run IDs, output
-//     file, and a subagent's token and tool-use counts and last tool remain
+//     file, a task's end time and paused time, and a subagent's token and
+//     tool-use counts and last tool remain
 //     available in the source line rather than the normalized event.
 //   - Times: a line's timestamp field, when present, is its runnerTime; the
 //     fixtures carry none, so which lines have one is unverified.

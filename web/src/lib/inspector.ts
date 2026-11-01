@@ -156,8 +156,12 @@ function summaryOf(event: Exclude<TranscriptEvent, EventOf<'tool_call' | 'tool_r
 }
 
 function lifecycleSummary(l: Lifecycle): string {
-  const detail = l.model ?? l.subtype ?? l.stopReason ?? l.detail;
   const label = LIFECYCLE_LABELS[l.phase];
+  if (l.phase === 'runner_notice') {
+    const said = [l.subtype, l.detail].filter((part) => part !== undefined && part !== '');
+    return said.length === 0 ? label : `${label}: ${firstLine(said.join(' · '))}`;
+  }
+  const detail = l.model ?? l.subtype ?? l.stopReason ?? l.detail;
   return detail === undefined ? label : `${label}: ${firstLine(detail)}`;
 }
 

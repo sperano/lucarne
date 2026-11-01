@@ -97,17 +97,32 @@
     },
     "toolProgress": {
       "callId": "toolu_01ExampleLint",
-      "phase": "completed",
-      "detail": "npm run lint \u0026\u0026 npm test"
+      "phase": "completed"
     }
   },
   {
     "seq": 7,
     "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0:9bb0866b7f2feb7a:7:0",
     "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0",
-    "kind": "tool_result",
+    "kind": "tool_progress",
     "source": {
       "line": 7,
+      "part": 0,
+      "type": "system"
+    },
+    "toolProgress": {
+      "callId": "toolu_01ExampleLint",
+      "phase": "completed",
+      "detail": "npm run lint \u0026\u0026 npm test"
+    }
+  },
+  {
+    "seq": 8,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0:9bb0866b7f2feb7a:8:0",
+    "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0",
+    "kind": "tool_result",
+    "source": {
+      "line": 8,
       "part": 0,
       "type": "user"
     },
@@ -118,12 +133,12 @@
     }
   },
   {
-    "seq": 8,
-    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0:9bb0866b7f2feb7a:8:0",
+    "seq": 9,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0:9bb0866b7f2feb7a:9:0",
     "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0",
     "kind": "message",
     "source": {
-      "line": 8,
+      "line": 9,
       "part": 0,
       "type": "assistant"
     },
@@ -135,12 +150,12 @@
     }
   },
   {
-    "seq": 9,
-    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0:9bb0866b7f2feb7a:8:1",
+    "seq": 10,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0:9bb0866b7f2feb7a:9:1",
     "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0",
     "kind": "usage",
     "source": {
-      "line": 8,
+      "line": 9,
       "part": 1,
       "type": "assistant"
     },
@@ -153,12 +168,12 @@
     }
   },
   {
-    "seq": 10,
-    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0:9bb0866b7f2feb7a:9:0",
+    "seq": 11,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0:9bb0866b7f2feb7a:10:0",
     "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0",
     "kind": "lifecycle",
     "source": {
-      "line": 9,
+      "line": 10,
       "part": 0,
       "type": "result"
     },
@@ -170,12 +185,12 @@
     }
   },
   {
-    "seq": 11,
-    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0:9bb0866b7f2feb7a:9:1",
+    "seq": 12,
+    "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0:9bb0866b7f2feb7a:10:1",
     "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0",
     "kind": "usage",
     "source": {
-      "line": 9,
+      "line": 10,
       "part": 1,
       "type": "result"
     },

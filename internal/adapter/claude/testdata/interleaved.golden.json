@@ -177,16 +177,15 @@
     "seq": 11,
     "id": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0:7e7ff0a245dfcf07:10:0",
     "attempt": "7c9d0e1f-2a3b-4c5d-9e6f-7a8b9c0d1e2f.claude-code.0",
-    "kind": "raw",
+    "kind": "lifecycle",
     "source": {
       "line": 10,
       "part": 0,
       "type": "stream_event"
     },
-    "raw": {
-      "reason": "unsupported",
-      "text": "{\"type\":\"stream_event\",\"event\":{\"type\":\"content_block_delta\",\"index\":0,\"delta\":{\"type\":\"text_delta\",\"text\":\"Both files\"}},\"parent_tool_use_id\":null,\"session_id\":\"0b1c2d3e-4f50-4617-8293-a4b5c6d7e8f9\",\"uuid\":\"00000000-0000-4000-8000-000000000033\"}",
-      "bytes": 246
+    "lifecycle": {
+      "phase": "runner_notice",
+      "subtype": "stream_event"
     }
   },
   {

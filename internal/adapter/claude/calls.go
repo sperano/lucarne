@@ -43,6 +43,12 @@ func (c *openCalls) compact() {
 	c.order = open
 }
 
+// lookup returns an open call's tool name and whether the call is open.
+func (c *openCalls) lookup(id string) (string, bool) {
+	name, ok := c.names[id]
+	return name, ok
+}
+
 // close forgets a call and returns its tool's name, empty when it is not
 // open.
 func (c *openCalls) close(id string) string {

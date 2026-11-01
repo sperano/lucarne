@@ -137,14 +137,20 @@ bounds them), `turn_started`, `turn_completed`, `turn_failed`, `compacted`,
 line; a conversation shows a batch of them as one indicator),
 `session_completed` (`subtype`, `isError`, `stopReason`) and
 `rate_limit_status` (`subtype` is the status, `detail` is the runner's rate
-limit information) from the runner; `limit_hit` for the
+limit information) and `runner_notice` (any other line the runner printed:
+`subtype` is the runner's name for its kind, a system line's subtype or the
+line's own type, `detail?` the text it carried, `exitCode?` a hook's exit
+code, `isError?` when it reports something going wrong; a kind the adapter
+does not know has only its name) from the runner; `limit_hit` for the
 `---KELOS_LIMIT_HIT---` line; `kelos_outputs` for the
 `---KELOS_OUTPUTS_START---` block, one `outputs` entry per `key: value`
 line, values as written (`response` stays base64).
 
 Raw reasons: `text` (not JSON: startup output, stderr), `malformed_json`
 (looks like JSON, does not parse; a cut line), `unknown_type` (JSON of a type
-no adapter knows), `unsupported` (a known type the adapter does not render),
+no adapter knows; an adapter that names unknown kinds as a `runner_notice`
+keeps it for a line without a string type or whose kind is not a name, such as
+markup), `unsupported` (a known type the adapter does not render),
 `oversized` (longer than `maxLineBytes`; `text` is its start).
 
 Gap reasons: `source_truncated` (the log's start is gone), `read_interrupted`

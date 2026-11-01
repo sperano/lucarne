@@ -5,6 +5,7 @@
   let {
     query = $bindable(''),
     filter = $bindable('all'),
+    hideNotices = $bindable(false),
     matches,
     current,
     scope,
@@ -12,6 +13,8 @@
   }: {
     query?: string;
     filter?: ItemFilter;
+    /** Whether the runner's notices (hooks, statuses, kinds no adapter knows) are left out. */
+    hideNotices?: boolean;
     /** How many items match the query. */
     matches: number;
     /** The 0-based position of the result shown among the matches, if one is. */
@@ -65,6 +68,10 @@
       {/each}
     </select>
   </label>
+  <label class="field">
+    <input type="checkbox" bind:checked={hideNotices} />
+    Hide runner notices
+  </label>
   <p class="scope muted">{scope}</p>
 </div>
 
@@ -85,7 +92,7 @@
   select {
     font: inherit;
   }
-  input {
+  input[type='search'] {
     width: 18rem;
   }
   .count {

@@ -112,6 +112,7 @@ export const LIFECYCLE_LABELS: Record<LifecyclePhase, string> = {
   thinking: 'Thinking',
   session_completed: 'Session completed',
   rate_limit_status: 'Rate limit status',
+  runner_notice: 'Runner notice',
   limit_hit: 'Usage limit hit',
   kelos_outputs: 'Kelos outputs',
 };

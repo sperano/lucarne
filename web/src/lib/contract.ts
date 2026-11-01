@@ -95,6 +95,7 @@ export const LIFECYCLE_PHASES = [
   'thinking',
   'session_completed',
   'rate_limit_status',
+  'runner_notice',
   'limit_hit',
   'kelos_outputs',
 ] as const;

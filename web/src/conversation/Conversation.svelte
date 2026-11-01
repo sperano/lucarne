@@ -1,7 +1,8 @@
 <script lang="ts">
   import { formatCount } from '../lib/format';
-  import { shownItems } from '../lib/conversation';
+  import { shownItems, type Item } from '../lib/conversation';
   import type { Connection } from '../lib/live';
+  import { withoutNotices } from '../lib/notices';
   import type { RunView } from '../lib/runstore';
   import { passes, search, type ItemFilter } from '../lib/search';
   import { attemptOfEvent, selectAttempt, type Selection } from '../lib/selection';
@@ -73,13 +74,11 @@
 
   let query = $state('');
   let filter: ItemFilter = $state('all');
+  // Runner notices are shown unless the reader hides them.
+  let hideNotices = $state(false);
   let current: string | undefined = $state();
   let request: Target | undefined = $state();
-  const items = $derived(
-    conversation
-      ? shownItems(conversation.items).filter((i) => filter === 'all' || passes(i, filter))
-      : [],
-  );
+  const items = $derived(conversation ? visibleItems(conversation.items, filter, hideNotices) : []);
   const matches = $derived(search(items, query));
   const matchSet = $derived(new Set(matches));
   const currentIndex = $derived.by(() => {
@@ -92,6 +91,13 @@
   );
   const scope = $derived(scopeOf(items.length, view.stream.droppedEvents, live));
 
+  function visibleItems(all: readonly Item[], shownFilter: ItemFilter, hide: boolean): Item[] {
+    const shown = shownItems(all);
+    return (hide ? withoutNotices(shown) : shown).filter(
+      (i) => shownFilter === 'all' || passes(i, shownFilter),
+    );
+  }
+
   function step(direction: 1 | -1): void {
     if (matches.length === 0) return;
     const at = currentIndex ?? (direction === 1 ? -1 : 0);
@@ -102,7 +108,7 @@
   }
 
   function scopeOf(count: number, dropped: number, more: boolean): string {
-    const what = filter === 'all' ? 'items' : 'items the filter shows';
+    const what = filter === 'all' && !hideNotices ? 'items' : 'items shown';
     const parts = [
       `Searches the ${formatCount(count)} ${what} of this attempt, collapsed content included`,
     ];
@@ -149,6 +155,7 @@
     <Finder
       bind:query
       bind:filter
+      bind:hideNotices
       matches={matches.length}
       current={currentIndex}
       {scope}
@@ -161,6 +168,7 @@
         limits={view.limits}
         {target}
         {filter}
+        {hideNotices}
         matches={matchSet}
         {current}
         {live}

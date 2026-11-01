@@ -20,7 +20,7 @@ var knownScenarios = []string{
 	"truncated_line", "non_json_line", "unknown_event", "unknown_item",
 	"kelos_outputs", "todo", "mcp_tool", "compaction", "duplicate_keys",
 	"parallel_tools", "subagent", "partial_message", "duplicate_line",
-	"duplicate_update", "cancelled_tool", "background_task",
+	"duplicate_update", "cancelled_tool", "background_task", "runner_notice",
 }
 
 // requiredScenarios must each be covered by a runner's fixtures at the

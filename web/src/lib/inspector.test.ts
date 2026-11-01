@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { eventMaker } from '../dev/events';
-import type { Media } from './contract';
+import type { Lifecycle, Media } from './contract';
 import { FIXTURE_RUNS } from '../dev/fixtures';
 import { buildConversation } from './conversation';
 import {
@@ -131,6 +131,23 @@ describe('rowOf', () => {
       'User: 1 image, 1 document',
     );
     expect(summary('Plain')).toBe('User: Plain');
+  });
+
+  it('summarizes a runner notice by its kind and the first line of its detail', () => {
+    const notice = (lifecycle: Omit<Lifecycle, 'phase'>) => {
+      const event = make({
+        kind: 'lifecycle',
+        lifecycle: { phase: 'runner_notice', ...lifecycle },
+      });
+      return rowOf(event, buildConversation([event], ATTEMPT), 'ended').summary;
+    };
+    expect(notice({ subtype: 'hook_response', detail: 'command allowed' })).toBe(
+      'Runner notice: hook_response · command allowed',
+    );
+    expect(notice({})).toBe('Runner notice');
+    expect(notice({ subtype: 'hook_response', detail: 'PreToolUse:Bash\n\nallowed' })).toBe(
+      'Runner notice: hook_response · PreToolUse:Bash',
+    );
   });
 
   it('cuts a long summary', () => {

@@ -4,6 +4,7 @@
 // arrive, a line repeats and the stream breaks and resumes.
 import type { Browser, Locator, Page } from 'playwright';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
+import { fixtureLines } from '../src/dev/sources';
 import {
   claudeInit,
   claudeText,
@@ -57,21 +58,28 @@ describe('the inspector’s diagnostics', () => {
     const watched = await open(browser, `${r.link}?${INSPECTOR_QUERY}`);
     const { page } = watched;
     await kind(page, 'Raw line').check();
-    const raws = snap.events.filter((e) => e.kind === 'raw');
-    await eventually(() => options(page).count()).toBe(raws.length);
-    for (const reason of ['malformed_json', 'unknown_type'] as const) {
-      const raw = raws.find((e) => e.raw.reason === reason);
-      if (!raw) throw new Error(`no ${reason} event`);
-      await eventRow(page, raw.id).click();
+    await kind(page, 'Lifecycle').check();
+    const listed = snap.events.filter((e) => e.kind === 'raw' || e.kind === 'lifecycle');
+    await eventually(() => options(page).count()).toBe(listed.length);
+    const malformed = listed.find((e) => e.kind === 'raw' && e.raw.reason === 'malformed_json');
+    // A type no adapter knows is a runner notice that only names it: the source line says the rest.
+    const unknown = listed.find(
+      (e) => e.kind === 'lifecycle' && e.lifecycle.subtype === 'example_future_type',
+    );
+    if (malformed?.kind !== 'raw' || !unknown) throw new Error('no malformed or unknown line');
+    const unknownLine = fixtureLines('claude-code', 'malformed-lines')[unknown.source.line - 1];
+    for (const [event, written] of [
+      // The line as the runner wrote it: the raw event holds the same text, uncut.
+      [malformed, malformed.raw.text],
+      [unknown, unknownLine],
+    ] as const) {
+      await eventRow(page, event.id).click();
       const formatted = eventDetail(page).getByLabel('Formatted');
       await visible(sourceText(page));
       if (await formatted.isVisible()) await formatted.uncheck();
-      // The line as the runner wrote it: the raw event holds the same text, uncut.
-      await eventually(() => sourceText(page).innerText()).toBe(raw.raw.text);
+      await eventually(() => sourceText(page).innerText()).toBe(written);
     }
-    expect(new URL(page.url()).hash).toBe(
-      `#event=${raws.find((e) => e.raw.reason === 'unknown_type')?.id ?? ''}`,
-    );
+    expect(new URL(page.url()).hash).toBe(`#event=${unknown.id}`);
     await close(watched);
   });
 

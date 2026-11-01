@@ -3,6 +3,7 @@
   import type { EventOf } from '../lib/conversation';
   import { formatBytes, utf8Length } from '../lib/format';
   import { RAW_REASON_LABELS } from '../lib/labels';
+  import { isDamaged } from '../lib/notices';
   import Truncated from './Truncated.svelte';
 
   let {
@@ -14,6 +15,8 @@
   const raw = $derived(event.raw);
   // text holds the start of a longer line when the source line passed maxRawBytes.
   const held = $derived(utf8Length(raw.text));
+  // A damaged line is part of the transcript that cannot be shown; any other is a runner notice.
+  const damaged = $derived(isDamaged(event));
 </script>
 
 {#if raw.reason === 'text'}
@@ -22,10 +25,17 @@
     <pre>{raw.text}</pre>
   </figure>
 {:else}
-  <details class="raw" {open}>
+  <details class="raw" class:damaged {open}>
     <summary>
-      <span class="label">{RAW_REASON_LABELS[raw.reason]}</span>
-      <span class="muted">{formatBytes(raw.bytes)}, line {event.source.line}</span>
+      {#if damaged}
+        <span class="mark" aria-hidden="true">⚠</span>
+        <span class="label">Damaged line</span>
+        <span>{RAW_REASON_LABELS[raw.reason]}</span>
+      {:else}
+        <span class="name">{event.source.type ?? 'line'}</span>
+        <span>shown as written</span>
+      {/if}
+      <span>{formatBytes(raw.bytes)}, line {event.source.line}</span>
     </summary>
     <pre>{raw.text}</pre>
     {#if held < raw.bytes}
@@ -47,9 +57,20 @@
   .raw summary {
     cursor: pointer;
     color: var(--text-muted);
-    font-size: 0.875rem;
+    font-size: 0.8125rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
-  .label {
+  .raw summary > span + span {
+    margin-left: 0.75rem;
+  }
+  .name {
+    font-family: var(--font-code);
+  }
+  .damaged .mark,
+  .damaged .label {
+    color: var(--error);
     font-weight: 600;
   }
 </style>

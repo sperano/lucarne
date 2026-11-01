@@ -3,6 +3,7 @@
   import type { CoverageState, Limits } from '../lib/contract';
   import { shownItems, type Conversation, type Item } from '../lib/conversation';
   import { formatCount } from '../lib/format';
+  import { withoutNotices } from '../lib/notices';
   import { passes, type ItemFilter } from '../lib/search';
   import {
     earlier,
@@ -23,6 +24,7 @@
     limits,
     target,
     filter = 'all',
+    hideNotices = false,
     matches = new Set<string>(),
     current,
     live = false,
@@ -34,6 +36,8 @@
     /** The event to show: a #event= link's, or a search result's; it must be in conversation. */
     target: Target | undefined;
     filter?: ItemFilter;
+    /** Whether the runner's notices are left out, but for the target's. */
+    hideNotices?: boolean;
     /** The IDs of the items the search matches. */
     matches?: ReadonlySet<string>;
     /** The ID of the search result shown. */
@@ -59,10 +63,17 @@
   const growing = $derived(live && coverage === 'following');
   const lastId = $derived(conversation.items.at(-1)?.id);
   const visible: readonly Item[] = $derived.by(() => {
-    const items = shownItems(conversation.items, targetId);
+    const shown = shownItems(conversation.items, targetId);
+    const items = hideNotices ? withoutNotices(shown, targetId) : shown;
     return filter === 'all' ? items : items.filter((i) => passes(i, filter));
   });
   const total = $derived(visible.length);
+  // Why nothing is shown: no item yet, only the notices the reader hid, or the filter.
+  const emptyText = $derived.by(() => {
+    if (conversation.items.length === 0) return 'No events yet.';
+    if (filter === 'all' && hideNotices) return 'Only runner notices, which are hidden.';
+    return 'No item passes the filter.';
+  });
   const positionOf = $derived(new Map(visible.map((item, i) => [item.id, i])));
 
   // A running attempt opens at its end, following; a finished one at its start.
@@ -232,7 +243,7 @@
   <nav class="controls" aria-label="Transcript position">
     <span class="muted" aria-live="polite">
       {#if total === 0}
-        {filter === 'all' ? 'No events yet.' : 'No item passes the filter.'}
+        {emptyText}
       {:else}
         Items {formatCount(range.start + 1)}–{formatCount(range.end)} of {formatCount(total)}
       {/if}

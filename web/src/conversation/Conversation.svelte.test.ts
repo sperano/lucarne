@@ -104,7 +104,78 @@ describe('Conversation over the runner fixtures', () => {
     const raws = [...root.querySelectorAll<HTMLDetailsElement>('details.raw')];
     expect(raws.length).toBeGreaterThan(0);
     expect(raws.every((d) => !d.open)).toBe(true);
-    expect(texts(root, '.raw .label')).toContain('Malformed JSON line');
+    expect(texts(root, '.raw.damaged .label')).toContain('Damaged line');
+    expect(texts(root, '.raw.damaged summary').join('\n')).toContain('Malformed JSON line');
+  });
+
+  it('shows runner notices on one line each, until the reader hides them', async () => {
+    const root = show(findFixture('claude-code', 'runner-notices').snapshot);
+    const names = () => texts(root, '.runner-notice .name');
+    expect(names()).toContain('system · hook_response');
+    expect(names()).toContain('system · example_future_notice');
+    // Only the notices that report a failure are marked, and they stay when notices are hidden.
+    const failed = ['system · files_persisted', 'system · permission_denied'];
+    expect(texts(root, '.runner-notice.failed .name')).toEqual(failed);
+    expect(texts(root, '.runner-notice .mark').length).toBe(failed.length);
+    expect(texts(root, '.runner-notice.failed .mark[aria-hidden="true"]').length).toBe(
+      failed.length,
+    );
+    const hide = root.querySelector<HTMLInputElement>('input[type="checkbox"]');
+    if (!hide) throw new Error('no checkbox');
+    expect(hide.checked).toBe(false);
+    await userEvent.click(hide);
+    await expect.poll(() => names()).not.toContain('system · hook_response');
+    expect(names().some((n) => n.includes('permission_denied'))).toBe(true);
+    expect(root.textContent).toContain('make build');
+  });
+
+  it('shows a notice with its facts, and its whole detail on demand', async () => {
+    const root = show(findFixture('claude-code', 'runner-notices').snapshot);
+    const hook = [...root.querySelectorAll('.runner-notice')].find(
+      (n) => n.querySelector('.name')?.textContent === 'system · hook_response',
+    );
+    const details = hook?.querySelector('details');
+    if (!details) throw new Error('no expandable hook_response notice');
+    expect(details.querySelector('summary .first')?.textContent).toBe('PreToolUse:Bash');
+    expect(texts(details, 'summary .fact')).toEqual(['exit code 0']);
+    expect(details.open).toBe(false);
+    const block = details.querySelector<HTMLElement>('.output');
+    expect(block?.querySelector('figcaption')?.textContent).toBe('Detail');
+    expect(block?.checkVisibility()).toBe(false);
+    await userEvent.click(details.querySelector('summary') ?? details);
+    expect(details.open).toBe(true);
+    expect(block?.checkVisibility()).toBe(true);
+    expect(block?.textContent).toContain('command allowed');
+  });
+
+  it('shows the model a notice names as a fact', () => {
+    const root = show(
+      snapshotWith([
+        {
+          kind: 'lifecycle',
+          lifecycle: {
+            phase: 'runner_notice',
+            subtype: 'model_refusal_fallback',
+            model: 'claude-example-1',
+          },
+        },
+      ]),
+    );
+    expect(texts(root, '.runner-notice .fact')).toEqual(['model claude-example-1']);
+  });
+
+  it('shows a line no adapter rendered as written, not as damaged', () => {
+    const event = eventMaker()({
+      kind: 'raw',
+      raw: { reason: 'unsupported', text: '{"type":"novel"}', bytes: 16 },
+    });
+    const typed = { ...event, source: { ...event.source, type: 'novel' } };
+    const root = show(snapshotOf('claude-code', 'example-run', [typed]));
+    const raw = root.querySelector('details.raw');
+    expect(raw?.classList.contains('damaged')).toBe(false);
+    expect(raw?.querySelector('.name')?.textContent).toBe('novel');
+    expect(raw?.querySelector('summary')?.textContent).toContain('shown as written');
+    expect(root.textContent).not.toContain('Damaged line');
   });
 });
 
@@ -151,6 +222,41 @@ describe('Conversation states', () => {
     expect(root.textContent).toContain('The log of this attempt is gone');
     expect(root.textContent).toContain('pod deleted');
     expect(root.textContent).toContain('The 40 oldest events of this run were dropped');
+  });
+
+  it('says an attempt has no events yet, even with notices hidden', async () => {
+    const root = show(snapshotWith([]));
+    expect(root.textContent).toContain('No events yet.');
+    const hide = root.querySelector<HTMLInputElement>('input[type="checkbox"]');
+    if (!hide) throw new Error('no checkbox');
+    await userEvent.click(hide);
+    await expect.poll(() => hide.checked).toBe(true);
+    expect(root.textContent).toContain('No events yet.');
+    expect(root.textContent).not.toContain('No item passes the filter.');
+  });
+
+  it('says an empty attempt has no events yet, whatever the filter', async () => {
+    const root = show(snapshotWith([]));
+    const select = root.querySelector<HTMLSelectElement>('.finder select');
+    if (!select) throw new Error('no filter');
+    await userEvent.selectOptions(select, 'errors');
+    await expect.poll(() => select.value).toBe('errors');
+    expect(root.textContent).toContain('No events yet.');
+    expect(root.textContent).not.toContain('No item passes the filter.');
+  });
+
+  it('says the only items are the runner notices it hides', async () => {
+    const notice: EventBody = {
+      kind: 'lifecycle',
+      lifecycle: { phase: 'runner_notice', subtype: 'hook_response' },
+    };
+    const root = show(snapshotWith([notice, notice]));
+    const hide = root.querySelector<HTMLInputElement>('input[type="checkbox"]');
+    if (!hide) throw new Error('no checkbox');
+    await userEvent.click(hide);
+    await expect.poll(() => root.textContent).toContain('Only runner notices, which are hidden.');
+    expect(root.textContent).not.toContain('No item passes the filter.');
+    expect(root.textContent).not.toContain('No events yet.');
   });
 
   it('says a run has no attempt yet', () => {

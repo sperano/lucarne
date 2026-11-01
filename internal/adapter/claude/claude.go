@@ -2,6 +2,7 @@ package claude
 
 import (
 	"encoding/json"
+	"regexp"
 	"time"
 
 	"github.com/sperano/lucarne/contract"
@@ -16,10 +17,6 @@ const (
 	typeResult    = "result"
 	// typeRateLimit reports the account's rate limit status.
 	typeRateLimit = "rate_limit_event"
-	// typeStreamEvent is a partial message, printed only with
-	// --include-partial-messages, which Kelos does not pass; the complete
-	// content block follows as an assistant line.
-	typeStreamEvent = "stream_event"
 	// typeToolProgress is a heartbeat the CLI prints while a tool call (a
 	// long Bash command, say) is still running; it carries the only elapsed
 	// time for that call, which tool_use and tool_result do not.
@@ -41,25 +38,30 @@ const (
 	// subtypeTaskProgress is a subagent's running report: its description,
 	// type, elapsed time and token and tool counts so far.
 	subtypeTaskProgress = "task_progress"
+	// subtypeTaskUpdated is a change of a task's state; it names the task,
+	// not the tool call.
+	subtypeTaskUpdated = "task_updated"
 )
 
-// renderedSubtypes are the system subtypes the parser renders.
+// renderedSubtypes are the system subtypes the parser renders, runner
+// notices aside.
 var renderedSubtypes = map[string]bool{
 	subtypeInit: true, subtypeAPIRetry: true, subtypeCompactBoundary: true, subtypeThinkingTokens: true,
-	subtypeTaskStarted: true, subtypeTaskNotification: true, subtypeTaskProgress: true,
+	subtypeTaskStarted: true, subtypeTaskNotification: true, subtypeTaskProgress: true, subtypeTaskUpdated: true,
 }
 
-// unsupportedTypes are line types the parser knows and does not render.
-var unsupportedTypes = map[string]bool{typeStreamEvent: true}
-
 // Parser normalizes Claude Code stream-json lines. It is an adapter.Runner;
-// it keeps only the tool calls still waiting for their result.
+// it keeps only the tool calls still waiting for their result and the
+// background tasks still running.
 type Parser struct {
 	calls *openCalls
+	// tasks maps the ID of each background task still running to the tool
+	// call it runs for, which task_updated lines do not name.
+	tasks *openCalls
 }
 
 // New returns a Parser for one attempt's log.
-func New() *Parser { return &Parser{calls: newOpenCalls()} }
+func New() *Parser { return &Parser{calls: newOpenCalls(), tasks: newOpenCalls()} }
 
 // head is what every stream-json line may carry, decoded first.
 type head struct {
@@ -77,17 +79,36 @@ func (p *Parser) Line(text []byte, out *adapter.Emitter) {
 	out.SetSource(h.Type, runnerTime(h.Timestamp))
 	before := out.Len()
 	if !p.render(h, text, out) || out.Len() == before {
-		out.RawLine(rawReason(h))
+		unrendered(h, out)
 	}
+}
+
+// kindNamePattern is what a kind's name looks like: a name, not markup or
+// prose, which a runner notice could not show as one.
+var kindNamePattern = regexp.MustCompile(`^[A-Za-z][A-Za-z0-9_.-]*$`)
+
+// unrendered adds a line the parser did not render: a JSON line of a kind
+// it does not know is a runner notice that names the kind, any other stays
+// raw (as does one whose kind has no such name).
+func unrendered(h head, out *adapter.Emitter) {
+	reason := rawReason(h)
+	if reason == contract.RawUnknownType && kindNamePattern.MatchString(kindName(h)) {
+		out.Emit(noticeEvent(kindName(h), notice{}))
+		return
+	}
+	out.RawLine(reason)
 }
 
 // render adds the events of a decoded line and reports whether it could:
 // the type is known and the line has the shape the parser expects. It adds
 // nothing when it cannot, and a line that produced nothing is kept raw.
 func (p *Parser) render(h head, text []byte, out *adapter.Emitter) bool {
+	if read, ok := typeNotices[h.Type]; ok {
+		return renderNotice(h.Type, read, text, out)
+	}
 	switch h.Type {
 	case typeSystem:
-		return renderSystem(h.Subtype, text, out)
+		return p.renderSystem(h.Subtype, text, out)
 	case typeAssistant:
 		return p.renderAssistant(text, out)
 	case typeUser:
@@ -113,9 +134,6 @@ func rawReason(h head) contract.RawReason {
 		}
 		return contract.RawUnsupported
 	case typeAssistant, typeUser, typeResult, typeRateLimit, typeToolProgress:
-		return contract.RawUnsupported
-	}
-	if unsupportedTypes[h.Type] {
 		return contract.RawUnsupported
 	}
 	return contract.RawUnknownType
@@ -148,11 +166,16 @@ type systemLine struct {
 }
 
 // renderSystem renders the system subtypes the adapter knows; any other
-// subtype is left raw.
-func renderSystem(subtype string, text []byte, out *adapter.Emitter) bool {
+// subtype is left to unrendered.
+func (p *Parser) renderSystem(subtype string, text []byte, out *adapter.Emitter) bool {
+	if read, ok := systemNotices[subtype]; ok {
+		return renderNotice(subtype, read, text, out)
+	}
 	switch subtype {
 	case subtypeTaskStarted, subtypeTaskProgress, subtypeTaskNotification:
-		return renderTaskProgress(subtype, text, out)
+		return p.renderTaskProgress(subtype, text, out)
+	case subtypeTaskUpdated:
+		return p.renderTaskUpdated(text, out)
 	}
 	var s systemLine
 	if !renderedSubtypes[subtype] || json.Unmarshal(text, &s) != nil {
