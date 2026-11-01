@@ -148,7 +148,9 @@ line, values as written (`response` stays base64).
 
 Raw reasons: `text` (not JSON: startup output, stderr), `malformed_json`
 (looks like JSON, does not parse; a cut line), `unknown_type` (JSON of a type
-no adapter knows), `unsupported` (a known type the adapter does not render),
+no adapter knows; an adapter that names unknown kinds as a `runner_notice`
+keeps it for a line without a string type or whose kind is not a name, such as
+markup), `unsupported` (a known type the adapter does not render),
 `oversized` (longer than `maxLineBytes`; `text` is its start).
 
 Gap reasons: `source_truncated` (the log's start is gone), `read_interrupted`

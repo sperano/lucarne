@@ -74,10 +74,10 @@ var systemNotices = map[string]noticeReader{
 	subtypePluginInstall:          readPluginInstall,
 	subtypeSessionStateChanged:    readField(func(l textFields) string { return l.State }),
 	subtypeBackgroundTasksChanged: readBackgroundTasks,
-	subtypeModelRefusalFallback:   readRefusal,
-	subtypeModelRefusalNoFallback: readRefusal,
-	subtypeMirrorError:            readError(func(l textFields) string { return l.Error }),
-	subtypePermissionDenied:       readPermissionDenied,
+	subtypeModelRefusalFallback:   asError(readRefusal),
+	subtypeModelRefusalNoFallback: asError(readRefusal),
+	subtypeMirrorError:            asError(readField(func(l textFields) string { return l.Error })),
+	subtypePermissionDenied:       asError(readPermissionDenied),
 	subtypeWorkerShuttingDown:     readField(func(l textFields) string { return l.Reason }),
 }
 
@@ -142,10 +142,9 @@ func readField(field func(textFields) string) noticeReader {
 	}
 }
 
-// readError reads a notice that reports an error, whose detail is one text
-// field.
-func readError(field func(textFields) string) noticeReader {
-	read := readField(field)
+// asError reads a notice of a kind that always reports an error: the line
+// is an error even when it does not have the shape of its kind.
+func asError(read noticeReader) noticeReader {
 	return func(text []byte) notice {
 		n := read(text)
 		n.isError = true
@@ -310,7 +309,7 @@ func readRefusal(text []byte) notice {
 	if model == "" {
 		model = l.OriginalModel
 	}
-	return notice{detail: l.Content, model: model, isError: true}
+	return notice{detail: l.Content, model: model}
 }
 
 // readPermissionDenied reads the tool denied and the CLI's message.
@@ -322,7 +321,7 @@ func readPermissionDenied(text []byte) notice {
 	if json.Unmarshal(text, &l) != nil {
 		return notice{}
 	}
-	return notice{detail: paragraphs(l.ToolName, l.Message), isError: true}
+	return notice{detail: paragraphs(l.ToolName, l.Message)}
 }
 
 // readAuthStatus reads an authentication status: its error, then its

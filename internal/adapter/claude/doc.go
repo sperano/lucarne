@@ -2,7 +2,7 @@
 // --output-format stream-json --verbose, as Kelos starts it) into transcript
 // events. It is an adapter.Runner: it sees every line that is not blank,
 // oversized or a Kelos marker, and keeps only the IDs of tool calls waiting
-// for their result.
+// for their result and of background tasks still running.
 //
 // What each line becomes:
 //
@@ -41,7 +41,8 @@
 //     model_refusal_fallback and model_refusal_no_fallback (the CLI's text,
 //     the model it fell back to), mirror_error, permission_denied (the tool
 //     and the message) and auth_status with an error. A notice line of the
-//     wrong shape is its kind's notice without detail.
+//     wrong shape is its kind's notice without detail, still an error for
+//     the kinds that always report one.
 //   - rate_limit_event: a rate_limit_status lifecycle event whose subtype is
 //     the status, whose sessionId is the source session and whose detail is
 //     rate_limit_info as written.

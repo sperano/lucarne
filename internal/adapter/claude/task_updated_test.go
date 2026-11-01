@@ -32,6 +32,38 @@ func TestTaskUpdatedReportsTheProgressOfItsCall(t *testing.T) {
 	}
 }
 
+func TestTaskUpdatedDetail(t *testing.T) {
+	t.Parallel()
+	events := normalize(t,
+		`{"type":"system","subtype":"task_started","task_id":"task-1","tool_use_id":"toolu_1"}`,
+		`{"type":"system","subtype":"task_updated","task_id":"task-1","patch":{"status":"running","description":"step 2"}}`,
+		`{"type":"system","subtype":"task_updated","task_id":"task-1","patch":{"status":"failed","error":"exit 2","description":"make check"}}`,
+	)
+	if len(events) != 3 {
+		t.Fatalf("events = %s", dump(events))
+	}
+	// The description is the detail, unless the patch has an error.
+	for i, want := range []string{"step 2", "exit 2"} {
+		if p := events[i+1].ToolProgress; p == nil || p.Detail != want {
+			t.Errorf("update %d = %s, want detail %q", i+1, dump(events[i+1:i+2]), want)
+		}
+	}
+}
+
+func TestTaskProgressRecordsItsCall(t *testing.T) {
+	t.Parallel()
+	events := normalize(t,
+		`{"type":"system","subtype":"task_progress","task_id":"task-9","tool_use_id":"toolu_9","description":"step"}`,
+		`{"type":"system","subtype":"task_updated","task_id":"task-9","patch":{"status":"running"}}`,
+	)
+	if len(events) != 2 {
+		t.Fatalf("events = %s", dump(events))
+	}
+	if p := events[1].ToolProgress; p == nil || p.CallID != "toolu_9" || p.Phase != contract.ToolProgressRunning {
+		t.Errorf("update = %s, want toolu_9 running", dump(events[1:]))
+	}
+}
+
 func TestTaskUpdatedWithoutItsCall(t *testing.T) {
 	t.Parallel()
 	cases := []struct {

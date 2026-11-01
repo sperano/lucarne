@@ -30,8 +30,13 @@ func TestRunnerNotices(t *testing.T) {
 		},
 		{
 			name:    "hook response",
-			line:    `{"type":"system","subtype":"hook_response","hook_name":"PreToolUse:Bash","output":"allowed","stdout":"allowed","exit_code":0,"outcome":"success"}`,
-			subtype: "hook_response", detail: "PreToolUse:Bash\n\nallowed", exitCode: intPtr(0),
+			line:    `{"type":"system","subtype":"hook_response","hook_name":"PreToolUse:Bash","output":"combined","stdout":"out-only","stderr":"err-only","exit_code":0,"outcome":"success"}`,
+			subtype: "hook_response", detail: "PreToolUse:Bash\n\ncombined", exitCode: intPtr(0),
+		},
+		{
+			name:    "hook response without a combined output",
+			line:    `{"type":"system","subtype":"hook_response","hook_name":"PreToolUse:Bash","output":"","stdout":"out-only","stderr":"err-only","exit_code":0,"outcome":"success"}`,
+			subtype: "hook_response", detail: "PreToolUse:Bash\n\nout-only\n\nerr-only", exitCode: intPtr(0),
 		},
 		{
 			name:    "hook failed",
@@ -57,6 +62,16 @@ func TestRunnerNotices(t *testing.T) {
 			name:    "notification",
 			line:    `{"type":"system","subtype":"notification","key":"k","text":"Context is 80% full","priority":"low"}`,
 			subtype: "notification", detail: "Context is 80% full",
+		},
+		{
+			name:    "local command output",
+			line:    `{"type":"system","subtype":"local_command_output","content":"ran /cost"}`,
+			subtype: "local_command_output", detail: "ran /cost",
+		},
+		{
+			name:    "session state changed",
+			line:    `{"type":"system","subtype":"session_state_changed","state":"idle"}`,
+			subtype: "session_state_changed", detail: "idle",
 		},
 		{
 			name:    "memory recall",
@@ -114,9 +129,24 @@ func TestRunnerNotices(t *testing.T) {
 			subtype: "auth_status", detail: "expired\n\nline 1\nline 2", isError: true,
 		},
 		{
+			name:    "auth status without an error",
+			line:    `{"type":"auth_status","isAuthenticating":true,"output":["Opening browser"]}`,
+			subtype: "auth_status", detail: "Opening browser",
+		},
+		{
 			name:    "notice of the wrong shape",
 			line:    `{"type":"system","subtype":"hook_started","hook_name":7}`,
 			subtype: "hook_started",
+		},
+		{
+			name:    "permission denied of the wrong shape",
+			line:    `{"type":"system","subtype":"permission_denied","tool_name":"WebFetch","message":{"text":"not allowed"}}`,
+			subtype: "permission_denied", isError: true,
+		},
+		{
+			name:    "refusal of the wrong shape",
+			line:    `{"type":"system","subtype":"model_refusal_fallback","content":["Retrying."]}`,
+			subtype: "model_refusal_fallback", isError: true,
 		},
 	}
 	for _, c := range cases {
@@ -140,6 +170,18 @@ func TestNoticeDetailIsBounded(t *testing.T) {
 	}
 	if len(ev.Truncated) != 1 || ev.Truncated[0] != "detail" {
 		t.Errorf("truncated = %v, want [detail]", ev.Truncated)
+	}
+}
+
+func TestNoticeNameIsBounded(t *testing.T) {
+	t.Parallel()
+	line := `{"type":"` + strings.Repeat("a", contract.MaxLabelBytes+1) + `"}`
+	ev := only(t, normalize(t, line), contract.KindLifecycle)
+	if len(ev.Lifecycle.Subtype) > contract.MaxLabelBytes {
+		t.Errorf("subtype is %d bytes, want at most MaxLabelBytes", len(ev.Lifecycle.Subtype))
+	}
+	if len(ev.Truncated) != 1 || ev.Truncated[0] != "subtype" {
+		t.Errorf("truncated = %v, want [subtype]", ev.Truncated)
 	}
 }
 

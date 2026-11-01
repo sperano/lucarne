@@ -57,7 +57,8 @@ func (p *Parser) renderTaskProgress(subtype string, text []byte, out *adapter.Em
 }
 
 // trackTask remembers which call a task runs for while it runs, and
-// forgets it when its notification ends it.
+// forgets it when its notification, or a terminal task_updated status, ends
+// it.
 func (p *Parser) trackTask(subtype string, line taskProgressLine) {
 	if line.TaskID == "" {
 		return

@@ -237,7 +237,7 @@
   <nav class="controls" aria-label="Transcript position">
     <span class="muted" aria-live="polite">
       {#if total === 0}
-        {filter === 'all' && !hideNotices ? 'No events yet.' : 'No item passes the filter.'}
+        {conversation.items.length === 0 ? 'No events yet.' : 'No item passes the filter.'}
       {:else}
         Items {formatCount(range.start + 1)}–{formatCount(range.end)} of {formatCount(total)}
       {/if}
