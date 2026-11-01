@@ -148,6 +148,22 @@ describe('Conversation over the runner fixtures', () => {
     expect(block?.textContent).toContain('command allowed');
   });
 
+  it('shows the model a notice names as a fact', () => {
+    const root = show(
+      snapshotWith([
+        {
+          kind: 'lifecycle',
+          lifecycle: {
+            phase: 'runner_notice',
+            subtype: 'model_refusal_fallback',
+            model: 'claude-example-1',
+          },
+        },
+      ]),
+    );
+    expect(texts(root, '.runner-notice .fact')).toEqual(['model claude-example-1']);
+  });
+
   it('shows a line no adapter rendered as written, not as damaged', () => {
     const event = eventMaker()({
       kind: 'raw',
@@ -217,6 +233,30 @@ describe('Conversation states', () => {
     await expect.poll(() => hide.checked).toBe(true);
     expect(root.textContent).toContain('No events yet.');
     expect(root.textContent).not.toContain('No item passes the filter.');
+  });
+
+  it('says an empty attempt has no events yet, whatever the filter', async () => {
+    const root = show(snapshotWith([]));
+    const select = root.querySelector<HTMLSelectElement>('.finder select');
+    if (!select) throw new Error('no filter');
+    await userEvent.selectOptions(select, 'errors');
+    await expect.poll(() => select.value).toBe('errors');
+    expect(root.textContent).toContain('No events yet.');
+    expect(root.textContent).not.toContain('No item passes the filter.');
+  });
+
+  it('says the only items are the runner notices it hides', async () => {
+    const notice: EventBody = {
+      kind: 'lifecycle',
+      lifecycle: { phase: 'runner_notice', subtype: 'hook_response' },
+    };
+    const root = show(snapshotWith([notice, notice]));
+    const hide = root.querySelector<HTMLInputElement>('input[type="checkbox"]');
+    if (!hide) throw new Error('no checkbox');
+    await userEvent.click(hide);
+    await expect.poll(() => root.textContent).toContain('Only runner notices, which are hidden.');
+    expect(root.textContent).not.toContain('No item passes the filter.');
+    expect(root.textContent).not.toContain('No events yet.');
   });
 
   it('says a run has no attempt yet', () => {

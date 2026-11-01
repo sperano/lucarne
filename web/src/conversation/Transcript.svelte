@@ -68,6 +68,12 @@
     return filter === 'all' ? items : items.filter((i) => passes(i, filter));
   });
   const total = $derived(visible.length);
+  // Why nothing is shown: no item yet, only the notices the reader hid, or the filter.
+  const emptyText = $derived.by(() => {
+    if (conversation.items.length === 0) return 'No events yet.';
+    if (filter === 'all' && hideNotices) return 'Only runner notices, which are hidden.';
+    return 'No item passes the filter.';
+  });
   const positionOf = $derived(new Map(visible.map((item, i) => [item.id, i])));
 
   // A running attempt opens at its end, following; a finished one at its start.
@@ -237,7 +243,7 @@
   <nav class="controls" aria-label="Transcript position">
     <span class="muted" aria-live="polite">
       {#if total === 0}
-        {conversation.items.length === 0 ? 'No events yet.' : 'No item passes the filter.'}
+        {emptyText}
       {:else}
         Items {formatCount(range.start + 1)}–{formatCount(range.end)} of {formatCount(total)}
       {/if}
