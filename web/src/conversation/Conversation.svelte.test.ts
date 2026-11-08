@@ -263,6 +263,36 @@ describe('Conversation states', () => {
     expect(root.textContent).not.toContain('No item passes the filter.');
   });
 
+  it('says when only empty reasoning summaries are hidden', () => {
+    const root = show(
+      snapshotWith([
+        {
+          kind: 'message',
+          message: { role: 'assistant', type: 'reasoning', text: ' \n\t' },
+        },
+      ]),
+    );
+
+    expect(root.textContent).toContain('Only empty reasoning summaries, which are hidden.');
+    expect(root.textContent).not.toContain('No item passes the filter.');
+  });
+
+  it('shows an empty reasoning summary when its event is linked', async () => {
+    const snapshot = snapshotWith([
+      {
+        kind: 'message',
+        message: { role: 'assistant', type: 'reasoning', text: ' \n\t' },
+      },
+    ]);
+    const linked = snapshot.events[0];
+    if (!linked) throw new Error('no linked event');
+    const root = show(snapshot, undefined, linked.id);
+
+    await expect.poll(() => root.querySelector('.items > li.targeted')).not.toBeNull();
+    expect(root.querySelector('.targeted .reasoning')).not.toBeNull();
+    expect(document.activeElement).toBe(root.querySelector('.targeted'));
+  });
+
   it('says the only items are the runner notices it hides', async () => {
     const notice: EventBody = {
       kind: 'lifecycle',

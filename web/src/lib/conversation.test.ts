@@ -195,6 +195,7 @@ describe('reasoning summaries', () => {
 
     expect(c.events).toEqual([blank, summary]);
     expect(c.itemOf.has(blank.id)).toBe(true);
-    expect(shownItems(c.items, blank.id).map((item) => item.id)).toEqual([summary.id]);
+    expect(shownItems(c.items).map((item) => item.id)).toEqual([summary.id]);
+    expect(shownItems(c.items, blank.id).map((item) => item.id)).toEqual([blank.id, summary.id]);
   });
 });

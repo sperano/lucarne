@@ -168,7 +168,7 @@ function isThinkingItem(item: Item): boolean {
 }
 
 /** Whether the runner emitted a reasoning message with nothing for the reader to see. */
-function isBlankReasoningItem(item: Item): boolean {
+export function isBlankReasoningItem(item: Item): boolean {
   return (
     item.kind === 'event' &&
     item.event.kind === 'message' &&
@@ -188,6 +188,7 @@ export function shownItems(items: readonly Item[], keep?: string): readonly Item
   const last = items.length - 1;
   return items.filter(
     (item, i) =>
-      !isBlankReasoningItem(item) && (!isThinkingItem(item) || i === last || item.id === keep),
+      (!isBlankReasoningItem(item) || item.id === keep) &&
+      (!isThinkingItem(item) || i === last || item.id === keep),
   );
 }

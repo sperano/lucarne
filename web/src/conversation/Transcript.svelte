@@ -1,9 +1,14 @@
 <script lang="ts">
   import { tick, untrack } from 'svelte';
   import type { CoverageState, Limits } from '../lib/contract';
-  import { shownItems, type Conversation, type Item } from '../lib/conversation';
+  import {
+    isBlankReasoningItem,
+    shownItems,
+    type Conversation,
+    type Item,
+  } from '../lib/conversation';
   import { formatCount } from '../lib/format';
-  import { withoutNotices } from '../lib/notices';
+  import { isRunnerNotice, withoutNotices } from '../lib/notices';
   import { passes, type ItemFilter } from '../lib/search';
   import {
     earlier,
@@ -71,6 +76,14 @@
   // Why nothing is shown: no item yet, only the notices the reader hid, or the filter.
   const emptyText = $derived.by(() => {
     if (conversation.items.length === 0) return 'No events yet.';
+    if (filter === 'all' && conversation.items.some(isBlankReasoningItem)) {
+      const hasHiddenNotice =
+        hideNotices &&
+        conversation.items.some((item) => item.kind === 'event' && isRunnerNotice(item.event));
+      return hasHiddenNotice
+        ? 'Only empty reasoning summaries and hidden runner notices remain.'
+        : 'Only empty reasoning summaries, which are hidden.';
+    }
     if (filter === 'all' && hideNotices) return 'Only runner notices, which are hidden.';
     return 'No item passes the filter.';
   });
