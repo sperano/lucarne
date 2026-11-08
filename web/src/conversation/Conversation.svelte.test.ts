@@ -277,6 +277,29 @@ describe('Conversation states', () => {
     expect(root.textContent).not.toContain('No item passes the filter.');
   });
 
+  it('distinguishes empty reasoning from runner notices hidden by the reader', async () => {
+    const root = show(
+      snapshotWith([
+        {
+          kind: 'message',
+          message: { role: 'assistant', type: 'reasoning', text: ' \n\t' },
+        },
+        {
+          kind: 'lifecycle',
+          lifecycle: { phase: 'runner_notice', subtype: 'hook_response' },
+        },
+      ]),
+    );
+    const hide = root.querySelector<HTMLInputElement>('input[type="checkbox"]');
+    if (!hide) throw new Error('no checkbox');
+    await userEvent.click(hide);
+
+    await expect
+      .poll(() => root.textContent)
+      .toContain('Only empty reasoning summaries and hidden runner notices remain.');
+    expect(root.textContent).not.toContain('No item passes the filter.');
+  });
+
   it('shows an empty reasoning summary when its event is linked', async () => {
     const snapshot = snapshotWith([
       {
