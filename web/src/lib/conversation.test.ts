@@ -25,6 +25,8 @@ const thinking = () =>
   ev({ kind: 'lifecycle', lifecycle: { phase: 'thinking', sessionId: 'session-example' } });
 const say = (text: string) =>
   ev({ kind: 'message', message: { role: 'assistant', type: 'text', text } });
+const reason = (text: string) =>
+  ev({ kind: 'message', message: { role: 'assistant', type: 'reasoning', text } });
 
 describe('buildConversation', () => {
   it('groups a call with its result and edits, keeping the call position', () => {
@@ -182,5 +184,17 @@ describe('thinking progress', () => {
     expect(shownItems(c.items, early.id)).toEqual([first, reply, last]);
     const ended = buildConversation([early, say('reply')], ATTEMPT);
     expect(shownItems(ended.items)).toEqual([ended.items[1]]);
+  });
+});
+
+describe('reasoning summaries', () => {
+  it('keeps blank reasoning for diagnostics but omits it from the conversation', () => {
+    const blank = reason(' \n\t');
+    const summary = reason('Checked the inputs.');
+    const c = buildConversation([blank, summary], ATTEMPT);
+
+    expect(c.events).toEqual([blank, summary]);
+    expect(c.itemOf.has(blank.id)).toBe(true);
+    expect(shownItems(c.items, blank.id).map((item) => item.id)).toEqual([summary.id]);
   });
 });

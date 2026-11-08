@@ -67,6 +67,24 @@ describe('Conversation over the runner fixtures', () => {
     expect(pr?.rel).toBe('noopener noreferrer nofollow');
   });
 
+  it('omits blank reasoning but shows a populated summary', () => {
+    const root = show(
+      snapshotWith([
+        {
+          kind: 'message',
+          message: { role: 'assistant', type: 'reasoning', text: ' \n\t' },
+        },
+        {
+          kind: 'message',
+          message: { role: 'assistant', type: 'reasoning', text: 'Checked the inputs.' },
+        },
+      ]),
+    );
+
+    expect(root.querySelectorAll('.reasoning')).toHaveLength(1);
+    expect(root.textContent).toContain('Checked the inputs.');
+  });
+
   it('shows a Codex to-do list in its latest state and calls with no outcome', () => {
     const root = show(findFixture('codex', 'interleaved').snapshot);
     const todo = [...root.querySelectorAll('.tool')].find((t) =>
