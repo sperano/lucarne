@@ -167,13 +167,28 @@ function isThinkingItem(item: Item): boolean {
   return item.kind === 'event' && isThinking(item.event);
 }
 
+/** Whether the runner emitted a reasoning message with nothing for the reader to see. */
+export function isBlankReasoningItem(item: Item): boolean {
+  return (
+    item.kind === 'event' &&
+    item.event.kind === 'message' &&
+    item.event.message.type === 'reasoning' &&
+    item.event.message.text.trim() === ''
+  );
+}
+
 /**
- * The items a conversation shows: a batch of thinking progress only as the
- * last item, where it says the model is at work or was when the attempt
- * stopped, or when keep (a link's, a search result's) names it. Everywhere
- * else the reasoning or the reply that followed says the rest.
+ * The items a conversation shows: blank reasoning is diagnostic-only, and a
+ * batch of thinking progress appears only as the last item, where it says the
+ * model is at work or was when the attempt stopped, or when keep (a link's, a
+ * search result's) names it. Everywhere else the reasoning or reply that
+ * followed says the rest.
  */
 export function shownItems(items: readonly Item[], keep?: string): readonly Item[] {
   const last = items.length - 1;
-  return items.filter((item, i) => !isThinkingItem(item) || i === last || item.id === keep);
+  return items.filter(
+    (item, i) =>
+      (!isBlankReasoningItem(item) || item.id === keep) &&
+      (!isThinkingItem(item) || i === last || item.id === keep),
+  );
 }

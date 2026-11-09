@@ -318,6 +318,23 @@ describe('Inspector diagnostics', () => {
   });
   const BASH: EventBody = { kind: 'tool_call', toolCall: { callId: 'c1', name: 'Bash' } };
 
+  it('keeps blank reasoning and its source line available', async () => {
+    const line =
+      '{"type":"assistant","message":{"content":[{"type":"thinking","thinking":"   "}]}}';
+    const snapshot = snapshotWith([
+      {
+        kind: 'message',
+        message: { role: 'assistant', type: 'reasoning', text: '   ' },
+      },
+    ]);
+    const { root } = show(snapshot, { loadSource: linesSource([line]) });
+
+    expect(rows(root)).toHaveLength(1);
+    await userEvent.click(rows(root)[0] as HTMLElement);
+    await expect.poll(() => sourceCode(root)).toContain('"thinking": "   "');
+    expect(JSON.parse(sourceCode(root))).toEqual(JSON.parse(line));
+  });
+
   it('shows the source line of unknown records and malformed input', async () => {
     const { snapshot } = findFixture('claude-code', 'malformed-lines');
     const lines = fixtureLines('claude-code', 'malformed-lines');

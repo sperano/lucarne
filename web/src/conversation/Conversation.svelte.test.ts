@@ -67,6 +67,24 @@ describe('Conversation over the runner fixtures', () => {
     expect(pr?.rel).toBe('noopener noreferrer nofollow');
   });
 
+  it('omits blank reasoning but shows a populated summary', () => {
+    const root = show(
+      snapshotWith([
+        {
+          kind: 'message',
+          message: { role: 'assistant', type: 'reasoning', text: ' \n\t' },
+        },
+        {
+          kind: 'message',
+          message: { role: 'assistant', type: 'reasoning', text: 'Checked the inputs.' },
+        },
+      ]),
+    );
+
+    expect(root.querySelectorAll('.reasoning')).toHaveLength(1);
+    expect(root.textContent).toContain('Checked the inputs.');
+  });
+
   it('shows a Codex to-do list in its latest state and calls with no outcome', () => {
     const root = show(findFixture('codex', 'interleaved').snapshot);
     const todo = [...root.querySelectorAll('.tool')].find((t) =>
@@ -243,6 +261,59 @@ describe('Conversation states', () => {
     await expect.poll(() => select.value).toBe('errors');
     expect(root.textContent).toContain('No events yet.');
     expect(root.textContent).not.toContain('No item passes the filter.');
+  });
+
+  it('says when only empty reasoning summaries are hidden', () => {
+    const root = show(
+      snapshotWith([
+        {
+          kind: 'message',
+          message: { role: 'assistant', type: 'reasoning', text: ' \n\t' },
+        },
+      ]),
+    );
+
+    expect(root.textContent).toContain('Only empty reasoning summaries, which are hidden.');
+    expect(root.textContent).not.toContain('No item passes the filter.');
+  });
+
+  it('distinguishes empty reasoning from runner notices hidden by the reader', async () => {
+    const root = show(
+      snapshotWith([
+        {
+          kind: 'message',
+          message: { role: 'assistant', type: 'reasoning', text: ' \n\t' },
+        },
+        {
+          kind: 'lifecycle',
+          lifecycle: { phase: 'runner_notice', subtype: 'hook_response' },
+        },
+      ]),
+    );
+    const hide = root.querySelector<HTMLInputElement>('input[type="checkbox"]');
+    if (!hide) throw new Error('no checkbox');
+    await userEvent.click(hide);
+
+    await expect
+      .poll(() => root.textContent)
+      .toContain('Only empty reasoning summaries and hidden runner notices remain.');
+    expect(root.textContent).not.toContain('No item passes the filter.');
+  });
+
+  it('shows an empty reasoning summary when its event is linked', async () => {
+    const snapshot = snapshotWith([
+      {
+        kind: 'message',
+        message: { role: 'assistant', type: 'reasoning', text: ' \n\t' },
+      },
+    ]);
+    const linked = snapshot.events[0];
+    if (!linked) throw new Error('no linked event');
+    const root = show(snapshot, undefined, linked.id);
+
+    await expect.poll(() => root.querySelector('.items > li.targeted')).not.toBeNull();
+    expect(root.querySelector('.targeted .reasoning')).not.toBeNull();
+    expect(document.activeElement).toBe(root.querySelector('.targeted'));
   });
 
   it('says the only items are the runner notices it hides', async () => {

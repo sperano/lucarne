@@ -36,6 +36,18 @@ func TestMessageLinesShareTheirIDAndAreNotMerged(t *testing.T) {
 	}
 }
 
+func TestWhitespaceThinkingStaysAReasoningEvent(t *testing.T) {
+	t.Parallel()
+	events := normalize(t,
+		`{"type":"assistant","message":{"id":"msg_1","content":[{"type":"thinking","thinking":"  \n\t"}]}}`,
+	)
+
+	m := only(t, events, contract.KindMessage)
+	if m.Message.Type != contract.MessageReasoning || m.Message.Text != "  \n\t" {
+		t.Errorf("thinking = %+v, want the whitespace-only reasoning event preserved", m.Message)
+	}
+}
+
 func TestPartialUsageIsNotReported(t *testing.T) {
 	t.Parallel()
 	events := normalize(t,
