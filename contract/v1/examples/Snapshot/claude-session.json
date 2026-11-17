@@ -22,6 +22,7 @@
         "restart": 0
       },
       "podName": "example-claude-42-x7k2p",
+      "nodeName": "worker-1.example.com",
       "runner": {
         "kind": "claude-code",
         "version": "2.1.296"

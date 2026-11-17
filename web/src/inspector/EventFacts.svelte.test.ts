@@ -1,14 +1,16 @@
 import { describe, expect, it, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
+import type { Attempt } from '../lib/contract';
 import { ATTEMPT_ID, eventMaker, type EventBody } from '../dev/events';
 import { FIXTURE_KEY, snapshotOf } from '../dev/fixtures';
 import { render } from '../render';
 import EventFacts from './EventFacts.svelte';
 
-function show(body: EventBody) {
+function show(body: EventBody, scheduled: Partial<Attempt> = {}) {
   const event = eventMaker()(body);
-  const [attempt] = snapshotOf('claude-code', 'example-run', [event]).attempts;
-  if (!attempt) throw new Error('no attempt');
+  const [first] = snapshotOf('claude-code', 'example-run', [event]).attempts;
+  if (!first) throw new Error('no attempt');
+  const attempt = { ...first, ...scheduled };
   const root = render(EventFacts, { event, attempt, runKey: FIXTURE_KEY });
   const facts = Object.fromEntries(
     [...root.querySelectorAll('dt')].map((dt) => [
@@ -43,6 +45,16 @@ describe('EventFacts', () => {
     expect(facts.Attempt).toContain('container claude-code, restart 0');
     expect(facts.Log).toBe('Log read to the end: 1 line read, 1 gap, 0 lines cut');
     expect(facts.Line).toBe('Before line 1, gap 1 there of the read from e3b0c44298fc1c14');
+  });
+
+  it('names the node of the pod once it is scheduled', () => {
+    const raw: EventBody = { kind: 'raw', raw: { reason: 'text', text: 'x', bytes: 1 } };
+    expect(show(raw, { nodeName: 'worker-1.example.com' }).facts.Attempt).toBe(
+      'Pod example-claude-code-x7k2p on node worker-1.example.com, container claude-code, restart 0',
+    );
+    expect(show(raw).facts.Attempt).toBe(
+      'Pod example-claude-code-x7k2p, container claude-code, restart 0',
+    );
   });
 
   it('copies a link that opens the event in the inspector', async () => {

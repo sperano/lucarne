@@ -191,6 +191,7 @@ export interface Attempt {
   readonly id: string;
   readonly key: AttemptKey;
   readonly podName: string;
+  readonly nodeName?: string;
   readonly runner: Runner;
   readonly container: ContainerState;
   readonly coverage: Coverage;

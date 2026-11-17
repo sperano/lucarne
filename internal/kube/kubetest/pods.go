@@ -19,6 +19,9 @@ var Epoch = time.Date(2026, 10, 25, 10, 0, 0, 0, time.UTC)
 // Lucarne never reads.
 const initContainer = "git-clone"
 
+// NodeName is the node every pod of the cluster is scheduled on.
+const NodeName = "worker-1.example.com"
+
 // Pod is a pod of a run's Job, its agent container running until
 // Terminate.
 type Pod struct {
@@ -130,8 +133,8 @@ func (p *Pod) update(change func(*corev1.Pod)) error {
 	return nil
 }
 
-// newPod is a running pod labelled for taskName and controlled by the Job
-// with jobUID.
+// newPod is a running pod on NodeName, labelled for taskName and
+// controlled by the Job with jobUID.
 func newPod(namespace, name, uid, taskName, jobUID string) *corev1.Pod {
 	controller := true
 	return &corev1.Pod{
@@ -144,6 +147,7 @@ func newPod(namespace, name, uid, taskName, jobUID string) *corev1.Pod {
 			}},
 		},
 		Spec: corev1.PodSpec{
+			NodeName:       NodeName,
 			InitContainers: []corev1.Container{{Name: initContainer}},
 			Containers:     []corev1.Container{{Name: kube.AgentContainer}},
 		},

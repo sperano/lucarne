@@ -158,6 +158,7 @@ const objects: Record<string, Record<string, boolean>> = {
     id: true,
     key: true,
     podName: true,
+    nodeName: false,
     runner: true,
     container: true,
     coverage: true,

@@ -132,7 +132,7 @@ func currentAttempt(pod *corev1.Pod, status *corev1.ContainerStatus, runner cont
 func newAttempt(pod *corev1.Pod, restart int64, runner contract.Runner, state contract.ContainerState, coverage contract.Coverage) contract.Attempt {
 	key := contract.AttemptKey{PodUID: string(pod.UID), Container: AgentContainer, Restart: restart}
 	coverage.Reason = cutLabel(coverage.Reason)
-	return contract.Attempt{ID: key.ID(), Key: key, PodName: pod.Name, Runner: runner, Container: state, Coverage: coverage}
+	return contract.Attempt{ID: key.ID(), Key: key, PodName: pod.Name, NodeName: cutLabel(pod.Spec.NodeName), Runner: runner, Container: state, Coverage: coverage}
 }
 
 func hasAgentContainer(pod *corev1.Pod) bool {

@@ -184,6 +184,15 @@ describe('Inspector keyboard', () => {
 });
 
 describe('Inspector states', () => {
+  it('names the node the pod was scheduled on', () => {
+    const { root } = show(
+      snapshotWith([{ kind: 'raw', raw: { reason: 'text', text: 'hi', bytes: 2 } }], {
+        nodeName: 'worker-1.example.com',
+      }),
+    );
+    expect(facts(root).Node).toBe('worker-1.example.com');
+  });
+
   it('says what the source did not report', () => {
     const { root } = show(
       snapshotWith([{ kind: 'raw', raw: { reason: 'text', text: 'hi', bytes: 2 } }]),
@@ -192,6 +201,7 @@ describe('Inspector states', () => {
     for (const label of ['Model', 'Session', 'Created', 'Started', 'Completed', 'Finished']) {
       expect(f[label], label).toBe('Unknown');
     }
+    expect(f.Node).toBe('Not scheduled');
     expect(root.querySelector('.context')?.textContent).toContain(
       'the log reports no session total',
     );

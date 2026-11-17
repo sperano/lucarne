@@ -129,6 +129,7 @@
         "id": { "$ref": "#/$defs/AttemptID" },
         "key": { "$ref": "#/$defs/AttemptKey" },
         "podName": { "$ref": "#/$defs/Label" },
+        "nodeName": { "$ref": "#/$defs/Label" },
         "runner": { "$ref": "#/$defs/Runner" },
         "container": { "$ref": "#/$defs/ContainerState" },
         "coverage": { "$ref": "#/$defs/Coverage" }

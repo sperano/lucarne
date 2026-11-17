@@ -8,6 +8,8 @@ import { assistantMessages, close, eventually, launch, open, visible } from './h
 // The messages of its attempts, as in internal/e2e/scenario/runs.go.
 const FIRST_TEXT = 'First attempt: the tests fail.';
 const SECOND_TEXT = 'Second attempt: the tests pass.';
+// The node of every pod, as in internal/kube/kubetest/pods.go.
+const NODE_NAME = 'worker-1.example.com';
 
 describe('a retried run', () => {
   let browser: Browser;
@@ -43,6 +45,13 @@ describe('a retried run', () => {
     await eventually(() => assistantMessages(page).filter({ hasText: SECOND_TEXT }).count()).toBe(
       0,
     );
+    await close(watched);
+  });
+
+  it('names the node its pod ran on', async () => {
+    const watched = await open(browser, r.link);
+    const node = watched.page.locator('.facts dt', { hasText: 'Node' }).locator('+ dd');
+    await visible(node.filter({ hasText: NODE_NAME }));
     await close(watched);
   });
 });

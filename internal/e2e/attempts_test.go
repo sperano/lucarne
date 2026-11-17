@@ -5,6 +5,7 @@ import (
 
 	"github.com/sperano/lucarne/contract"
 	"github.com/sperano/lucarne/internal/e2e/scenario"
+	"github.com/sperano/lucarne/internal/kube/kubetest"
 )
 
 func TestRetriedRunListsEachAttemptWithItsOwnEvents(t *testing.T) {
@@ -18,6 +19,9 @@ func TestRetriedRunListsEachAttemptWithItsOwnEvents(t *testing.T) {
 	for i, a := range snap.Attempts {
 		if a.Container.ExitCode == nil || *a.Container.ExitCode != wantExit[i] {
 			t.Errorf("attempt %d container %+v, want exit code %d", i+1, a.Container, wantExit[i])
+		}
+		if a.NodeName != kubetest.NodeName {
+			t.Errorf("attempt %d on node %q, want its pod's %q", i+1, a.NodeName, kubetest.NodeName)
 		}
 		if a.Coverage.State != contract.CoverageEnded {
 			t.Errorf("attempt %d coverage %+v, want its log read to its end", i+1, a.Coverage)

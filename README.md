@@ -36,7 +36,8 @@ tab. Desktop browsers only: there is no mobile layout.
   their results, edits, errors and lifecycle lines, in order; search,
   follow or pause on a live run, the attempt picker, and a link to any item.
 - **Inspector**, in three columns: the run's context (only facts the source
-  gave; the rest reads *Unknown*), the attempt's events as a list, and the
+  gave; the rest reads *Unknown*, and a pod not yet on a node reads *Not
+  scheduled*), the attempt's events as a list, and the
   selected event's detail: rendered as in the conversation, its facts
   (attempt, log line, times, exit code, what Lucarne cut), its related
   events (the call, its results, edits, parent and sub-calls), why a result
