@@ -73,7 +73,8 @@
   </dd>
   <dt>Attempt</dt>
   <dd>
-    Pod <code>{attempt.podName}</code>, container <code>{attempt.key.container}</code>, restart {attempt
+    Pod <code>{attempt.podName}</code>{#if attempt.nodeName !== undefined}&#32;on node
+      <code>{attempt.nodeName}</code>{/if}, container <code>{attempt.key.container}</code>, restart {attempt
       .key.restart}
   </dd>
   <dt>Log</dt>

@@ -198,6 +198,21 @@ describe('Conversation over the runner fixtures', () => {
 });
 
 describe('Conversation states', () => {
+  it('names the node of a scheduled pod, and no node before it is', () => {
+    const RAW: EventBody = { kind: 'raw', raw: { reason: 'text', text: 'hi', bytes: 2 } };
+    const header = (root: HTMLElement) =>
+      Object.fromEntries(
+        [...root.querySelectorAll('.facts dt')].map((dt) => [
+          dt.textContent.trim(),
+          dt.nextElementSibling?.textContent.trim(),
+        ]),
+      );
+    expect(header(show(snapshotWith([RAW], { nodeName: 'worker-1.example.com' }))).Node).toBe(
+      'worker-1.example.com',
+    );
+    expect(header(show(snapshotWith([RAW]))).Node).toBeUndefined();
+  });
+
   it('marks gaps, cuts and an incomplete log', () => {
     const root = show(
       snapshotWith(

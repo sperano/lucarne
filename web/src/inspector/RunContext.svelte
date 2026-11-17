@@ -13,6 +13,7 @@
   import { usageParts } from '../lib/usage';
 
   const UNKNOWN = 'Unknown';
+  const NOT_SCHEDULED = 'Not scheduled';
 
   let {
     run,
@@ -111,6 +112,12 @@
     <dl class="facts">
       <dt>Pod</dt>
       <dd><code>{selected.podName}</code></dd>
+      <dt>Node</dt>
+      {#if selected.nodeName === undefined}
+        <dd class="unknown">{NOT_SCHEDULED}</dd>
+      {:else}
+        <dd><code>{selected.nodeName}</code></dd>
+      {/if}
       <dt>Container</dt>
       <dd><code>{selected.key.container}</code>, restart {selected.key.restart}</dd>
       {@render fact('Model', facts.model, eventUnknown)}

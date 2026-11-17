@@ -47,11 +47,13 @@ type Runner struct {
 }
 
 // Attempt is one container instance of a run and how much of its log
-// Lucarne holds.
+// Lucarne holds. NodeName is the node its pod was scheduled on, set only
+// once Kubernetes has scheduled it.
 type Attempt struct {
 	ID        string         `json:"id"`
 	Key       AttemptKey     `json:"key"`
 	PodName   string         `json:"podName"`
+	NodeName  string         `json:"nodeName,omitempty"`
 	Runner    Runner         `json:"runner"`
 	Container ContainerState `json:"container"`
 	Coverage  Coverage       `json:"coverage"`

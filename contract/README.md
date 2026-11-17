@@ -53,7 +53,9 @@ An **attempt** is one container instance: a pod (by UID; a retried Job makes
 a second pod, and Kelos's `status.podName` names only the latest), one of
 its containers, and that container's restart count when it ran. Kubernetes
 keeps the log of the current instance and of the previous one only; older
-restarts are `expired`. The pod name is shown, never used as identity.
+restarts are `expired`. The pod name is shown, never used as identity;
+`nodeName` is the node Kubernetes scheduled the pod on (its
+`spec.nodeName`), absent until it is scheduled.
 
 Neither `.` nor `:` occurs in a UID or a DNS label, so identifiers split
 without ambiguity, and none of them needs escaping in a URL path, query or

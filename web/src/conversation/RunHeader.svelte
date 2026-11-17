@@ -78,6 +78,10 @@
         <code>{selected.podName}</code>, container <code>{selected.key.container}</code>, restart
         {selected.key.restart}: {containerLabel}
       </dd>
+      {#if selected.nodeName !== undefined}
+        <dt>Node</dt>
+        <dd><code>{selected.nodeName}</code></dd>
+      {/if}
       <dt>Log</dt>
       <dd>{coverageLabel}</dd>
     {/if}

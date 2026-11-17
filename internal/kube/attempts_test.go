@@ -2,6 +2,7 @@ package kube
 
 import (
 	"context"
+	"strings"
 	"testing"
 	"time"
 
@@ -190,5 +191,41 @@ func TestAttemptsOnlyAgentContainer(t *testing.T) {
 	got := attemptsOf(t, newJob(taskName, jobUID, taskUID), withExtra, noAgent)
 	if len(got) != 1 || got[0].Key.Container != AgentContainer || got[0].Key.PodUID != podUID {
 		t.Errorf("attempts = %+v", got)
+	}
+}
+
+// TestAttemptsNodeName proves an attempt names the node its pod was
+// scheduled on, cut to a label, and none before the pod is scheduled.
+func TestAttemptsNodeName(t *testing.T) {
+	t.Parallel()
+	long := strings.Repeat("n", contract.MaxLabelBytes+1)
+	cases := map[string]struct{ node, want string }{
+		"scheduled":   {"worker-1.example.com", "worker-1.example.com"},
+		"unscheduled": {"", ""},
+		"oversized":   {long, long[:contract.MaxLabelBytes]},
+	}
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			pod := newPod(podName, podUID, jobUID, 0, corev1.PodRunning, running())
+			pod.Spec.NodeName = tc.node
+			got := attemptsOf(t, newJob(taskName, jobUID, taskUID), pod)
+			if len(got) != 1 || got[0].NodeName != tc.want {
+				t.Errorf("attempts = %+v, want one on node %q", got, tc.want)
+			}
+		})
+	}
+}
+
+// TestAttemptsPreviousRestartNodeName proves the instance before a restart
+// names its pod's node too.
+func TestAttemptsPreviousRestartNodeName(t *testing.T) {
+	t.Parallel()
+	const node = "worker-2.example.com"
+	pod := newPod(podName, podUID, jobUID, 0, corev1.PodRunning, crashLooping(1, 1))
+	pod.Spec.NodeName = node
+	got := attemptsOf(t, newJob(taskName, jobUID, taskUID), pod)
+	if len(got) != 2 || got[0].NodeName != node || got[1].NodeName != node {
+		t.Errorf("attempts = %+v, want both on node %q", got, node)
 	}
 }
