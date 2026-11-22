@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it } from 'vitest';
-import { EXPAND_ALL_KEY, loadExpandAll, saveExpandAll } from './expand';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { EXPAND_ALL_KEY, deviceStorage, loadExpandAll, saveExpandAll } from './expand';
 
 class MemoryStorage implements Storage {
   private readonly items = new Map<string, string>();
@@ -39,6 +39,29 @@ let storage: MemoryStorage;
 
 beforeEach(() => {
   storage = new MemoryStorage();
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
+describe('deviceStorage', () => {
+  it("returns the window's localStorage", () => {
+    vi.stubGlobal('window', { localStorage: storage });
+    expect(deviceStorage()).toBe(storage);
+  });
+
+  it('returns undefined where reading localStorage throws', () => {
+    const refusing = {};
+    Object.defineProperty(refusing, 'localStorage', {
+      get(): never {
+        throw new DOMException('denied', 'SecurityError');
+      },
+    });
+    vi.stubGlobal('window', refusing);
+    expect(deviceStorage()).toBeUndefined();
+    expect(loadExpandAll(deviceStorage())).toBe(false);
+  });
 });
 
 describe('expand all preference', () => {

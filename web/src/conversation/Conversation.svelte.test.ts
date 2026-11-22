@@ -490,7 +490,17 @@ describe('Conversation expand all', () => {
       { kind: 'tool_call', toolCall: { callId: 'c', name: 'Bash', input: { command: 'make' } } },
       { kind: 'tool_result', toolResult: { callId: 'c', status: 'ok', output: 'built' } },
       { kind: 'raw', raw: { reason: 'unknown_type', text: '{"x":1}', bytes: 7 } },
+      {
+        kind: 'lifecycle',
+        lifecycle: {
+          phase: 'runner_notice',
+          subtype: 'hook_response',
+          detail: 'line one\nline two',
+        },
+      },
     ]);
+  const notice = (root: HTMLElement) =>
+    root.querySelector<HTMLDetailsElement>('.items .runner-notice details')?.open;
   const opened = (root: HTMLElement) =>
     [...root.querySelectorAll<HTMLDetailsElement>('.items details')].map((d) => d.open);
   function checkbox(root: HTMLElement): HTMLInputElement {
@@ -505,12 +515,15 @@ describe('Conversation expand all', () => {
   it('opens every collapsible item while ticked and keeps the choice', async () => {
     const root = show(collapsible());
     expect(checkbox(root).checked).toBe(false);
-    expect(opened(root)).toEqual([false, false, false]);
+    expect(opened(root)).toEqual([false, false, false, false]);
+    expect(notice(root)).toBe(false);
     await userEvent.click(checkbox(root));
-    await expect.poll(() => opened(root)).toEqual([true, true, true]);
+    await expect.poll(() => opened(root)).toEqual([true, true, true, true]);
+    expect(notice(root)).toBe(true);
     expect(localStorage.getItem(EXPAND_ALL_KEY)).toBe('true');
     await userEvent.click(checkbox(root));
-    await expect.poll(() => opened(root)).toEqual([false, false, false]);
+    await expect.poll(() => opened(root)).toEqual([false, false, false, false]);
+    expect(notice(root)).toBe(false);
     expect(localStorage.getItem(EXPAND_ALL_KEY)).toBeNull();
   });
 
@@ -518,6 +531,7 @@ describe('Conversation expand all', () => {
     localStorage.setItem(EXPAND_ALL_KEY, 'true');
     const root = show(collapsible());
     expect(checkbox(root).checked).toBe(true);
-    expect(opened(root)).toEqual([true, true, true]);
+    expect(opened(root)).toEqual([true, true, true, true]);
+    expect(notice(root)).toBe(true);
   });
 });
