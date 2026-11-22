@@ -7,6 +7,7 @@ import { baseURL, run } from './control';
 import {
   assistantMessages,
   close,
+  expandDetails,
   launch,
   open,
   transcript,
@@ -72,7 +73,7 @@ describe('the hostile run', () => {
 
   it('shows a tool output that closes its block as text', async () => {
     const tool = transcript(page).getByRole('article', { name: 'Tool call Bash' });
-    await tool.locator('summary').first().click();
+    await expandDetails(tool.locator('details'));
     await visible(tool.getByText(HOSTILE_OUTPUT));
   });
 

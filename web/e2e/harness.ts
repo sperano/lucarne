@@ -106,6 +106,14 @@ export async function close(watched: Watched, allowedErrors?: RegExp): Promise<v
   await page.context().close();
 }
 
+/** Opens the first details element of locator, whether expand all left it closed or open. */
+export async function expandDetails(locator: Locator): Promise<void> {
+  const details = locator.first();
+  if (!(await details.evaluate((el) => (el as HTMLDetailsElement).open))) {
+    await details.locator('summary').first().click();
+  }
+}
+
 /** Waits for the first element of locator to be visible. */
 export async function visible(locator: Locator): Promise<void> {
   await locator.first().waitFor({ state: 'visible', timeout: UI_TIMEOUT_MS });

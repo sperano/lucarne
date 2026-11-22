@@ -12,6 +12,7 @@ import {
   assistantMessages,
   close,
   eventually,
+  expandDetails,
   inViewport,
   launch,
   open,
@@ -61,7 +62,7 @@ describe('the long-line run', () => {
     await eventually(() => cut.count()).toBe(3);
     await visible(cut.filter({ hasText: /^Cut to the size limit by Lucarne: text \(/ }));
     const tool = transcript(page).getByRole('article', { name: 'Tool call Bash' });
-    await tool.locator('summary').first().click();
+    await expandDetails(tool.locator('details'));
     await visible(tool.getByText(/Cut to the size limit by Lucarne: output \(/));
   });
 });

@@ -58,6 +58,7 @@ describe('Conversation over the runner fixtures', () => {
   );
 
   it('shows a Claude Code session: roles, tools, the edit diff, outputs', () => {
+    localStorage.setItem(EXPAND_ALL_KEY, 'false');
     const root = show(findFixture('claude-code', 'session-basic').snapshot);
     expect(texts(root, '.message .role')).toContain('Assistant');
     expect(root.querySelector('.reasoning')?.hasAttribute('open')).toBe(false);
@@ -123,6 +124,7 @@ describe('Conversation over the runner fixtures', () => {
   });
 
   it('keeps unrendered lines collapsed, with their reason', () => {
+    localStorage.setItem(EXPAND_ALL_KEY, 'false');
     const root = show(findFixture('claude-code', 'malformed-lines').snapshot);
     const raws = [...root.querySelectorAll<HTMLDetailsElement>('details.raw')];
     expect(raws.length).toBeGreaterThan(0);
@@ -153,6 +155,7 @@ describe('Conversation over the runner fixtures', () => {
   });
 
   it('shows a notice with its facts, and its whole detail on demand', async () => {
+    localStorage.setItem(EXPAND_ALL_KEY, 'false');
     const root = show(findFixture('claude-code', 'runner-notices').snapshot);
     const hook = [...root.querySelectorAll('.runner-notice')].find(
       (n) => n.querySelector('.name')?.textContent === 'system · hook_response',
@@ -512,26 +515,26 @@ describe('Conversation expand all', () => {
     return box;
   }
 
-  it('opens every collapsible item while ticked and keeps the choice', async () => {
-    const root = show(collapsible());
-    expect(checkbox(root).checked).toBe(false);
-    expect(opened(root)).toEqual([false, false, false, false]);
-    expect(notice(root)).toBe(false);
-    await userEvent.click(checkbox(root));
-    await expect.poll(() => opened(root)).toEqual([true, true, true, true]);
-    expect(notice(root)).toBe(true);
-    expect(localStorage.getItem(EXPAND_ALL_KEY)).toBe('true');
-    await userEvent.click(checkbox(root));
-    await expect.poll(() => opened(root)).toEqual([false, false, false, false]);
-    expect(notice(root)).toBe(false);
-    expect(localStorage.getItem(EXPAND_ALL_KEY)).toBeNull();
-  });
-
-  it('starts expanded when the reader chose so before', () => {
-    localStorage.setItem(EXPAND_ALL_KEY, 'true');
+  it('starts ticked, opening every collapsible item, and keeps the choice when unticked', async () => {
     const root = show(collapsible());
     expect(checkbox(root).checked).toBe(true);
     expect(opened(root)).toEqual([true, true, true, true]);
     expect(notice(root)).toBe(true);
+    await userEvent.click(checkbox(root));
+    await expect.poll(() => opened(root)).toEqual([false, false, false, false]);
+    expect(notice(root)).toBe(false);
+    expect(localStorage.getItem(EXPAND_ALL_KEY)).toBe('false');
+    await userEvent.click(checkbox(root));
+    await expect.poll(() => opened(root)).toEqual([true, true, true, true]);
+    expect(notice(root)).toBe(true);
+    expect(localStorage.getItem(EXPAND_ALL_KEY)).toBeNull();
+  });
+
+  it('starts collapsed when the reader chose so before', () => {
+    localStorage.setItem(EXPAND_ALL_KEY, 'false');
+    const root = show(collapsible());
+    expect(checkbox(root).checked).toBe(false);
+    expect(opened(root)).toEqual([false, false, false, false]);
+    expect(notice(root)).toBe(false);
   });
 });
