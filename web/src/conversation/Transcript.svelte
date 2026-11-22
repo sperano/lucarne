@@ -30,6 +30,7 @@
     target,
     filter = 'all',
     hideNotices = false,
+    expandAll = false,
     matches = new Set<string>(),
     current,
     live = false,
@@ -43,6 +44,8 @@
     filter?: ItemFilter;
     /** Whether the runner's notices are left out, but for the target's. */
     hideNotices?: boolean;
+    /** Whether every collapsible item opens, not only the target's. */
+    expandAll?: boolean;
     /** The IDs of the items the search matches. */
     matches?: ReadonlySet<string>;
     /** The ID of the search result shown. */
@@ -287,6 +290,7 @@
           {coverage}
           {limits}
           {targeted}
+          expanded={expandAll}
           ongoing={growing && item.id === lastId}
         />
       </li>

@@ -1,7 +1,8 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import type { Attempt, Snapshot, TranscriptEvent } from '../lib/contract';
 import { buildConversation } from '../lib/conversation';
+import { EXPAND_ALL_KEY } from '../lib/expand';
 import { formatCount } from '../lib/format';
 import { RunStore } from '../lib/runstore';
 import { WINDOW_STEP } from '../lib/window';
@@ -9,6 +10,10 @@ import { ATTEMPT_ID, eventMaker, type EventBody } from '../dev/events';
 import { FIXTURE_RUNS, findFixture, snapshotOf } from '../dev/fixtures';
 import { render } from '../render';
 import Conversation from './Conversation.svelte';
+
+afterEach(() => {
+  localStorage.removeItem(EXPAND_ALL_KEY);
+});
 
 function show(snapshot: Snapshot, attempt?: string, event?: string): HTMLElement {
   const view = new RunStore(snapshot).view();
@@ -475,5 +480,58 @@ describe('Conversation search and filter', () => {
     expect(root.querySelector('.items')?.textContent).toContain('Bash');
     await userEvent.selectOptions(select, 'all');
     expect(root.querySelectorAll('.items > li')).toHaveLength(WINDOW_STEP);
+  });
+});
+
+describe('Conversation expand all', () => {
+  const collapsible = (): Snapshot =>
+    snapshotWith([
+      { kind: 'message', message: { role: 'assistant', type: 'reasoning', text: 'Plan it.' } },
+      { kind: 'tool_call', toolCall: { callId: 'c', name: 'Bash', input: { command: 'make' } } },
+      { kind: 'tool_result', toolResult: { callId: 'c', status: 'ok', output: 'built' } },
+      { kind: 'raw', raw: { reason: 'unknown_type', text: '{"x":1}', bytes: 7 } },
+      {
+        kind: 'lifecycle',
+        lifecycle: {
+          phase: 'runner_notice',
+          subtype: 'hook_response',
+          detail: 'line one\nline two',
+        },
+      },
+    ]);
+  const notice = (root: HTMLElement) =>
+    root.querySelector<HTMLDetailsElement>('.items .runner-notice details')?.open;
+  const opened = (root: HTMLElement) =>
+    [...root.querySelectorAll<HTMLDetailsElement>('.items details')].map((d) => d.open);
+  function checkbox(root: HTMLElement): HTMLInputElement {
+    const label = [...root.querySelectorAll('.finder label')].find((l) =>
+      l.textContent.includes('Expand all'),
+    );
+    const box = label?.querySelector<HTMLInputElement>('input[type="checkbox"]');
+    if (!box) throw new Error('no Expand all checkbox');
+    return box;
+  }
+
+  it('opens every collapsible item while ticked and keeps the choice', async () => {
+    const root = show(collapsible());
+    expect(checkbox(root).checked).toBe(false);
+    expect(opened(root)).toEqual([false, false, false, false]);
+    expect(notice(root)).toBe(false);
+    await userEvent.click(checkbox(root));
+    await expect.poll(() => opened(root)).toEqual([true, true, true, true]);
+    expect(notice(root)).toBe(true);
+    expect(localStorage.getItem(EXPAND_ALL_KEY)).toBe('true');
+    await userEvent.click(checkbox(root));
+    await expect.poll(() => opened(root)).toEqual([false, false, false, false]);
+    expect(notice(root)).toBe(false);
+    expect(localStorage.getItem(EXPAND_ALL_KEY)).toBeNull();
+  });
+
+  it('starts expanded when the reader chose so before', () => {
+    localStorage.setItem(EXPAND_ALL_KEY, 'true');
+    const root = show(collapsible());
+    expect(checkbox(root).checked).toBe(true);
+    expect(opened(root)).toEqual([true, true, true, true]);
+    expect(notice(root)).toBe(true);
   });
 });

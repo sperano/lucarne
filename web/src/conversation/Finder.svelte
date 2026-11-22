@@ -6,6 +6,7 @@
     query = $bindable(''),
     filter = $bindable('all'),
     hideNotices = $bindable(false),
+    expandAll = $bindable(false),
     matches,
     current,
     scope,
@@ -15,6 +16,8 @@
     filter?: ItemFilter;
     /** Whether the runner's notices (hooks, statuses, kinds no adapter knows) are left out. */
     hideNotices?: boolean;
+    /** Whether every collapsible item (tool calls, reasoning, notices, raw lines) opens. */
+    expandAll?: boolean;
     /** How many items match the query. */
     matches: number;
     /** The 0-based position of the result shown among the matches, if one is. */
@@ -71,6 +74,10 @@
   <label class="field">
     <input type="checkbox" bind:checked={hideNotices} />
     Hide runner notices
+  </label>
+  <label class="field">
+    <input type="checkbox" bind:checked={expandAll} />
+    Expand all
   </label>
   <p class="scope muted">{scope}</p>
 </div>

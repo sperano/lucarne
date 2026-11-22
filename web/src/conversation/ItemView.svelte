@@ -21,6 +21,7 @@
     coverage,
     limits,
     targeted,
+    expanded = false,
     ongoing = false,
   }: {
     item: Item;
@@ -29,6 +30,8 @@
     limits: Limits;
     /** Whether the page's #event= link, or the search result shown, points into this item: it opens. */
     targeted: boolean;
+    /** Whether the reader asked every item to open. */
+    expanded?: boolean;
     /** Whether the item is the end of an attempt still being read: thinking shows as under way. */
     ongoing?: boolean;
   } = $props();
@@ -45,10 +48,10 @@
     parentName={parentName(item.call.toolCall.parentCallId)}
     {coverage}
     {limits}
-    open={targeted}
+    open={targeted || expanded}
   />
 {:else if item.event.kind === 'message'}
-  <MessageView event={item.event} {limits} open={targeted} />
+  <MessageView event={item.event} {limits} open={targeted || expanded} />
 {:else if item.event.kind === 'tool_result'}
   <OrphanResult
     event={item.event}
@@ -66,11 +69,11 @@
 {:else if item.event.kind === 'lifecycle' && item.event.lifecycle.phase === 'thinking'}
   <ThinkingLine {ongoing} />
 {:else if item.event.kind === 'lifecycle' && item.event.lifecycle.phase === 'runner_notice'}
-  <NoticeLine event={item.event} {limits} open={targeted} />
+  <NoticeLine event={item.event} {limits} open={targeted || expanded} />
 {:else if item.event.kind === 'lifecycle'}
   <LifecycleLine event={item.event} {limits} {ongoing} />
 {:else if item.event.kind === 'raw'}
-  <RawLine event={item.event} {limits} open={targeted} />
+  <RawLine event={item.event} {limits} open={targeted || expanded} />
   <!-- eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- the last kind is tested so that unreachable() fails to compile when a kind is added. -->
 {:else if item.event.kind === 'gap'}
   <GapNotice event={item.event} />
