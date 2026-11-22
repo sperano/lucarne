@@ -77,7 +77,7 @@
   let filter: ItemFilter = $state('all');
   // Runner notices are shown unless the reader hides them.
   let hideNotices = $state(false);
-  // Collapsible items open when the reader chose so, on this device, for every run.
+  // Collapsible items open by default; the device remembers only the choice to close them.
   const preferences = deviceStorage();
   let expandAll = $state(loadExpandAll(preferences));
   $effect(() => {
