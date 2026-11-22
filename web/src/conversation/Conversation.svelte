@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { deviceStorage, loadExpandAll, saveExpandAll } from '../lib/expand';
   import { formatCount } from '../lib/format';
   import { shownItems, type Item } from '../lib/conversation';
   import type { Connection } from '../lib/live';
@@ -76,6 +77,12 @@
   let filter: ItemFilter = $state('all');
   // Runner notices are shown unless the reader hides them.
   let hideNotices = $state(false);
+  // Collapsible items open when the reader chose so, on this device, for every run.
+  const preferences = deviceStorage();
+  let expandAll = $state(loadExpandAll(preferences));
+  $effect(() => {
+    saveExpandAll(preferences, expandAll);
+  });
   let current: string | undefined = $state();
   let request: Target | undefined = $state();
   const items = $derived(conversation ? visibleItems(conversation.items, filter, hideNotices) : []);
@@ -156,6 +163,7 @@
       bind:query
       bind:filter
       bind:hideNotices
+      bind:expandAll
       matches={matches.length}
       current={currentIndex}
       {scope}
@@ -169,6 +177,7 @@
         {target}
         {filter}
         {hideNotices}
+        {expandAll}
         matches={matchSet}
         {current}
         {live}
