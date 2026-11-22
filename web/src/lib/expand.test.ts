@@ -60,33 +60,33 @@ describe('deviceStorage', () => {
     });
     vi.stubGlobal('window', refusing);
     expect(deviceStorage()).toBeUndefined();
-    expect(loadExpandAll(deviceStorage())).toBe(false);
+    expect(loadExpandAll(deviceStorage())).toBe(true);
   });
 });
 
 describe('expand all preference', () => {
-  it('is off when nothing was saved or there is no storage', () => {
-    expect(loadExpandAll(storage)).toBe(false);
-    expect(loadExpandAll(undefined)).toBe(false);
-  });
-
-  it('keeps the choice on, then forgets it when turned off', () => {
-    saveExpandAll(storage, true);
-    expect(storage.getItem(EXPAND_ALL_KEY)).toBe('true');
+  it('is on when nothing was saved or there is no storage', () => {
     expect(loadExpandAll(storage)).toBe(true);
+    expect(loadExpandAll(undefined)).toBe(true);
+  });
+
+  it('keeps the choice off, then forgets it when turned back on', () => {
     saveExpandAll(storage, false);
+    expect(storage.getItem(EXPAND_ALL_KEY)).toBe('false');
+    expect(loadExpandAll(storage)).toBe(false);
+    saveExpandAll(storage, true);
     expect(storage.getItem(EXPAND_ALL_KEY)).toBeNull();
-    expect(loadExpandAll(storage)).toBe(false);
+    expect(loadExpandAll(storage)).toBe(true);
   });
 
-  it('reads any other saved value as off', () => {
+  it('reads any other saved value as on', () => {
     storage.setItem(EXPAND_ALL_KEY, '1');
-    expect(loadExpandAll(storage)).toBe(false);
+    expect(loadExpandAll(storage)).toBe(true);
   });
 
-  it('reads as off and saves nothing where storage refuses it', () => {
+  it('reads as on and saves nothing where storage refuses it', () => {
     const refusing = new RefusingStorage();
-    expect(loadExpandAll(refusing)).toBe(false);
+    expect(loadExpandAll(refusing)).toBe(true);
     expect(() => {
       saveExpandAll(refusing, true);
     }).not.toThrow();
